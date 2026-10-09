@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var status: TextView
     private lateinit var result: TextView
-    private var contextEdit: EditText? = null
+
     private var recorder: AudioRecord? = null
     private var recordingThread: Thread? = null
     private var recording = false
@@ -113,8 +113,7 @@ class MainActivity : AppCompatActivity() {
         phraseLibraryButton.setOnClickListener { showPhraseLibrary() }
         val rootView = findViewById<ViewGroup>(android.R.id.content)
         findViewById<Button>(R.id.parentPcConnectionButton).setOnClickListener { showParentPcConnectionDialog() }
-status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=findViewById<EditText?>(R.id.contextEdit)
-        findViewById<Button>(R.id.recordButton).setOnClickListener {
+status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById<Button>(R.id.recordButton).setOnClickListener {
             if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED)
                 permission.launch(Manifest.permission.RECORD_AUDIO) else startRecording()
         }
