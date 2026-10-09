@@ -59,6 +59,37 @@ class MainActivity : AppCompatActivity() {
     private var recorder: AudioRecord? = null
     private var recordingThread: Thread? = null
     private var recording = false
+    @Volatile private var micAmplitude = 0
+    private val recordUiHandler = Handler(Looper.getMainLooper())
+    private var recordStartMs = 0L
+    private var recordFlashOn = true
+    private val recordingUiTick = object : Runnable {
+        override fun run() {
+            if (!recording) return
+            val elapsed = (android.os.SystemClock.elapsedRealtime() - recordStartMs) / 1000
+            val label = findViewById<TextView>(R.id.recordingLabel)
+            recordFlashOn = !recordFlashOn
+            label.text = "● RECORDING %02d:%02d".format(Locale.US, elapsed / 60, elapsed % 60)
+            label.alpha = if (recordFlashOn) 1f else 0.35f
+            val level = micAmplitude
+            findViewById<android.widget.ProgressBar>(R.id.micLevel).progress = level
+            findViewById<TextView>(R.id.micHint).text =
+                if (elapsed >= 3 && level < 3) "Low microphone volume — move closer" else "Microphone active"
+            recordUiHandler.postDelayed(this, 400)
+        }
+    }
+    private fun showRecordingUi(active: Boolean) {
+        recordUiHandler.removeCallbacks(recordingUiTick)
+        findViewById<android.view.View>(R.id.recordingPanel).visibility =
+            if (active) android.view.View.VISIBLE else android.view.View.GONE
+        if (active) {
+            recordStartMs = android.os.SystemClock.elapsedRealtime()
+            recordFlashOn = true
+            micAmplitude = 0
+            findViewById<TextView>(R.id.recordingLabel).alpha = 1f
+            recordingUiTick.run()
+        }
+    }
     private val pcm = ByteArrayOutputStream()
     private val sampleRate = 16000
     private fun parentPcApiBase(): String =
@@ -128,27 +159,60 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
     }
 
     private fun startRecording() {
-        val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
-        recorder=AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,maxOf(min,sampleRate))
+        if (recording) return
+        val min = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        if (min <= 0) { status.text = "Microphone unavailable"; return }
+        val audio = try {
+            AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRate,
+                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(min, sampleRate))
+        } catch (e: Exception) { status.text = "Cannot open microphone: ${e.message}"; return }
+        if (audio.state != AudioRecord.STATE_INITIALIZED) {
+            audio.release(); status.text = "Microphone could not initialize"; return
+        }
+        try { audio.startRecording() } catch (e: Exception) {
+            audio.release(); status.text = "Microphone start failed"; return
+        }
+        recorder = audio
         currentRecordingId = UUID.randomUUID().toString()
-        pcm.reset(); recording=true
-        findViewById<Button>(R.id.recordButton).isEnabled=false
-        findViewById<Button>(R.id.stopButton).isEnabled=true
-        status.text="Listening…"
-        recorder!!.startRecording()
-        recordingThread=Thread {
-            val buf=ByteArray(maxOf(min,4096))
-            while(recording) { val n=recorder!!.read(buf,0,buf.size); if(n>0) synchronized(pcm){pcm.write(buf,0,n)} }
-        }.also{it.start()}
+        synchronized(pcm) { pcm.reset() }
+        recording = true
+        findViewById<Button>(R.id.recordButton).isEnabled = false
+        findViewById<Button>(R.id.stopButton).isEnabled = true
+        status.text = "Listening…"
+        showRecordingUi(true)
+        recordingThread = Thread {
+            val buf = ByteArray(maxOf(min, 4096))
+            while (recording) {
+                val n = try { audio.read(buf, 0, buf.size) } catch (_: Exception) { break }
+                if (n <= 0) break
+                synchronized(pcm) { pcm.write(buf, 0, n) }
+                var sum = 0.0
+                var samples = 0
+                var i = 0
+                while (i + 1 < n) {
+                    val value = ((buf[i].toInt() and 255) or (buf[i + 1].toInt() shl 8)).toShort().toInt()
+                    sum += value.toDouble() * value
+                    samples++
+                    i += 2
+                }
+                val rms = kotlin.math.sqrt(sum / maxOf(samples, 1)) / 32768.0
+                micAmplitude = (rms * 450).toInt().coerceIn(0, 100)
+            }
+        }.also { it.start() }
     }
 
     private fun stopRecording() {
-        recording=false
-        try{recorder?.stop()}catch(_:Exception){}
-        recorder?.release(); recorder=null
-        findViewById<Button>(R.id.recordButton).isEnabled=true
-        findViewById<Button>(R.id.stopButton).isEnabled=false
-        status.text="Recording ready. Tap Analyze speech."
+        if (!recording) return
+        recording = false
+        showRecordingUi(false)
+        try { recorder?.stop() } catch (_: Exception) {}
+        try { recordingThread?.join(700) } catch (_: InterruptedException) { Thread.currentThread().interrupt() }
+        try { recorder?.release() } catch (_: Exception) {}
+        recorder = null
+        recordingThread = null
+        findViewById<Button>(R.id.recordButton).isEnabled = true
+        findViewById<Button>(R.id.stopButton).isEnabled = false
+        status.text = "Recording ready. Tap Analyze speech."
     }
 
     private fun wavBytes(): ByteArray {
@@ -315,7 +379,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
         }.start()
     }
 
-    override fun onDestroy(){ recording=false; try{recorder?.release()}catch(_:Exception){}; super.onDestroy() }
+    override fun onDestroy(){ recording=false; recordUiHandler.removeCallbacks(recordingUiTick); try{recorder?.stop()}catch(_:Exception){}; try{recordingThread?.join(700)}catch(_:Exception){}; try{recorder?.release()}catch(_:Exception){}; super.onDestroy() }
 
     private fun formatAnalysisResult(json: String): String {
         return try {
