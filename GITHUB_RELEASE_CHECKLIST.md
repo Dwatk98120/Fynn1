@@ -19,7 +19,7 @@
 
 ## GitHub Actions
 - [ ] Gradle wrapper is committed.
-- [ ] `FIRST_SOUND_HELPER_API_URL` repository variable is configured if needed.
+- [ ] `PARENT_PC_LOCAL_API_URL` repository variable is configured if needed.
 - [ ] Actions workflow succeeds.
 - [ ] APK artifact can be downloaded.
 

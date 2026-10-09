@@ -6,11 +6,6 @@
 <TextView android:id="@+id/status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ready" android:textColor="#315C4C" android:layout_marginBottom="10dp"/>
 <Button android:id="@+id/parentPcConnectionButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent PC Connection" android:layout_marginBottom="8dp"/>
 <Button android:id="@+id/recordButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎙️ Record speech"/>
-<LinearLayout android:id="@+id/recordingPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:visibility="visible" android:background="#EEE8F6" android:padding="10dp" android:minHeight="64dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:contentDescription="Microphone recording status">
-<TextView android:id="@+id/recordingLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="● MIC READY — indicator between buttons" android:textColor="#666666" android:textSize="16sp" android:textStyle="bold"/>
-<ProgressBar android:id="@+id/micLevel" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:max="100" android:progress="0" android:progressTint="#6B50A0" android:layout_marginTop="8dp"/>
-<TextView android:id="@+id/micHint" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Tap Record speech to begin" android:textColor="#555555" android:textSize="12sp" android:layout_marginTop="4dp"/>
-</LinearLayout>
 <Button android:id="@+id/stopButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Stop" android:enabled="false"/>
 
 <Button
@@ -33,8 +28,6 @@
     android:paddingBottom="6dp"
     android:visibility="gone"/>
 
-<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Optional context" android:textStyle="bold" android:layout_marginTop="14dp"/>
-<EditText android:id="@+id/contextEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="I see a ___" android:minHeight="52dp"/>
 <Button android:id="@+id/pilotReadinessButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🛡️ Caregiver Setup &amp; Pilot Readiness" android:layout_marginTop="12dp"/>
 <Button android:id="@+id/communicationDictionaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧠 Communication Interpretation Tools" android:layout_marginTop="12dp"/>
 <Button android:id="@+id/studentToolsButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧩 Student Communication Tools" android:layout_marginTop="12dp"/>

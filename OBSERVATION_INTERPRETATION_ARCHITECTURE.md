@@ -30,7 +30,7 @@ and rationale. It can be revised or superseded without changing the observation.
 The five learning keys reference the observation by `observation_id`. They are not
 permitted to overwrite observation fields.
 
-This separation is required before moving Render analytics to the Parent PC.
+This separation is required before moving legacy cloud backend analytics to the Parent PC.
 
 ## Recording and session traceability
 

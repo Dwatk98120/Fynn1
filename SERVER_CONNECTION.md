@@ -22,7 +22,7 @@ Start FastAPI on all interfaces, for example:
 `uvicorn app:app --host 0.0.0.0 --port 8787`
 
 Then set:
-`FIRST_SOUND_HELPER_API_URL=http://192.168.1.50:8787`
+`PARENT_PC_LOCAL_API_URL=http://192.168.1.50:8787`
 
 Also allow TCP port 8787 through the computer's firewall for the private/local network.
 
@@ -36,11 +36,11 @@ Do not use plain HTTP for production.
 
 The Android build reads the Gradle property:
 
-`FIRST_SOUND_HELPER_API_URL`
+`PARENT_PC_LOCAL_API_URL`
 
 For local development, add it to `gradle.properties` on the development machine, not to source control:
 
-`FIRST_SOUND_HELPER_API_URL=http://192.168.1.50:8787`
+`PARENT_PC_LOCAL_API_URL=http://192.168.1.50:8787`
 
 For production builds, supply the HTTPS URL as a Gradle property or CI build parameter.
 
@@ -53,12 +53,12 @@ For production builds, supply the HTTPS URL as a Gradle property or CI build par
 - Do not use student recordings for model training without separate authorization.
 
 
-## Render production
+## Parent PC local backend production
 
-The repository includes `render.yaml` and a Render-ready Dockerfile.
+The repository includes `Parent PC local backend.yaml` and a Parent PC local backend-ready Dockerfile.
 
 Production Android builds should use:
 
-`FIRST_SOUND_HELPER_API_URL=https://first-sound-helper-api.onrender.com`
+`PARENT_PC_LOCAL_API_URL=[removed-cloud-backend]`
 
 For a custom domain, replace that URL with your HTTPS API domain.

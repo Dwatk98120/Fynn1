@@ -6,7 +6,7 @@ Android = recording, communication UI, playback, candidate selection, caregiver 
 
 Parent PC = local API, 13-layer analysis, persistent observations, interpretations, approved learning, speaker profiles and future larger AI models.
 
-Render is no longer required for the normal analysis path in this phase.
+legacy cloud backend is no longer required for the normal analysis path in this phase.
 
 Connection flow:
 

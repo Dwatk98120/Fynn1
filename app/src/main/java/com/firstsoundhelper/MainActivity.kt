@@ -55,52 +55,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var status: TextView
     private lateinit var result: TextView
-    private lateinit var contextEdit: EditText
+    private var contextEdit: EditText? = null
     private var recorder: AudioRecord? = null
     private var recordingThread: Thread? = null
     private var recording = false
-    @Volatile private var micAmplitude = 0
-    private val recordUiHandler = Handler(Looper.getMainLooper())
-    private var recordStartMs = 0L
-    private var recordFlashOn = true
-    private val recordingUiTick = object : Runnable {
-        override fun run() {
-            if (!recording) return
-            val elapsed = (android.os.SystemClock.elapsedRealtime() - recordStartMs) / 1000
-            val label = findViewById<TextView>(R.id.recordingLabel)
-            recordFlashOn = !recordFlashOn
-            label.text = "● RECORDING %02d:%02d".format(Locale.US, elapsed / 60, elapsed % 60)
-            label.alpha = if (recordFlashOn) 1f else 0.35f
-            val level = micAmplitude
-            findViewById<android.widget.ProgressBar>(R.id.micLevel).progress = level
-            findViewById<TextView>(R.id.micHint).text =
-                if (elapsed >= 3 && level < 3) "Low microphone volume — move closer" else "Microphone active"
-            recordUiHandler.postDelayed(this, 400)
-        }
-    }
-    private fun showRecordingUi(active: Boolean) {
-        recordUiHandler.removeCallbacks(recordingUiTick)
-        // Keep the panel anchored between Record speech and Stop at all times.
-        findViewById<android.view.View>(R.id.recordingPanel).visibility = android.view.View.VISIBLE
-        if (!active) {
-            findViewById<TextView>(R.id.recordingLabel).apply {
-                text = "● MIC READY — indicator between buttons"
-                alpha = 1f
-                setTextColor(android.graphics.Color.DKGRAY)
-            }
-            findViewById<android.widget.ProgressBar>(R.id.micLevel).progress = 0
-            findViewById<TextView>(R.id.micHint).text = "Tap Record speech to begin"
-        }
-        if (active) {
-            findViewById<TextView>(R.id.recordingLabel)
-                .setTextColor(android.graphics.Color.rgb(211, 47, 47))
-            recordStartMs = android.os.SystemClock.elapsedRealtime()
-            recordFlashOn = true
-            micAmplitude = 0
-            findViewById<TextView>(R.id.recordingLabel).alpha = 1f
-            recordingUiTick.run()
-        }
-    }
     private val pcm = ByteArrayOutputStream()
     private val sampleRate = 16000
     private fun parentPcApiBase(): String =
@@ -155,14 +113,13 @@ class MainActivity : AppCompatActivity() {
         phraseLibraryButton.setOnClickListener { showPhraseLibrary() }
         val rootView = findViewById<ViewGroup>(android.R.id.content)
         findViewById<Button>(R.id.parentPcConnectionButton).setOnClickListener { showParentPcConnectionDialog() }
-status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=findViewById(R.id.contextEdit)
-        showRecordingUi(false)
+status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=findViewById<EditText?>(R.id.contextEdit)
         findViewById<Button>(R.id.recordButton).setOnClickListener {
             if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED)
                 permission.launch(Manifest.permission.RECORD_AUDIO) else startRecording()
         }
         findViewById<Button>(R.id.stopButton).setOnClickListener { stopRecording() }
-        findViewById<Button>(R.id.analyzeButton).setOnClickListener { uploadForAnalysis() }
+        findViewById<Button>(R.id.analyzeButton).setOnClickListener { showAnalyzeContextDialog() }
         findViewById<Button>(R.id.savedRecordingsButton).setOnClickListener { showSavedRecordings() }
         findViewById<Button>(R.id.liveRecordingButton).setOnClickListener { startLiveSpeechMode() }
         findViewById<Button>(R.id.studentToolsButton).setOnClickListener { showStudentCommunicationTools() }
@@ -171,60 +128,27 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
     }
 
     private fun startRecording() {
-        if (recording) return
-        val min = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-        if (min <= 0) { status.text = "Microphone unavailable"; return }
-        val audio = try {
-            AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRate,
-                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(min, sampleRate))
-        } catch (e: Exception) { status.text = "Cannot open microphone: ${e.message}"; return }
-        if (audio.state != AudioRecord.STATE_INITIALIZED) {
-            audio.release(); status.text = "Microphone could not initialize"; return
-        }
-        try { audio.startRecording() } catch (e: Exception) {
-            audio.release(); status.text = "Microphone start failed"; return
-        }
-        recorder = audio
+        val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
+        recorder=AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,maxOf(min,sampleRate))
         currentRecordingId = UUID.randomUUID().toString()
-        synchronized(pcm) { pcm.reset() }
-        recording = true
-        findViewById<Button>(R.id.recordButton).isEnabled = false
-        findViewById<Button>(R.id.stopButton).isEnabled = true
-        status.text = "Listening…"
-        showRecordingUi(true)
-        recordingThread = Thread {
-            val buf = ByteArray(maxOf(min, 4096))
-            while (recording) {
-                val n = try { audio.read(buf, 0, buf.size) } catch (_: Exception) { break }
-                if (n <= 0) break
-                synchronized(pcm) { pcm.write(buf, 0, n) }
-                var sum = 0.0
-                var samples = 0
-                var i = 0
-                while (i + 1 < n) {
-                    val value = ((buf[i].toInt() and 255) or (buf[i + 1].toInt() shl 8)).toShort().toInt()
-                    sum += value.toDouble() * value
-                    samples++
-                    i += 2
-                }
-                val rms = kotlin.math.sqrt(sum / maxOf(samples, 1)) / 32768.0
-                micAmplitude = (rms * 450).toInt().coerceIn(0, 100)
-            }
-        }.also { it.start() }
+        pcm.reset(); recording=true
+        findViewById<Button>(R.id.recordButton).isEnabled=false
+        findViewById<Button>(R.id.stopButton).isEnabled=true
+        status.text="Listening…"
+        recorder!!.startRecording()
+        recordingThread=Thread {
+            val buf=ByteArray(maxOf(min,4096))
+            while(recording) { val n=recorder!!.read(buf,0,buf.size); if(n>0) synchronized(pcm){pcm.write(buf,0,n)} }
+        }.also{it.start()}
     }
 
     private fun stopRecording() {
-        if (!recording) return
-        recording = false
-        showRecordingUi(false)
-        try { recorder?.stop() } catch (_: Exception) {}
-        try { recordingThread?.join(700) } catch (_: InterruptedException) { Thread.currentThread().interrupt() }
-        try { recorder?.release() } catch (_: Exception) {}
-        recorder = null
-        recordingThread = null
-        findViewById<Button>(R.id.recordButton).isEnabled = true
-        findViewById<Button>(R.id.stopButton).isEnabled = false
-        status.text = "Recording ready. Tap Analyze speech."
+        recording=false
+        try{recorder?.stop()}catch(_:Exception){}
+        recorder?.release(); recorder=null
+        findViewById<Button>(R.id.recordButton).isEnabled=true
+        findViewById<Button>(R.id.stopButton).isEnabled=false
+        status.text="Recording ready. Tap Analyze speech."
     }
 
     private fun wavBytes(): ByteArray {
@@ -235,11 +159,51 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
         out.write("data".toByteArray()); le(audio.size); out.write(audio); return out.toByteArray()
     }
 
+
+    private fun showAnalyzeContextDialog() {
+        val box = LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(40, 24, 40, 8)
+        }
+
+        val prompt = TextView(this@MainActivity).apply {
+            text = "Optional context"
+            textSize = 18f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+
+        val helper = TextView(this@MainActivity).apply {
+            text = "Add a short clue if it may help the analysis. You can leave this blank."
+            textSize = 14f
+            setPadding(0, 8, 0, 10)
+        }
+
+        val input = EditText(this@MainActivity).apply {
+            hint = "Example: I see a ___"
+            setText(pendingAnalyzeContext)
+            isSingleLine = true
+        }
+
+        box.addView(prompt)
+        box.addView(helper)
+        box.addView(input)
+
+        androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+            .setTitle("Analyze Speech")
+            .setView(box)
+            .setPositiveButton("Analyze") { _, _ ->
+                pendingAnalyzeContext = input.text.toString().trim()
+                uploadForAnalysis()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun uploadForAnalysis() {
         val base = parentPcApiBase()
         if (base.isBlank()) {
             status.text = "Parent PC not configured"
-            result.text = "Tap Parent PC Connection and enter the Parent PC address shown by the local server."
+            result.text = "Parent PC is required for analysis. Tap Parent PC Connection and enter or discover your Parent PC."
             return
         }
         if (getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false)) {
@@ -253,7 +217,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
             try {
                 val client=OkHttpClient.Builder().connectTimeout(20,TimeUnit.SECONDS).readTimeout(120,TimeUnit.SECONDS).build()
                 val body=MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("context",contextEdit.text.toString())
+                    .addFormDataPart("context",pendingAnalyzeContext)
                     .addFormDataPart("session_id", currentSessionId)
                     .addFormDataPart("recording_id", currentRecordingId.ifBlank { UUID.randomUUID().toString().also { currentRecordingId = it } })
                     .addFormDataPart("speaker_id", speakerId())
@@ -271,7 +235,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
                             result.text = if (txt.trimStart().startsWith("<")) {
                                 "The Parent PC server returned an unexpected web page instead of analysis data."
                             } else {
-                                "Server error ${r.code}: " + txt.take(500)
+                                "Parent PC error ${r.code}: " + txt.take(500)
                             }
                         }
                     }
@@ -391,7 +355,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
         }.start()
     }
 
-    override fun onDestroy(){ recording=false; recordUiHandler.removeCallbacks(recordingUiTick); try{recorder?.stop()}catch(_:Exception){}; try{recordingThread?.join(700)}catch(_:Exception){}; try{recorder?.release()}catch(_:Exception){}; super.onDestroy() }
+    override fun onDestroy(){ recording=false; try{recorder?.release()}catch(_:Exception){}; super.onDestroy() }
 
     private fun formatAnalysisResult(json: String): String {
         return try {
@@ -1107,6 +1071,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
     // ---------------- Live Speech ----------------
     private var liveSpeechRecognizer: SpeechRecognizer? = null
     private var liveListening = false
+    private var pendingAnalyzeContext: String = ""
     private val liveIndicatorHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var liveIndicatorBright = true
     private val liveIndicatorFlash = object : Runnable {

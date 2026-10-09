@@ -9,11 +9,11 @@ FastAPI service for First Sound Helper.
     pip install -r requirements.txt
     uvicorn main:app --host 0.0.0.0 --port 8787
 
-## Render
+## legacy cloud backend
 
-This server is configured for Render using the repository `render.yaml` and `server/Dockerfile`.
+This server is configured for legacy cloud backend using the repository `legacy cloud backend.yaml` and `server/Dockerfile`.
 
-Render supplies the runtime `PORT` environment variable. The Dockerfile uses that port automatically.
+legacy cloud backend supplies the runtime `PORT` environment variable. The Dockerfile uses that port automatically.
 
 Health endpoint:
 

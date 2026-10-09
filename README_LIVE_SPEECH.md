@@ -13,7 +13,7 @@ This build adds a **Live Speech** mode.
 Live results are assistive/probabilistic. Partial speech recognition text is not treated as proof of an initial-consonant omission. The current phoneme model and candidate matching are starter-level and not clinically validated.
 
 ### API URL
-The app continues to use the Gradle `FIRST_SOUND_HELPER_API_URL` configuration when available, with the Android emulator fallback `http://10.0.2.2:8787`.
+The app continues to use the Gradle `PARENT_PC_LOCAL_API_URL` configuration when available, with the Android emulator fallback `http://10.0.2.2:8787`.
 
 ### Production privacy
 Use HTTPS, authenticated access, short retention, deletion controls, and caregiver/guardian consent for any child voice data sent to a server.

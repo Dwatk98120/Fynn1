@@ -7,7 +7,7 @@ Android records/loads 16 kHz mono WAV and calls:
 The Android client remains compatible with the existing API contract and now displays
 the enhanced overall candidate confidence when supplied.
 
-## Render/FastAPI
+## legacy cloud backend/FastAPI
 The server runs:
 1. Wav2Vec2 phoneme inference
 2. CTC decoding

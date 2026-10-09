@@ -6,8 +6,6 @@ plugins {
 android {
     namespace 'com.firstsoundhelper'
     compileSdk 35
-    buildFeatures { buildConfig true }
-
     defaultConfig {
         applicationId 'com.firstsoundhelper'
         minSdk 26

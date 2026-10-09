@@ -27,7 +27,7 @@ For real deployment:
 
 
 ## Rebuilt deployment package
-See `GITHUB_AND_DEPLOY.md` for GitHub, Render, and Android API configuration.
+See `GITHUB_AND_DEPLOY.md` for GitHub, Parent PC local backend, and Android API configuration.
 
 
 ## Visual Sentence Builder
@@ -60,9 +60,9 @@ You can also start the workflow manually from GitHub's **Actions** tab.
 
 ### API configuration
 
-The Android build uses the `FIRST_SOUND_HELPER_API_URL` Gradle property for the speech-analysis API.
+The Android build uses the `PARENT_PC_LOCAL_API_URL` Gradle property for the speech-analysis API.
 
-For GitHub Actions, create a repository **Variable** named `FIRST_SOUND_HELPER_API_URL` containing the HTTPS API address.
+For GitHub Actions, create a repository **Variable** named `PARENT_PC_LOCAL_API_URL` containing the HTTPS API address.
 
 Do not put API keys or passwords in source code.
 
@@ -112,7 +112,7 @@ The workflow at `.github/workflows/android-build.yml` builds a debug APK and upl
 
 Set this repository variable if the build should point at a deployed analysis API:
 
-`FIRST_SOUND_HELPER_API_URL`
+`PARENT_PC_LOCAL_API_URL`
 
 Do not use GitHub repository variables for secrets. Use GitHub Actions secrets when an actual secret is required.
 
@@ -149,13 +149,13 @@ The app can learn confirmed student-specific meanings locally and use them as ca
 ## Enhanced AI Trial
 This package includes an optional Parent PC trial under `parent_pc_trial/` and an enhanced
 server evidence layer in `server/analysis_engine.py`. The Android client remains compatible
-with the Render API and displays candidate confidence when returned by the server.
+with the Parent PC Local API and displays candidate confidence when returned by the server.
 
 The enhanced server adds acoustic/temporal evidence and a conservative candidate-confidence
 band. These are engineering signals, not clinical measurements.
 
 ## Android Studio Trial v3
-See `ANDROID_STUDIO_READY.md`. This package includes a Gradle wrapper compatible with the project's Android Gradle Plugin 8.7.3 setup and keeps the Render API configurable through `FIRST_SOUND_HELPER_API_URL`.
+See `ANDROID_STUDIO_READY.md`. This package includes a Gradle wrapper compatible with the project's Android Gradle Plugin 8.7.3 setup and keeps the Parent PC Local API configurable through `PARENT_PC_LOCAL_API_URL`.
 
 
 ## v6 observation safety boundary

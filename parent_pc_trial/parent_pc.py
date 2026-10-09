@@ -81,7 +81,7 @@ class App:
     def save_url(self): save_config({"api_url":self.base()}); self.status.set("API URL saved.")
     def test(self): threading.Thread(target=self._test,daemon=True).start()
     def _test(self):
-        self.status.set("Testing Render API…")
+        self.status.set("Testing Parent PC Local API…")
         try:
             d=request_json(self.base()+"/health",timeout=30)
             self.root.after(0,lambda:self.status.set(f"Connected • API {d.get('apiVersion','')} • model={d.get('model','')} • device={d.get('device','')}"))
@@ -176,7 +176,7 @@ class App:
         if not folder: return
         files=sorted(Path(folder).glob("*.wav"))
         if not files: messagebox.showinfo("No WAV files","No WAV files found."); return
-        if not messagebox.askyesno("Batch analysis",f"Analyze {len(files)} recordings through Render?"): return
+        if not messagebox.askyesno("Batch analysis",f"Analyze {len(files)} recordings through the Parent PC local API?"): return
         threading.Thread(target=self._batch,args=(files,),daemon=True).start()
 
     def _batch(self,files):

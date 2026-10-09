@@ -6,16 +6,16 @@
 3. Keep the repository private while developing and testing.
 
 ## Deploy the speech-analysis API
-This project includes `render.yaml` and `server/Dockerfile`.
-In Render, create a new Blueprint from the GitHub repository.
-Render should detect `render.yaml` and deploy `first-sound-helper-api`.
+This project includes `Parent PC local backend.yaml` and `server/Dockerfile`.
+In Parent PC local backend, create a new Blueprint from the GitHub repository.
+Parent PC local backend should detect `Parent PC local backend.yaml` and deploy `first-sound-helper-api`.
 
 After deployment, copy the HTTPS service URL.
 
 ## Build the Android app against the deployed API
 In Android Studio, add this Gradle property when building:
 
-`FIRST_SOUND_HELPER_API_URL=https://YOUR-SERVICE.onrender.com`
+`PARENT_PC_LOCAL_API_URL=[removed-cloud-backend]`
 
 For the Android emulator, the default remains:
 `http://10.0.2.2:8787`

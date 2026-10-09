@@ -1,6 +1,6 @@
 # First Sound Helper — Parent PC AI Trial
 
-This trial PC client connects to the Render/FastAPI backend in the project and adds:
+This trial PC client connects to the legacy cloud backend/FastAPI backend in the project and adds:
 - AI dashboard
 - evidence view
 - confidence/uncertainty display
@@ -8,7 +8,7 @@ This trial PC client connects to the Render/FastAPI backend in the project and a
 - local analysis-result history
 - recurring candidate-word analytics
 - raw JSON inspection
-- configurable Render API URL
+- configurable Parent PC Local API URL
 
 Run on Windows with Python 3.10+:
 1. Open this folder in File Explorer.

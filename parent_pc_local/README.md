@@ -1,6 +1,6 @@
 # Parent PC Local Backend — Phase 1
 
-This phase removes Render from the normal Android analysis path.
+This phase removes legacy cloud backend from the normal Android analysis path.
 
 ## Architecture
 
