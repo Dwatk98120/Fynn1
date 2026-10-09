@@ -1,0 +1,55 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Bootstrap Gradle 8.9
+        shell: bash
+        run: |
+          set -euo pipefail
+          GRADLE_ZIP="$RUNNER_TEMP/gradle-8.9-bin.zip"
+          GRADLE_HOME_DIR="$RUNNER_TEMP/gradle-8.9"
+          curl --fail --location --retry 3 --retry-delay 5 \
+            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
+            --output "$GRADLE_ZIP"
+          unzip -q "$GRADLE_ZIP" -d "$RUNNER_TEMP"
+          echo "$GRADLE_HOME_DIR/bin" >> "$GITHUB_PATH"
+
+      - name: Verify bootstrap Gradle
+        run: gradle --version
+
+      - name: Regenerate official Gradle 8.9 wrapper
+        run: |
+          rm -f ./gradle/wrapper/gradle-wrapper.jar
+          gradle wrapper --gradle-version 8.9 --distribution-type bin
+          chmod +x ./gradlew
+
+      - name: Verify Gradle wrapper
+        run: ./gradlew --version
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-sound-helper-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
