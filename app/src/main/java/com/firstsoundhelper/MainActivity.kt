@@ -121,6 +121,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
         findViewById<Button>(R.id.stopButton).setOnClickListener { stopRecording() }
         findViewById<Button>(R.id.analyzeButton).setOnClickListener { uploadForAnalysis() }
         findViewById<Button>(R.id.savedRecordingsButton).setOnClickListener { showSavedRecordings() }
+        findViewById<Button>(R.id.liveRecordingButton).setOnClickListener { startLiveSpeechMode() }
         findViewById<Button>(R.id.studentToolsButton).setOnClickListener { showStudentCommunicationTools() }
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }

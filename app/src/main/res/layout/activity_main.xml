@@ -7,6 +7,14 @@
 <Button android:id="@+id/parentPcConnectionButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent PC Connection" android:layout_marginBottom="8dp"/>
 <Button android:id="@+id/recordButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎙️ Record speech"/>
 <Button android:id="@+id/stopButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Stop" android:enabled="false"/>
+
+<Button
+    android:id="@+id/liveRecordingButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="🎙 Live Recording"
+    android:layout_marginTop="8dp"/>
+
 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Optional context" android:textStyle="bold" android:layout_marginTop="14dp"/>
 <EditText android:id="@+id/contextEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="I see a ___" android:minHeight="52dp"/>
 <Button android:id="@+id/pilotReadinessButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🛡️ Caregiver Setup &amp; Pilot Readiness" android:layout_marginTop="12dp"/>
