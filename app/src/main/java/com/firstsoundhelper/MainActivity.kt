@@ -80,9 +80,20 @@ class MainActivity : AppCompatActivity() {
     }
     private fun showRecordingUi(active: Boolean) {
         recordUiHandler.removeCallbacks(recordingUiTick)
-        findViewById<android.view.View>(R.id.recordingPanel).visibility =
-            if (active) android.view.View.VISIBLE else android.view.View.GONE
+        // Keep the panel anchored between Record speech and Stop at all times.
+        findViewById<android.view.View>(R.id.recordingPanel).visibility = android.view.View.VISIBLE
+        if (!active) {
+            findViewById<TextView>(R.id.recordingLabel).apply {
+                text = "● Ready to record"
+                alpha = 1f
+                setTextColor(android.graphics.Color.DKGRAY)
+            }
+            findViewById<android.widget.ProgressBar>(R.id.micLevel).progress = 0
+            findViewById<TextView>(R.id.micHint).text = "Tap Record speech to begin"
+        }
         if (active) {
+            findViewById<TextView>(R.id.recordingLabel)
+                .setTextColor(android.graphics.Color.rgb(211, 47, 47))
             recordStartMs = android.os.SystemClock.elapsedRealtime()
             recordFlashOn = true
             micAmplitude = 0
@@ -145,6 +156,7 @@ class MainActivity : AppCompatActivity() {
         val rootView = findViewById<ViewGroup>(android.R.id.content)
         findViewById<Button>(R.id.parentPcConnectionButton).setOnClickListener { showParentPcConnectionDialog() }
 status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=findViewById(R.id.contextEdit)
+        showRecordingUi(false)
         findViewById<Button>(R.id.recordButton).setOnClickListener {
             if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED)
                 permission.launch(Manifest.permission.RECORD_AUDIO) else startRecording()
