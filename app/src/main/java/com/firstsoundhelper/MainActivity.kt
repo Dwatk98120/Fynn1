@@ -184,10 +184,13 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             }
         }
 
-        dialog.findViewById<android.widget.TextView?>(android.R.id.alertTitle)?.apply {
-            setTextColor(android.graphics.Color.parseColor("#21124D"))
-            textSize = 22f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        val alertTitleId = resources.getIdentifier("alertTitle", "id", "android")
+        if (alertTitleId != 0) {
+            dialog.findViewById<android.widget.TextView?>(alertTitleId)?.apply {
+                setTextColor(android.graphics.Color.parseColor("#21124D"))
+                textSize = 22f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }
         }
         dialog.findViewById<android.widget.TextView?>(android.R.id.message)?.apply {
             setTextColor(android.graphics.Color.parseColor("#4B4855"))
@@ -3432,8 +3435,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
         val statusCard = popupInfoCard(
             "Setup status",
-            "Privacy acknowledgement: ${if (acknowledged) "complete ✓" else "needed !"}
-Caregiver setup: ${if (complete) "complete ✓" else "needed !"}",
+            "Privacy acknowledgement: ${if (acknowledged) "complete ✓" else "needed !"}\nCaregiver setup: ${if (complete) "complete ✓" else "needed !"}",
             if (acknowledged && complete) "✅" else "⚠️"
         )
         list.addView(statusCard)
@@ -3442,8 +3444,7 @@ Caregiver setup: ${if (complete) "complete ✓" else "needed !"}",
             val a = prefs.getBoolean("privacy_ack", false)
             val c = prefs.getBoolean("setup_complete", false)
             val body = statusCard.getChildAt(1) as? TextView
-            body?.text = "Privacy acknowledgement: ${if (a) "complete ✓" else "needed !"}
-Caregiver setup: ${if (c) "complete ✓" else "needed !"}"
+            body?.text = "Privacy acknowledgement: ${if (a) "complete ✓" else "needed !"}\nCaregiver setup: ${if (c) "complete ✓" else "needed !"}"
         }
 
         list.addView(popupActionButton(
@@ -3489,11 +3490,7 @@ Caregiver setup: ${if (c) "complete ✓" else "needed !"}"
 
         list.addView(popupInfoCard(
             "Pilot checklist",
-            "✓ Test with familiar routines.
-✓ Confirm meanings rather than assuming them.
-✓ Use pictures/choices when speech is uncertain.
-✓ Test Offline Mode.
-✓ Keep student information out of GitHub.",
+            "✓ Test with familiar routines.\n✓ Confirm meanings rather than assuming them.\n✓ Use pictures/choices when speech is uncertain.\n✓ Test Offline Mode.\n✓ Keep student information out of GitHub.",
             "📋"
         ).apply {
             val lp = LinearLayout.LayoutParams(
