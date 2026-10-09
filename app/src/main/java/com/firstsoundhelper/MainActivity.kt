@@ -159,6 +159,134 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
 
+
+    private fun popupDp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
+
+    private fun popupBackground(color: String, radiusDp: Int = 24): android.graphics.drawable.GradientDrawable =
+        android.graphics.drawable.GradientDrawable().apply {
+            setColor(android.graphics.Color.parseColor(color))
+            cornerRadius = popupDp(radiusDp).toFloat()
+        }
+
+    private fun styleUnifiedDialog(dialog: android.app.Dialog) {
+        dialog.window?.let { w ->
+            w.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+            w.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            val lp = w.attributes
+            lp.dimAmount = 0.48f
+            w.attributes = lp
+            w.decorView.post {
+                val width = (resources.displayMetrics.widthPixels * 0.91f).toInt()
+                w.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+                w.decorView.background = popupBackground("#FFFFFF", 26)
+                w.decorView.setPadding(popupDp(2), popupDp(2), popupDp(2), popupDp(2))
+            }
+        }
+
+        dialog.findViewById<android.widget.TextView?>(android.R.id.alertTitle)?.apply {
+            setTextColor(android.graphics.Color.parseColor("#21124D"))
+            textSize = 22f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        dialog.findViewById<android.widget.TextView?>(android.R.id.message)?.apply {
+            setTextColor(android.graphics.Color.parseColor("#4B4855"))
+            textSize = 16f
+            setLineSpacing(0f, 1.12f)
+        }
+        dialog.findViewById<android.widget.Button?>(android.R.id.button1)?.apply {
+            setTextColor(android.graphics.Color.parseColor("#6D4DB3"))
+            isAllCaps = false
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        dialog.findViewById<android.widget.Button?>(android.R.id.button2)?.apply {
+            setTextColor(android.graphics.Color.parseColor("#5C5965"))
+            isAllCaps = false
+        }
+        dialog.findViewById<android.widget.Button?>(android.R.id.button3)?.apply {
+            setTextColor(android.graphics.Color.parseColor("#6D4DB3"))
+            isAllCaps = false
+        }
+    }
+
+    private fun popupHeader(title: String, subtitle: String? = null, icon: String = "✨"): android.widget.LinearLayout =
+        android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(8), popupDp(4), popupDp(8), popupDp(12))
+
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = "$icon  $title"
+                textSize = 24f
+                setTextColor(android.graphics.Color.parseColor("#21124D"))
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+
+            if (!subtitle.isNullOrBlank()) {
+                addView(android.widget.TextView(this@MainActivity).apply {
+                    text = subtitle
+                    textSize = 15f
+                    setTextColor(android.graphics.Color.parseColor("#666270"))
+                    setPadding(0, popupDp(6), 0, 0)
+                })
+            }
+        }
+
+    private fun popupActionButton(
+        title: String,
+        description: String? = null,
+        icon: String = "›",
+        primary: Boolean = false,
+        action: () -> Unit
+    ): android.widget.Button =
+        android.widget.Button(this@MainActivity).apply {
+            text = buildString {
+                append(icon)
+                append("  ")
+                append(title)
+                if (!description.isNullOrBlank()) {
+                    append("\n")
+                    append(description)
+                }
+                append("   ›")
+            }
+            textSize = if (description.isNullOrBlank()) 16f else 15f
+            isAllCaps = false
+            gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
+            minHeight = popupDp(if (description.isNullOrBlank()) 58 else 70)
+            setPadding(popupDp(18), popupDp(10), popupDp(14), popupDp(10))
+            setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#4D27A6"))
+            background = popupBackground(if (primary) "#6D4DB3" else "#F1ECFC", 18)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            val lp = android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.setMargins(0, popupDp(5), 0, popupDp(5))
+            layoutParams = lp
+            setOnClickListener { action() }
+        }
+
+    private fun popupInfoCard(title: String, body: String, icon: String = "✓"): android.widget.LinearLayout =
+        android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(16), popupDp(14), popupDp(16), popupDp(14))
+            background = popupBackground("#F7F4FD", 18)
+
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = "$icon  $title"
+                textSize = 17f
+                setTextColor(android.graphics.Color.parseColor("#40218F"))
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = body
+                textSize = 15f
+                setTextColor(android.graphics.Color.parseColor("#53505D"))
+                setPadding(0, popupDp(8), 0, 0)
+                setLineSpacing(0f, 1.1f)
+            })
+        }
+
     private fun showAnalyzeContextDialog() {
         val box = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
@@ -187,7 +315,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         box.addView(helper)
         box.addView(input)
 
-        androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
             .setTitle("Analyze Speech")
             .setView(box)
             .setPositiveButton("Analyze") { _, _ ->
@@ -195,7 +323,9 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 uploadForAnalysis()
             }
             .setNegativeButton("Cancel", null)
-            .show()
+            .create()
+        dialog.setOnShowListener { styleUnifiedDialog(dialog) }
+        dialog.show()
     }
 
     private fun uploadForAnalysis() {
@@ -281,44 +411,74 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
 
     private fun showParentPcConnectionDialog() {
-        val box = LinearLayout(this@MainActivity).apply {
+        val content = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(40, 24, 40, 8)
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(10))
         }
-        val instructions = TextView(this@MainActivity).apply {
-            text = "Enter the Parent PC address shown when the local server starts. Example: 192.168.1.25:8000"
+
+        content.addView(popupHeader(
+            "Parent PC Connection",
+            "Connect this phone to the Parent PC for local speech analysis and learning.",
+            "🖥️"
+        ))
+
+        content.addView(popupInfoCard(
+            "Local connection",
+            "Enter the Parent PC address shown by the local server. Both devices should be on the same local network.",
+            "🟢"
+        ).apply {
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.setMargins(0, popupDp(5), 0, popupDp(12))
+            layoutParams = lp
+        })
+
+        val label = TextView(this@MainActivity).apply {
+            text = "Parent PC address"
+            textSize = 15f
+            setTextColor(android.graphics.Color.parseColor("#32245C"))
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, popupDp(4), 0, popupDp(5))
         }
+        content.addView(label)
+
         val input = EditText(this@MainActivity).apply {
-            hint = "192.168.1.25:8000"
+            hint = "Example: 192.168.1.25:8000"
             setText(parentPcApiBase())
             isSingleLine = true
+            background = popupBackground("#F7F4FD", 14)
+            setPadding(popupDp(14), popupDp(12), popupDp(14), popupDp(12))
         }
-        val test = Button(this@MainActivity).apply {
-            text = "Test Parent PC"
-            setOnClickListener {
-                val url = normalizeParentPcUrl(input.text.toString())
-                if (url.isBlank()) {
-                    Toast.makeText(this@MainActivity, "Enter the Parent PC address first.", Toast.LENGTH_SHORT).show()
-                } else {
-                    testParentPcConnection(url)
-                }
-            }
-        }
-        box.addView(instructions)
-        box.addView(input)
-        box.addView(test)
+        content.addView(input)
 
-        androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-            .setTitle("Parent PC Connection")
-            .setView(box)
-            .setPositiveButton("Save") { _, _ ->
-                val url = normalizeParentPcUrl(input.text.toString())
-                getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
-                    .edit().putString("parent_pc_url", url).apply()
-                status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC saved: $url"
+        content.addView(popupActionButton(
+            "Test Connection",
+            "Check whether the Parent PC service can be reached.",
+            "⚙️"
+        ) {
+            val url = normalizeParentPcUrl(input.text.toString())
+            if (url.isBlank()) {
+                Toast.makeText(this@MainActivity, "Enter the Parent PC address first.", Toast.LENGTH_SHORT).show()
+            } else {
+                testParentPcConnection(url)
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        })
+
+        val dialog = android.app.Dialog(this@MainActivity)
+        content.addView(popupActionButton("Save Connection", null, "✓", true) {
+            val url = normalizeParentPcUrl(input.text.toString())
+            getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
+                .edit().putString("parent_pc_url", url).apply()
+            status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC saved: $url"
+            dialog.dismiss()
+        })
+        content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
+
+        dialog.setContentView(ScrollView(this@MainActivity).apply { addView(content) })
+        dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun testParentPcConnection(base: String) {
@@ -2244,70 +2404,46 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
     private fun showStudentCommunicationTools() {
         val dialog = android.app.Dialog(this@MainActivity)
-        val scroll = ScrollView(this@MainActivity)
         val list = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(28, 20, 28, 24)
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(22))
         }
 
-        list.addView(TextView(this@MainActivity).apply {
-            text = "Student Communication Tools"
-            textSize = 25f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        })
-        list.addView(TextView(this@MainActivity).apply {
-            text = "Choose the way that is easiest for the student right now."
-            textSize = 16f
-            setPadding(0, 8, 0, 18)
-        })
+        list.addView(popupHeader(
+            "Student Communication Tools",
+            "Choose the communication support that is easiest for the student right now.",
+            "🧩"
+        ))
 
-        fun tool(title: String, description: String, action: () -> Unit) {
-            val b = Button(this@MainActivity).apply {
-                text = "$title\n$description"
-                textSize = 16f
-                minHeight = 64
-                setOnClickListener { action() }
-            }
-            list.addView(b)
+        fun tool(icon: String, title: String, description: String, action: () -> Unit) {
+            list.addView(popupActionButton(title, description, icon) {
+                dialog.dismiss()
+                action()
+            })
         }
 
-        tool("⭐ Favorite Phrases", "Keep important phrases one tap away.") {
-            dialog.dismiss(); showFavoritePhrases()
-        }
-        tool("🖼️ Picture + Voice Choices", "Choose from visual options and hear the choice.") {
-            dialog.dismiss(); showPictureVoiceChoices()
-        }
-        tool("🔁 Try Again Practice", "Practice a word or phrase without pressure.") {
-            dialog.dismiss(); showTryAgainPractice()
-        }
-        tool("☑️ Choice Board", "Offer two to six simple choices.") {
-            dialog.dismiss(); showChoiceBoard()
-        }
-        tool("💬 Quick Communication Needs", "Fast access to help, break, yes, no, and more.") {
-            dialog.dismiss(); showQuickCommunication()
-        }
-        tool("📈 Visual Progress", "See saved practice and communication activity.") {
-            dialog.dismiss(); showVisualProgress()
-        }
-        tool("📝 Teacher / Caregiver Notes", "Keep local notes about helpful communication supports.") {
-            dialog.dismiss(); showSupportNotes()
-        }
-        tool("📚 Custom Vocabulary", "Add words that matter to this student.") {
-            dialog.dismiss(); showCustomVocabulary()
-        }
-        tool("🔒 Privacy & Offline", "Control analysis uploads and remove local student data.") {
-            dialog.dismiss(); showPrivacyControls()
-        }
-        tool("🗣️ Communication Modes", "Switch between speech, visual, text, and recorded voice.") {
-            dialog.dismiss(); showCommunicationModes()
-        }
-        tool("🧩 Visual Sentence Builder", "Build a sentence by tapping word tiles.") {
-            dialog.dismiss(); showVisualSentenceBuilder()
-        }
+        tool("⭐", "Favorite Phrases", "Keep important phrases one tap away.") { showFavoritePhrases() }
+        tool("🖼️", "Picture + Voice Choices", "Choose from visual options and hear the choice.") { showPictureVoiceChoices() }
+        tool("🔁", "Try Again Practice", "Practice a word or phrase without pressure.") { showTryAgainPractice() }
+        tool("☑️", "Choice Board", "Offer two to six simple choices.") { showChoiceBoard() }
+        tool("💬", "Quick Communication Needs", "Fast access to help, break, yes, no, and more.") { showQuickCommunication() }
+        tool("📈", "Visual Progress", "See saved practice and communication activity.") { showVisualProgress() }
+        tool("📝", "Teacher / Caregiver Notes", "Keep local notes about helpful communication supports.") { showSupportNotes() }
+        tool("📚", "Custom Vocabulary", "Add words that matter to this student.") { showCustomVocabulary() }
+        tool("🔒", "Privacy & Offline", "Control analysis uploads and remove local student data.") { showPrivacyControls() }
+        tool("🗣️", "Communication Modes", "Switch between speech, visual, text, and recorded voice.") { showCommunicationModes() }
+        tool("🧩", "Visual Sentence Builder", "Build a sentence by tapping word tiles.") { showVisualSentenceBuilder() }
 
-        scroll.addView(list)
-        dialog.setContentView(scroll)
+        list.addView(popupInfoCard(
+            "Tip",
+            "Customize these tools around the student's interests, routines, and communication goals.",
+            "❤️"
+        ))
+        list.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
+
+        dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showFavoritePhrases() {
@@ -2691,65 +2827,44 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val dialog = android.app.Dialog(this@MainActivity)
         val list = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(28, 20, 28, 24)
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(22))
         }
 
-        list.addView(TextView(this@MainActivity).apply {
-            text = "Communication Interpretation Tools"
-            textSize = 24f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        })
-        list.addView(TextView(this@MainActivity).apply {
-            text = "Use these tools to explore possible meanings without treating an interpretation as certain."
-            textSize = 16f
-            setPadding(0, 8, 0, 18)
-        })
+        list.addView(popupHeader(
+            "Communication Interpretation Tools",
+            "Explore possible meanings while keeping uncertainty visible.",
+            "🧠"
+        ))
 
-        fun addTool(title: String, description: String, action: () -> Unit) {
-            list.addView(Button(this@MainActivity).apply {
-                text = "$title\n$description"
-                textSize = 16f
-                minHeight = 68
-                setOnClickListener { action() }
+        fun addTool(icon: String, title: String, description: String, action: () -> Unit) {
+            list.addView(popupActionButton(title, description, icon) {
+                dialog.dismiss()
+                action()
             })
         }
 
-        addTool("🔎 Context-Aware Interpretation", "Use the current activity to narrow possible meanings.") {
-            dialog.dismiss(); showContextAwareInterpretation()
-        }
-        addTool("🗣️ Personal Pronunciation Profile", "View descriptive sound patterns for this student.") {
-            dialog.dismiss(); showPersonalPronunciationProfile()
-        }
-        addTool("📊 Sound-Pattern History", "Review possible omissions and substitutions over time.") {
-            dialog.dismiss(); showSoundPatternHistory()
-        }
-        addTool("🔤 Multiple Candidate Meanings", "Compare several possible words instead of one forced answer.") {
-            dialog.dismiss(); showCandidateMeanings()
-        }
-        addTool("🧩 Context + Sound Matching", "Combine context, word bank, and sound clues.") {
-            dialog.dismiss(); showContextSoundMatching()
-        }
-        addTool("✅ Caregiver Confirmation", "Confirm what the student intended and build their dictionary.") {
-            dialog.dismiss(); showCaregiverConfirmation()
-        }
-        addTool("📖 Communication History", "Review successful communication attempts.") {
-            dialog.dismiss(); showCommunicationHistory()
-        }
-        addTool("🖼️ Picture Candidate Results", "Show visual candidates the student can select.") {
-            dialog.dismiss(); showPictureCandidates()
-        }
-        addTool("👋 Gesture / Speech Notes", "Record gestures and context that accompanied speech.") {
-            dialog.dismiss(); showGestureNotes()
-        }
-        addTool("🧠 Personalized Learning", "Use explicitly confirmed meanings from this student.") {
-            dialog.dismiss(); showPersonalizedLearning()
-        }
-        addTool("❓ I'm Not Sure Yet", "Use a safe fallback when no interpretation is reliable.") {
-            dialog.dismiss(); showNotSureMode()
-        }
+        addTool("🔎", "Context-Aware Interpretation", "Use the current activity to narrow possible meanings.") { showContextAwareInterpretation() }
+        addTool("🗣️", "Personal Pronunciation Profile", "View descriptive sound patterns for this student.") { showPersonalPronunciationProfile() }
+        addTool("📊", "Sound-Pattern History", "Review possible omissions and substitutions over time.") { showSoundPatternHistory() }
+        addTool("🔤", "Multiple Candidate Meanings", "Compare several possible words instead of one forced answer.") { showCandidateMeanings() }
+        addTool("🧩", "Context + Sound Matching", "Combine context, word bank, and sound clues.") { showContextSoundMatching() }
+        addTool("✅", "Caregiver Confirmation", "Confirm what the student intended and build their dictionary.") { showCaregiverConfirmation() }
+        addTool("📖", "Communication History", "Review successful communication attempts.") { showCommunicationHistory() }
+        addTool("🖼️", "Picture Candidate Results", "Show visual candidates the student can select.") { showPictureCandidates() }
+        addTool("👋", "Gesture / Speech Notes", "Record gestures and context that accompanied speech.") { showGestureNotes() }
+        addTool("🎓", "Personalized Learning", "Use explicitly confirmed meanings from this student.") { showPersonalizedLearning() }
+        addTool("❓", "I'm Not Sure Yet", "Use a safe fallback when no interpretation is reliable.") { showNotSureMode() }
+
+        list.addView(popupInfoCard(
+            "Tip",
+            "Try more than one tool when the meaning is unclear. Different evidence can point toward different possibilities.",
+            "✨"
+        ))
+        list.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
 
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showContextAwareInterpretation() {
@@ -3303,56 +3418,97 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val acknowledged = prefs.getBoolean("privacy_ack", false)
         val complete = prefs.getBoolean("setup_complete", false)
         val dialog = android.app.Dialog(this@MainActivity)
+
         val list = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(26, 20, 26, 24)
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(22))
         }
-        val status = TextView(this@MainActivity).apply {
-            text = "Privacy acknowledgement: ${if (acknowledged) "complete" else "needed"}\nCaregiver setup: ${if (complete) "complete" else "needed"}"
-            textSize = 17f
-            setPadding(0, 8, 0, 16)
+
+        list.addView(popupHeader(
+            "Caregiver Setup & Pilot Readiness",
+            "Review privacy, personalized learning, and the pilot checklist before regular use.",
+            "🛡️"
+        ))
+
+        val statusCard = popupInfoCard(
+            "Setup status",
+            "Privacy acknowledgement: ${if (acknowledged) "complete ✓" else "needed !"}
+Caregiver setup: ${if (complete) "complete ✓" else "needed !"}",
+            if (acknowledged && complete) "✅" else "⚠️"
+        )
+        list.addView(statusCard)
+
+        fun refreshStatus() {
+            val a = prefs.getBoolean("privacy_ack", false)
+            val c = prefs.getBoolean("setup_complete", false)
+            val body = statusCard.getChildAt(1) as? TextView
+            body?.text = "Privacy acknowledgement: ${if (a) "complete ✓" else "needed !"}
+Caregiver setup: ${if (c) "complete ✓" else "needed !"}"
         }
-        list.addView(TextView(this@MainActivity).apply {
-            text = "Caregiver Setup & Pilot Readiness"
-            textSize = 24f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        })
-        list.addView(status)
-        list.addView(Button(this@MainActivity).apply {
-            text = "Review Privacy & Recording Notice"
-            setOnClickListener {
-                android.app.AlertDialog.Builder(this@MainActivity)
-                    .setTitle("Privacy & Recording Notice")
-                    .setMessage("Voice recordings and student information can be sensitive. Keep data local when possible. Use Offline Mode when network speech analysis is not needed. Only enable network analysis when the caregiver/guardian and your organization have authorized its use. This app is a communication-support tool, not a diagnosis or clinical assessment.")
-                    .setNegativeButton("Not now", null)
-                    .setPositiveButton("I understand") { _, _ ->
-                        prefs.edit().putBoolean("privacy_ack", true).apply()
-                        status.text = "Privacy acknowledgement: complete\nCaregiver setup: ${if (prefs.getBoolean("setup_complete", false)) "complete" else "needed"}"
-                    }.show()
-            }
-        })
-        list.addView(Button(this@MainActivity).apply {
-            text = "Open Personalized Learning"
-            setOnClickListener { showPersonalizedLearning() }
-        })
-        list.addView(Button(this@MainActivity).apply {
-            text = "Mark Setup Complete"
-            setOnClickListener {
-                if (!prefs.getBoolean("privacy_ack", false)) {
-                    Toast.makeText(this@MainActivity, "Review the privacy notice first.", Toast.LENGTH_SHORT).show()
-                } else {
-                    prefs.edit().putBoolean("setup_complete", true).apply()
-                    status.text = "Privacy acknowledgement: complete\nCaregiver setup: complete"
+
+        list.addView(popupActionButton(
+            "Review Privacy & Recording Notice",
+            "Review how recordings and student information should be handled.",
+            "📄",
+            true
+        ) {
+            val privacy = android.app.AlertDialog.Builder(this@MainActivity)
+                .setTitle("Privacy & Recording Notice")
+                .setMessage("Voice recordings and student information can be sensitive. Keep data local when possible. Only use network features that the caregiver/guardian and your organization have authorized. This app is a communication-support tool, not a diagnosis or clinical assessment.")
+                .setNegativeButton("Not now", null)
+                .setPositiveButton("I understand") { _, _ ->
+                    prefs.edit().putBoolean("privacy_ack", true).apply()
+                    refreshStatus()
                 }
+                .create()
+            privacy.setOnShowListener { styleUnifiedDialog(privacy) }
+            privacy.show()
+        })
+
+        list.addView(popupActionButton(
+            "Open Personalized Learning",
+            "Review confirmed meanings and student-specific learning.",
+            "🎓"
+        ) {
+            dialog.dismiss()
+            showPersonalizedLearning()
+        })
+
+        list.addView(popupActionButton(
+            "Mark Setup Complete",
+            "Finish caregiver setup after reviewing the privacy notice.",
+            "✓"
+        ) {
+            if (!prefs.getBoolean("privacy_ack", false)) {
+                Toast.makeText(this@MainActivity, "Review the privacy notice first.", Toast.LENGTH_SHORT).show()
+            } else {
+                prefs.edit().putBoolean("setup_complete", true).apply()
+                refreshStatus()
             }
         })
-        list.addView(TextView(this@MainActivity).apply {
-            text = "Pilot checklist:\n• Test with familiar routines.\n• Confirm meanings rather than assuming them.\n• Use pictures/choices when speech is uncertain.\n• Test Offline Mode.\n• Keep student information out of GitHub."
-            textSize = 15f
-            setPadding(0, 18, 0, 0)
+
+        list.addView(popupInfoCard(
+            "Pilot checklist",
+            "✓ Test with familiar routines.
+✓ Confirm meanings rather than assuming them.
+✓ Use pictures/choices when speech is uncertain.
+✓ Test Offline Mode.
+✓ Keep student information out of GitHub.",
+            "📋"
+        ).apply {
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.setMargins(0, popupDp(10), 0, 0)
+            layoutParams = lp
         })
+
+        list.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
+
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
 }
