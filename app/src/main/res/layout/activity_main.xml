@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F7F5EF">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="First Sound Helper" android:textSize="32sp" android:textStyle="bold" android:layout_marginBottom="7dp"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Speak naturally. The app looks for possible initial- and final-consonant omissions and shows uncertain possibilities rather than correcting the child." android:textColor="#676B70" android:textSize="16sp" android:layout_marginBottom="15dp"/>
+<TextView android:id="@+id/status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ready" android:textColor="#315C4C" android:layout_marginBottom="10dp"/>
+<Button android:id="@+id/parentPcConnectionButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent PC Connection" android:layout_marginBottom="8dp"/>
+<Button android:id="@+id/recordButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎙️ Record speech"/>
+<Button android:id="@+id/stopButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Stop" android:enabled="false"/>
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Optional context" android:textStyle="bold" android:layout_marginTop="14dp"/>
+<EditText android:id="@+id/contextEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="I see a ___" android:minHeight="52dp"/>
+<Button android:id="@+id/pilotReadinessButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🛡️ Caregiver Setup &amp; Pilot Readiness" android:layout_marginTop="12dp"/>
+<Button android:id="@+id/communicationDictionaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧠 Communication Interpretation Tools" android:layout_marginTop="12dp"/>
+<Button android:id="@+id/studentToolsButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧩 Student Communication Tools" android:layout_marginTop="12dp"/>
+<Button android:id="@+id/analyzeButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Analyze speech" android:layout_marginTop="10dp"/>
+<TextView android:id="@+id/result" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Results will appear here." android:textSize="18sp" android:padding="12dp" android:layout_marginTop="12dp"/>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="The phoneme model provides speech evidence; it does not diagnose autism or a speech disorder. Results are suggestions for human confirmation." android:textColor="#676B70" android:textSize="13sp" android:paddingTop="12dp"/>
+</LinearLayout></ScrollView>

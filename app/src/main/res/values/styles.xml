@@ -1,0 +1,1 @@
+<resources><style name="Theme.FirstSoundHelper" parent="Theme.Material3.DayNight.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:colorAccent">#315C4C</item><item name="android:navigationBarColor">#F7F5EF</item><item name="android:statusBarColor">#F7F5EF</item><item name="android:windowLightStatusBar">true</item></style></resources>

@@ -1,0 +1,8 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+torch>=2.4
+transformers>=4.48
+soundfile>=0.12
+numpy>=1.26
+g2p-en>=2.1.0

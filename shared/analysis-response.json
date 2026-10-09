@@ -1,0 +1,25 @@
+{
+  "sessionId": "uuid-created-on-android",
+  "recordingId": "uuid-created-on-android-before-recording-upload",
+  "observation": {
+    "observationId": "uuid-created-by-analysis-server",
+    "sessionId": "same-session-uuid",
+    "recordingId": "same-recording-uuid"
+  },
+  "transcript": "string",
+  "analysis": {
+    "status": "probabilistic",
+    "possibleInitialConsonantOmission": false,
+    "note": "not a diagnosis"
+  },
+  "candidates": [
+    {
+      "word": "cat",
+      "expectedPhonemes": "kæt",
+      "observedInitial": "æ",
+      "expectedInitial": "k",
+      "possibleInitialOmission": true,
+      "score": 0.0
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+FIRST SOUND HELPER v6 - GITHUB MAIN ROOT CHECK
+
+After uploading/extracting into the repository root, the GitHub Code page on branch main
+should show these items directly at the top level:
+
+.github/
+app/
+gradle/
+parent_pc_local/
+parent_pc_trial/
+server/
+shared/
+build.gradle
+gradle.properties
+gradlew
+gradlew.bat
+settings.gradle
+
+The workflow must be exactly:
+.github/workflows/build-apk.yml
+
+The Android module must be exactly:
+app/build.gradle
+
+settings.gradle must be at the repository root and include:
+include(":app")
+
+IMPORTANT:
+Do not upload this ZIP itself as one file to GitHub.
+Extract it first, then upload/push the CONTENTS to the repository root.
