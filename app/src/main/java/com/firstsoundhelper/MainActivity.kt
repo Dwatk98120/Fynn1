@@ -108,28 +108,19 @@ class MainActivity : AppCompatActivity() {
             text = "Live Speech"
             setOnClickListener { startLiveSpeechMode() }
         }
-
-        val savedRecordingsButton = Button(this@MainActivity)
-        savedRecordingsButton.text = "Saved Recordings"
-        savedRecordingsButton.setOnClickListener { showSavedRecordings() }
-        
         val phraseLibraryButton = Button(this@MainActivity)
         phraseLibraryButton.text = "Phrase Library"
         phraseLibraryButton.setOnClickListener { showPhraseLibrary() }
         val rootView = findViewById<ViewGroup>(android.R.id.content)
         findViewById<Button>(R.id.parentPcConnectionButton).setOnClickListener { showParentPcConnectionDialog() }
-        rootView.addView(savedRecordingsButton, ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ))
-
-        status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=findViewById(R.id.contextEdit)
+status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=findViewById(R.id.contextEdit)
         findViewById<Button>(R.id.recordButton).setOnClickListener {
             if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED)
                 permission.launch(Manifest.permission.RECORD_AUDIO) else startRecording()
         }
         findViewById<Button>(R.id.stopButton).setOnClickListener { stopRecording() }
         findViewById<Button>(R.id.analyzeButton).setOnClickListener { uploadForAnalysis() }
+        findViewById<Button>(R.id.savedRecordingsButton).setOnClickListener { showSavedRecordings() }
         findViewById<Button>(R.id.studentToolsButton).setOnClickListener { showStudentCommunicationTools() }
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }

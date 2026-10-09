@@ -13,6 +13,13 @@
 <Button android:id="@+id/communicationDictionaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧠 Communication Interpretation Tools" android:layout_marginTop="12dp"/>
 <Button android:id="@+id/studentToolsButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧩 Student Communication Tools" android:layout_marginTop="12dp"/>
 <Button android:id="@+id/analyzeButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Analyze speech" android:layout_marginTop="10dp"/>
+<Button
+    android:id="@+id/savedRecordingsButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Saved Recordings"
+    android:layout_marginTop="8dp"/>
+
 <TextView android:id="@+id/result" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Results will appear here." android:textSize="18sp" android:padding="12dp" android:layout_marginTop="12dp"/>
 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="The phoneme model provides speech evidence; it does not diagnose autism or a speech disorder. Results are suggestions for human confirmation." android:textColor="#676B70" android:textSize="13sp" android:paddingTop="12dp"/>
 </LinearLayout></ScrollView>
