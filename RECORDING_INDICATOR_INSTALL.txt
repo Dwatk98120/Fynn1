@@ -1,0 +1,4 @@
+The GREEN mic at top-right is Android’s microphone privacy indicator, not an app view. Android controls its location.
+The in-app recording panel is inside activity_main.xml, directly between recordButton and stopButton.
+After replacing the project in GitHub, confirm the APK build uses this commit, uninstall the old APK if needed (back up local app data first), then install the new APK.
+On the new version, MIC READY — indicator between buttons must be visible even before recording. If it is absent, you are running an older APK or a different build variant.

@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<android.view.View>(R.id.recordingPanel).visibility = android.view.View.VISIBLE
         if (!active) {
             findViewById<TextView>(R.id.recordingLabel).apply {
-                text = "● Ready to record"
+                text = "● MIC READY — indicator between buttons"
                 alpha = 1f
                 setTextColor(android.graphics.Color.DKGRAY)
             }
