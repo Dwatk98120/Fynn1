@@ -1031,6 +1031,34 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
     // ---------------- Live Speech ----------------
     private var liveSpeechRecognizer: SpeechRecognizer? = null
     private var liveListening = false
+    private val liveIndicatorHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var liveIndicatorBright = true
+    private val liveIndicatorFlash = object : Runnable {
+        override fun run() {
+            val indicator = findViewById<android.widget.TextView?>(R.id.liveStatusIndicator)
+            if (liveListening && indicator != null) {
+                liveIndicatorBright = !liveIndicatorBright
+                indicator.alpha = if (liveIndicatorBright) 1.0f else 0.28f
+                liveIndicatorHandler.postDelayed(this, 500)
+            }
+        }
+    }
+
+    private fun setLiveIndicator(active: Boolean, voiceDetected: Boolean = false) {
+        val indicator = findViewById<android.widget.TextView?>(R.id.liveStatusIndicator) ?: return
+        liveIndicatorHandler.removeCallbacks(liveIndicatorFlash)
+        if (active) {
+            indicator.visibility = android.view.View.VISIBLE
+            indicator.alpha = 1.0f
+            indicator.text = if (voiceDetected) "● LIVE — Voice detected" else "● LIVE — Listening"
+            liveIndicatorBright = true
+            liveIndicatorHandler.postDelayed(liveIndicatorFlash, 500)
+        } else {
+            indicator.alpha = 1.0f
+            indicator.visibility = android.view.View.GONE
+        }
+    }
+
     private val liveMissingSoundCounts = java.util.LinkedHashMap<String, Int>()
     private val liveCandidateWordCounts = java.util.LinkedHashMap<String, Int>()
     private var liveSessionStartMs = 0L
@@ -1051,6 +1079,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
         }
 
         liveListening = true
+        setLiveIndicator(active = true)
         liveSessionStartMs = System.currentTimeMillis()
         liveMissingSoundCounts.clear()
         liveCandidateWordCounts.clear()
@@ -1073,6 +1102,8 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
         liveSpeechRecognizer = recognizer
 
         if (recognizer == null) {
+            liveListening = false
+            setLiveIndicator(active = false)
             dialog.setMessage("Live speech recognition is not available on this device.")
             return
         }
@@ -1081,13 +1112,20 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
             override fun onReadyForSpeech(params: android.os.Bundle?) {
                 if (liveListening) dialog.setMessage("Listening…\n\nHeard: —\n\nPossible missing first sound: —\n\nSpeak naturally.")
             }
-            override fun onBeginningOfSpeech() {}
+            override fun onBeginningOfSpeech() {
+                if (liveListening) setLiveIndicator(active = true, voiceDetected = true)
+            }
             override fun onRmsChanged(rmsdB: Float) {
-                // Keep the UI responsive without exposing a technical meter.
+                if (liveListening) {
+                    setLiveIndicator(active = true, voiceDetected = rmsdB > 3.5f)
+                }
             }
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {
-                if (liveListening) restartLiveRecognizer()
+                if (liveListening) {
+                    setLiveIndicator(active = true, voiceDetected = false)
+                    restartLiveRecognizer()
+                }
             }
             override fun onError(error: Int) {
                 if (liveListening) {
@@ -1267,6 +1305,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); contextEdit=
     }
     private fun stopLiveSpeechMode(showSummary: Boolean = false) {
         liveListening = false
+        setLiveIndicator(active = false)
         try { liveSpeechRecognizer?.stopListening() } catch (_: Exception) {}
         try { liveSpeechRecognizer?.destroy() } catch (_: Exception) {}
         liveSpeechRecognizer = null

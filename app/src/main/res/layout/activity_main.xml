@@ -15,6 +15,19 @@
     android:text="🎙 Live Recording"
     android:layout_marginTop="8dp"/>
 
+<TextView
+    android:id="@+id/liveStatusIndicator"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="● LIVE — Listening"
+    android:textColor="#D32F2F"
+    android:textStyle="bold"
+    android:textSize="16sp"
+    android:gravity="center"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
+    android:visibility="gone"/>
+
 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Optional context" android:textStyle="bold" android:layout_marginTop="14dp"/>
 <EditText android:id="@+id/contextEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="I see a ___" android:minHeight="52dp"/>
 <Button android:id="@+id/pilotReadinessButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🛡️ Caregiver Setup &amp; Pilot Readiness" android:layout_marginTop="12dp"/>
