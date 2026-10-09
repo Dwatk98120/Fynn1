@@ -1,0 +1,11 @@
+# Copy the relevant setting into your machine-local Gradle properties.
+# Do NOT commit local.properties.
+#
+# Physical phone on the same Wi-Fi:
+# FIRST_SOUND_HELPER_API_URL=http://192.168.1.50:8787
+#
+# Android emulator:
+# FIRST_SOUND_HELPER_API_URL=http://10.0.2.2:8787
+#
+# Production:
+# FIRST_SOUND_HELPER_API_URL=https://api.example.com

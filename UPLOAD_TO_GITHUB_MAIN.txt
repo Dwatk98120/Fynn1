@@ -1,0 +1,28 @@
+FIRST SOUND HELPER v6 — GITHUB MAIN READY
+
+This ZIP is intentionally structured with the Android project at the ZIP root.
+
+IMPORTANT:
+GitHub Actions requires the workflow to be located at:
+.github/workflows/build-apk.yml
+
+That .github folder MUST be at the repository root on the main branch.
+It cannot be placed directly at the repository root as build-apk.yml, because
+GitHub Actions will not recognize it there.
+
+Expected repository root:
+.github/
+  workflows/
+    build-apk.yml
+app/
+gradle/
+server/
+parent_pc_local/
+build.gradle
+settings.gradle
+gradlew
+gradlew.bat
+...
+
+When uploading to GitHub, upload the CONTENTS of this ZIP to the root of main.
+Do not upload a single enclosing folder around these files.
