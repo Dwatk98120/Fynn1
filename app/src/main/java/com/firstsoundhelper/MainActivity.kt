@@ -929,7 +929,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 .setMessage("Heard:\n$recognized\n\nSaved phrase:\n${best.first}\n\nMatch: $percent%")
                 .setNegativeButton("Not the same", null)
                 .setPositiveButton("That's the phrase") { _, _ ->
-                    android.widget.Toast.makeText(this@MainActivity, "Phrase confirmed.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                    android.widget.Toast.makeText(this@MainActivity, "Phrase confirmed.", android.widget.Toast.LENGTH_SHORT).show()
                 }
                 .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
         }
@@ -1735,7 +1735,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     text = "Play"
                     setOnClickListener {
                         if (!playStudentWord(word)) {
-                            android.widget.Toast.makeText(this@MainActivity, "Could not play recording.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                            android.widget.Toast.makeText(this@MainActivity, "Could not play recording.", android.widget.Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -1779,7 +1779,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 wordBankRecorder = recorder
                 recordButton.text = "Stop Recording"
                 wordInput.isEnabled = false
-                android.widget.Toast.makeText(this@MainActivity, "Say “$word” once.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                android.widget.Toast.makeText(this@MainActivity, "Say “$word” once.", android.widget.Toast.LENGTH_SHORT).show()
 
                 recordButton.setOnClickListener {
                     try { wordBankRecorder?.stop() } catch (_: Exception) {}
@@ -1812,7 +1812,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             } catch (_: Exception) {
                 wordBankRecorder = null
                 file.delete()
-                android.widget.Toast.makeText(this@MainActivity, "Could not start recording.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                android.widget.Toast.makeText(this@MainActivity, "Could not start recording.", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -2758,7 +2758,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Save") { _, _ ->
                 prefs.edit().putString("caregiver_notes", note.text.toString()).apply()
-                Toast.makeText(this@MainActivity, "Notes saved on this device.", Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                Toast.makeText(this@MainActivity, "Notes saved on this device.", Toast.LENGTH_SHORT).show()
             }.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
@@ -2821,7 +2821,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setView(message)
             .setPositiveButton(if (offline) "Turn Offline Mode Off" else "Turn Offline Mode On") { _, _ ->
                 prefs.edit().putBoolean("offline_mode", !offline).apply()
-                Toast.makeText(this@MainActivity, "Offline Mode is now ${if (!offline) "ON" else "OFF"}.", Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                Toast.makeText(this@MainActivity, "Offline Mode is now ${if (!offline) "ON" else "OFF"}.", Toast.LENGTH_SHORT).show()
             }
             .setNeutralButton("Delete Local Student Data") { _, _ ->
                 android.app.AlertDialog.Builder(this@MainActivity)
@@ -2876,7 +2876,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setTitle("Communication Mode")
             .setSingleChoiceItems(modes, selected) { dialog, which ->
                 prefs.edit().putString("communication_mode", modes[which]).apply()
-                Toast.makeText(this@MainActivity, "Mode: ${modes[which]}", Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                Toast.makeText(this@MainActivity, "Mode: ${modes[which]}", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
             .setNegativeButton("Close", null)
