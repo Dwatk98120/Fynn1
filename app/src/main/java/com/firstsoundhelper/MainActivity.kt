@@ -210,6 +210,64 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             setTextColor(android.graphics.Color.parseColor("#6D4DB3"))
             isAllCaps = false
         }
+
+        dialog.window?.decorView?.post {
+            stylePopupTree(dialog.window?.decorView)
+            dialog.findViewById<android.widget.Button?>(android.R.id.button1)?.apply {
+                setTextColor(android.graphics.Color.parseColor("#FFFFFF"))
+                background = popupBackground("#6D4DB3", 16)
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }
+            dialog.findViewById<android.widget.Button?>(android.R.id.button2)?.apply {
+                setTextColor(android.graphics.Color.parseColor("#5C5965"))
+                background = popupBackground("#F3F1F6", 16)
+            }
+            dialog.findViewById<android.widget.Button?>(android.R.id.button3)?.apply {
+                setTextColor(android.graphics.Color.parseColor("#4D27A6"))
+                background = popupBackground("#F1ECFC", 16)
+            }
+        }
+    }
+
+
+    private fun stylePopupTree(view: android.view.View?) {
+        if (view == null) return
+
+        when (view) {
+            is android.widget.Button -> {
+                view.isAllCaps = false
+                view.textSize = 15f
+                view.minHeight = popupDp(54)
+                view.setPadding(popupDp(16), popupDp(9), popupDp(14), popupDp(9))
+                view.setTextColor(android.graphics.Color.parseColor("#4D27A6"))
+                view.background = popupBackground("#F1ECFC", 18)
+                view.setTypeface(view.typeface, android.graphics.Typeface.BOLD)
+            }
+
+            is android.widget.EditText -> {
+                view.textSize = 16f
+                view.setTextColor(android.graphics.Color.parseColor("#3F3B48"))
+                view.setHintTextColor(android.graphics.Color.parseColor("#88838F"))
+                view.background = popupBackground("#F7F4FD", 14)
+                view.setPadding(popupDp(14), popupDp(11), popupDp(14), popupDp(11))
+            }
+
+            is android.widget.TextView -> {
+                if (view.textSize >= 20f) {
+                    view.setTextColor(android.graphics.Color.parseColor("#21124D"))
+                    view.setTypeface(view.typeface, android.graphics.Typeface.BOLD)
+                } else {
+                    view.setTextColor(android.graphics.Color.parseColor("#53505D"))
+                    view.setLineSpacing(0f, 1.08f)
+                }
+            }
+        }
+
+        if (view is android.view.ViewGroup) {
+            for (i in 0 until view.childCount) {
+                stylePopupTree(view.getChildAt(i))
+            }
+        }
     }
 
     private fun popupHeader(title: String, subtitle: String? = null, icon: String = "✨"): android.widget.LinearLayout =
@@ -329,6 +387,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .create()
         dialog.setOnShowListener { styleUnifiedDialog(dialog) }
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun uploadForAnalysis() {
@@ -683,6 +742,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
         dialog.setContentView(scroll)
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun speakSuggestedWord(word: String) {
@@ -757,6 +817,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         scroll.addView(list)
         dialog.setContentView(scroll)
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun extractSuggestedWords(json: String): List<Pair<String, String>> {
@@ -868,9 +929,9 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 .setMessage("Heard:\n$recognized\n\nSaved phrase:\n${best.first}\n\nMatch: $percent%")
                 .setNegativeButton("Not the same", null)
                 .setPositiveButton("That's the phrase") { _, _ ->
-                    android.widget.Toast.makeText(this@MainActivity, "Phrase confirmed.", android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast.makeText(this@MainActivity, "Phrase confirmed.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                 }
-                .show()
+                .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
         }
     }
 
@@ -950,6 +1011,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         scroll.addView(list)
         dialog.setContentView(scroll)
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showConsonantPatterns() {
@@ -1053,6 +1115,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         scroll.addView(list)
         dialog.setContentView(scroll)
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun studentDir(): File {
@@ -1125,7 +1188,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setNegativeButton("Cancel",null)
             .setPositiveButton("Save") { _,_ ->
                 saveStudentProfile(name.text.toString(),id.text.toString(),notes.text.toString())
-            }.show()
+            }.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
     override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?) {
@@ -1219,7 +1282,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setTitle("Report created")
             .setMessage("Saved to the app's private report storage:\n${file.name}")
             .setPositiveButton("OK",null)
-            .show()
+            .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
     private fun showStudentTools() {
@@ -1227,7 +1290,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setTitle("Student & Reports")
             .setItems(arrayOf("Student Profile / Photo","Create Printable Report")) { _,which ->
                 if(which==0) showStudentProfile() else buildStudentReportPdf()
-            }.show()
+            }.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
     // ---------------- Live Speech ----------------
@@ -1298,7 +1361,8 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setOnDismissListener { if (liveListening) stopLiveSpeechMode() }
             .create()
         dialog.setCanceledOnTouchOutside(false)
-        dialog.show()
+        dialog.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+        styleUnifiedDialog(dialog)
 
         val messageView = dialog.findViewById<android.widget.TextView>(android.R.id.message)
         val recognizer = if (SpeechRecognizer.isRecognitionAvailable(this)) SpeechRecognizer.createSpeechRecognizer(this) else null
@@ -1570,7 +1634,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     this,
                     if (ok) "Session summary saved." else "Could not save session summary.",
                     android.widget.Toast.LENGTH_SHORT
-                ).show()
+                ).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                 dialog.dismiss()
             }
 
@@ -1580,7 +1644,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                         this,
                         "No corrected sentence is available yet.",
                         android.widget.Toast.LENGTH_SHORT
-                    ).show()
+                    ).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                 } else {
                     val correctedWords = buildCorrectedSentenceWords(liveLastHeard, sounds, words)
                     val spliced = playSplicedSentence(correctedWords)
@@ -1590,12 +1654,13 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                             this,
                             "Student word recordings were incomplete, so the app used TTS.",
                             android.widget.Toast.LENGTH_SHORT
-                        ).show()
+                        ).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                     }
                 }
             }
         }
-        dialog.show()
+        dialog.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+        styleUnifiedDialog(dialog)
     }
 
 
@@ -1670,7 +1735,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     text = "Play"
                     setOnClickListener {
                         if (!playStudentWord(word)) {
-                            android.widget.Toast.makeText(this@MainActivity, "Could not play recording.", android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(this@MainActivity, "Could not play recording.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                         }
                     }
                 }
@@ -1714,7 +1779,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 wordBankRecorder = recorder
                 recordButton.text = "Stop Recording"
                 wordInput.isEnabled = false
-                android.widget.Toast.makeText(this@MainActivity, "Say “$word” once.", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(this@MainActivity, "Say “$word” once.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
 
                 recordButton.setOnClickListener {
                     try { wordBankRecorder?.stop() } catch (_: Exception) {}
@@ -1747,7 +1812,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             } catch (_: Exception) {
                 wordBankRecorder = null
                 file.delete()
-                android.widget.Toast.makeText(this@MainActivity, "Could not start recording.", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(this@MainActivity, "Could not start recording.", android.widget.Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
             }
         }
 
@@ -1758,7 +1823,8 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             wordBankRecorder = null
             wordBankDialog = null
         }
-        dialog.show()
+        dialog.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+        styleUnifiedDialog(dialog)
     }
 
     private fun startWordBankRecording(
@@ -2362,6 +2428,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         )
         dialog.show()
+        styleUnifiedDialog(dialog)
         dialog.window?.setLayout(
             (resources.displayMetrics.widthPixels * 0.94).toInt(),
             (resources.displayMetrics.heightPixels * 0.88).toInt()
@@ -2504,6 +2571,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         render()
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showPictureVoiceChoices() {
@@ -2535,6 +2603,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(grid)
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showTryAgainPractice() {
@@ -2575,6 +2644,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(Button(this@MainActivity).apply { text = "Done"; setOnClickListener { dialog.dismiss() } })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showChoiceBoard() {
@@ -2602,6 +2672,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(grid)
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showQuickCommunication() {
@@ -2630,6 +2701,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         }
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showVisualProgress() {
@@ -2670,6 +2742,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showSupportNotes() {
@@ -2685,8 +2758,8 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Save") { _, _ ->
                 prefs.edit().putString("caregiver_notes", note.text.toString()).apply()
-                Toast.makeText(this@MainActivity, "Notes saved on this device.", Toast.LENGTH_SHORT).show()
-            }.show()
+                Toast.makeText(this@MainActivity, "Notes saved on this device.", Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+            }.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
     private fun showCustomVocabulary() {
@@ -2733,6 +2806,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         render()
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showPrivacyControls() {
@@ -2747,7 +2821,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setView(message)
             .setPositiveButton(if (offline) "Turn Offline Mode Off" else "Turn Offline Mode On") { _, _ ->
                 prefs.edit().putBoolean("offline_mode", !offline).apply()
-                Toast.makeText(this@MainActivity, "Offline Mode is now ${if (!offline) "ON" else "OFF"}.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Offline Mode is now ${if (!offline) "ON" else "OFF"}.", Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
             }
             .setNeutralButton("Delete Local Student Data") { _, _ ->
                 android.app.AlertDialog.Builder(this@MainActivity)
@@ -2755,10 +2829,10 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     .setMessage("This removes saved recordings, word-bank audio, phrases, favorites, custom vocabulary, notes, and live-session summaries from this device.")
                     .setNegativeButton("Cancel", null)
                     .setPositiveButton("Delete") { _, _ -> deleteAllLocalStudentData() }
-                    .show()
+                    .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
             }
             .setNegativeButton("Close", null)
-        builder.show()
+        builder.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
     private fun deleteAllLocalStudentData() {
@@ -2802,11 +2876,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setTitle("Communication Mode")
             .setSingleChoiceItems(modes, selected) { dialog, which ->
                 prefs.edit().putString("communication_mode", modes[which]).apply()
-                Toast.makeText(this@MainActivity, "Mode: ${modes[which]}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Mode: ${modes[which]}", Toast.LENGTH_SHORT).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                 dialog.dismiss()
             }
             .setNegativeButton("Close", null)
-            .show()
+            .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
 
@@ -2929,6 +3003,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(results)
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showPersonalPronunciationProfile() {
@@ -2968,6 +3043,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showSoundPatternHistory() {
@@ -2995,6 +3071,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         }
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showCandidateMeanings() {
@@ -3034,6 +3111,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(grid)
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showContextSoundMatching() {
@@ -3082,6 +3160,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(results)
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showCaregiverConfirmation() {
@@ -3120,6 +3199,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun recordInterpretation(
@@ -3179,6 +3259,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showPictureCandidates() {
@@ -3213,6 +3294,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(grid)
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showGestureNotes() {
@@ -3253,6 +3335,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showNotSureMode() {
@@ -3299,6 +3382,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
 
@@ -3414,6 +3498,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
+        styleUnifiedDialog(dialog)
     }
 
     private fun showCaregiverSetupAndReadiness() {
