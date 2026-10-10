@@ -1634,7 +1634,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     this,
                     if (ok) "Session summary saved." else "Could not save session summary.",
                     android.widget.Toast.LENGTH_SHORT
-                ).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                ).show()
                 dialog.dismiss()
             }
 
@@ -1644,7 +1644,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                         this,
                         "No corrected sentence is available yet.",
                         android.widget.Toast.LENGTH_SHORT
-                    ).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                    ).show()
                 } else {
                     val correctedWords = buildCorrectedSentenceWords(liveLastHeard, sounds, words)
                     val spliced = playSplicedSentence(correctedWords)
@@ -1654,7 +1654,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                             this,
                             "Student word recordings were incomplete, so the app used TTS.",
                             android.widget.Toast.LENGTH_SHORT
-                        ).create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                        ).show()
                     }
                 }
             }
