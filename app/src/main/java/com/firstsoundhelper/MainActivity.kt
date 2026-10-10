@@ -99,6 +99,20 @@ class MainActivity : AppCompatActivity() {
         if (it) startRecording() else status.text = "Microphone permission denied."
     }
 
+    private val bluetoothPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants.values.all { it }) {
+            showBluetoothParentPcDialog()
+        } else {
+            showInfoPopup(
+                "Bluetooth permission needed",
+                "Allow Nearby devices / Bluetooth permission so First Sound Helper can find and remember the paired Parent PC.",
+                "📶"
+            )
+        }
+    }
+
     override fun onCreate(b: Bundle?) {
         super.onCreate(b); setContentView(R.layout.activity_main)
         
@@ -348,6 +362,35 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             })
         }
 
+    private fun popupEmptyStateCard(
+        title: String,
+        body: String,
+        icon: String = "ℹ️"
+    ): android.widget.LinearLayout = popupInfoCard(title, body, icon).apply {
+        val lp = android.widget.LinearLayout.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        lp.setMargins(0, popupDp(8), 0, popupDp(10))
+        layoutParams = lp
+    }
+
+    private fun showInfoPopup(title: String, message: String, icon: String = "ℹ️") {
+        val content = android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(14))
+        }
+        content.addView(popupHeader(title, null, icon))
+        content.addView(popupEmptyStateCard("Information", message, icon))
+
+        val dialog = android.app.Dialog(this@MainActivity)
+        content.addView(popupActionButton("Close", null, "✓", true) { dialog.dismiss() })
+        dialog.setContentView(android.widget.ScrollView(this@MainActivity).apply { addView(content) })
+        dialog.setCanceledOnTouchOutside(true)
+        dialog.show()
+        styleUnifiedDialog(dialog)
+    }
+
     private fun showAnalyzeContextDialog() {
         val box = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
@@ -472,6 +515,140 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
 
+    private fun bluetoothPrefs() =
+        getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
+
+    private fun selectedBluetoothParentPcSummary(): String {
+        val prefs = bluetoothPrefs()
+        val name = prefs.getString("bluetooth_pc_name", "") ?: ""
+        val address = prefs.getString("bluetooth_pc_address", "") ?: ""
+        return if (name.isBlank() && address.isBlank()) {
+            "No Parent PC has been selected over Bluetooth yet."
+        } else {
+            "Paired Parent PC: ${name.ifBlank { "Bluetooth device" }}${if (address.isNotBlank()) "\n$address" else ""}"
+        }
+    }
+
+    private fun bluetoothAdapterOrNull(): android.bluetooth.BluetoothAdapter? {
+        val manager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+        return manager?.adapter
+    }
+
+    private fun bluetoothPermissionsGranted(): Boolean {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return true
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun openBluetoothParentPcSetup() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && !bluetoothPermissionsGranted()) {
+            bluetoothPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                )
+            )
+        } else {
+            showBluetoothParentPcDialog()
+        }
+    }
+
+    private fun showBluetoothParentPcDialog() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && !bluetoothPermissionsGranted()) {
+            openBluetoothParentPcSetup()
+            return
+        }
+
+        val content = LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(14))
+        }
+        content.addView(popupHeader(
+            "Bluetooth Parent PC",
+            "Pair and remember the Parent PC. Bluetooth identifies the trusted computer; Wi-Fi/LAN continues to carry recordings and analysis data.",
+            "📶"
+        ))
+
+        val adapter = bluetoothAdapterOrNull()
+        if (adapter == null) {
+            content.addView(popupEmptyStateCard(
+                "Bluetooth unavailable",
+                "This Android device does not report a usable Bluetooth adapter.",
+                "⚠️"
+            ))
+        } else if (!adapter.isEnabled) {
+            content.addView(popupEmptyStateCard(
+                "Bluetooth is turned off",
+                "Turn Bluetooth on, pair the Parent PC in Android Bluetooth settings, then return here and refresh the paired-device list.",
+                "📴"
+            ))
+        } else {
+            val pairedDevices = try {
+                adapter.bondedDevices?.toList()?.sortedBy { device ->
+                    try { device.name ?: device.address } catch (_: SecurityException) { "" }
+                } ?: emptyList()
+            } catch (_: SecurityException) {
+                emptyList()
+            }
+
+            if (pairedDevices.isEmpty()) {
+                content.addView(popupEmptyStateCard(
+                    "No paired Bluetooth devices",
+                    "Open Bluetooth settings, pair the Parent PC, then return here and tap Refresh paired devices.",
+                    "🔎"
+                ))
+            } else {
+                content.addView(popupInfoCard(
+                    "Choose the Parent PC",
+                    "Select the Windows computer you want First Sound Helper to remember.",
+                    "✓"
+                ))
+                pairedDevices.forEach { device ->
+                    val name = try { device.name ?: "Bluetooth device" } catch (_: SecurityException) { "Bluetooth device" }
+                    val address = try { device.address ?: "" } catch (_: SecurityException) { "" }
+                    content.addView(popupActionButton(
+                        name,
+                        if (address.isBlank()) "Paired device" else address,
+                        "🖥️"
+                    ) {
+                        bluetoothPrefs().edit()
+                            .putString("bluetooth_pc_name", name)
+                            .putString("bluetooth_pc_address", address)
+                            .apply()
+                        status.text = "Bluetooth Parent PC selected: $name"
+                        showInfoPopup(
+                            "Parent PC remembered",
+                            "$name is now the trusted Bluetooth Parent PC. Keep the phone and PC on the same Wi-Fi/LAN for speech-analysis transfers.",
+                            "✓"
+                        )
+                    })
+                }
+            }
+        }
+
+        val dialog = android.app.Dialog(this@MainActivity)
+        content.addView(popupActionButton(
+            "Open Bluetooth Settings",
+            "Pair a new Parent PC or turn Bluetooth on.",
+            "⚙️"
+        ) {
+            startActivity(android.content.Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS))
+        })
+        content.addView(popupActionButton(
+            "Refresh paired devices",
+            "Reload the paired-device list after returning from Bluetooth settings.",
+            "↻"
+        ) {
+            dialog.dismiss()
+            showBluetoothParentPcDialog()
+        })
+        content.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
+
+        dialog.setContentView(android.widget.ScrollView(this@MainActivity).apply { addView(content) })
+        dialog.show()
+        styleUnifiedDialog(dialog)
+    }
+
     private fun showParentPcConnectionDialog() {
         val content = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
@@ -496,6 +673,25 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             lp.setMargins(0, popupDp(5), 0, popupDp(12))
             layoutParams = lp
         })
+
+        content.addView(popupInfoCard(
+            "Bluetooth pairing",
+            selectedBluetoothParentPcSummary(),
+            "📶"
+        ).apply {
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.setMargins(0, 0, 0, popupDp(8))
+            layoutParams = lp
+        })
+
+        content.addView(popupActionButton(
+            "Bluetooth Setup",
+            "Pair or choose the Parent PC and remember it for future sessions.",
+            "📶"
+        ) { openBluetoothParentPcSetup() })
 
         val label = TextView(this@MainActivity).apply {
             text = "Parent PC address"
@@ -653,7 +849,12 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val scroll = ScrollView(this@MainActivity)
         val list = LinearLayout(this@MainActivity)
         list.orientation = LinearLayout.VERTICAL
-        list.setPadding(32, 24, 32, 24)
+        list.setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(16))
+        list.addView(popupHeader(
+            "Saved Recordings",
+            "Review recordings and their saved analysis.",
+            "🎙️"
+        ))
         scroll.addView(list)
 
         val dir = File(filesDir, "dialogue_history")
@@ -662,10 +863,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         } else emptyList()
 
         if (sessions.isEmpty()) {
-            val empty = TextView(this@MainActivity)
-            empty.text = "No saved recordings yet."
-            empty.textSize = 18f
-            list.addView(empty)
+            list.addView(popupEmptyStateCard(
+                "No saved recordings yet",
+                "Record and analyze speech first. Saved sessions will appear here for review.",
+                "🎙️"
+            ))
         } else {
             sessions.forEach { session ->
                 val title = TextView(this@MainActivity)
@@ -700,7 +902,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                         .setTitle("Analysis — ${session.name}")
                         .setMessage(text)
                         .setPositiveButton("Close", null)
-                        .show()
+                        .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                 }
 
                 val delete = Button(this@MainActivity)
@@ -715,7 +917,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                             dialog.dismiss()
                             showSavedRecordings()
                         }
-                        .show()
+                        .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
                 }
 
                 row.addView(play, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
@@ -735,10 +937,12 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                         if (dir.exists()) dir.deleteRecursively()
                         dialog.dismiss()
                     }
-                    .show()
+                    .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
             }
             list.addView(deleteAll)
         }
+
+        list.addView(popupActionButton("Close", null, "✓", true) { dialog.dismiss() })
 
         dialog.setContentView(scroll)
         dialog.show()
@@ -945,10 +1149,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
         val phrases = loadSavedPhrases()
         if (phrases.isEmpty()) {
-            val empty = android.widget.TextView(this@MainActivity)
-            empty.text = "No saved phrases yet."
-            empty.textSize = 18f
-            list.addView(empty)
+            list.addView(popupEmptyStateCard(
+                "No saved phrases yet",
+                "Add an important phrase to make repeated communication faster and easier.",
+                "💬"
+            ))
         } else {
             phrases.forEach { phrase ->
                 val row = android.widget.LinearLayout(this@MainActivity)
@@ -990,7 +1195,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     addSavedPhrase(input.text.toString())
                     dialog.dismiss()
                     showPhraseLibrary()
-                }.show()
+                }.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
         }
         list.addView(add)
 
@@ -1004,7 +1209,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 .setPositiveButton("Delete All") { _, _ ->
                     phraseFile().delete()
                     dialog.dismiss()
-                }.show()
+                }.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
         }
         list.addView(clear)
 
@@ -1071,10 +1276,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(soundTitle)
 
         if (topSounds.isEmpty()) {
-            val empty = android.widget.TextView(this@MainActivity)
-            empty.text = "No possible omissions have been recorded yet."
-            empty.setPadding(0,12,0,24)
-            list.addView(empty)
+            list.addView(popupEmptyStateCard(
+                "No omission patterns yet",
+                "Possible consonant-omission patterns will appear after analyzed recordings provide enough evidence.",
+                "🔤"
+            ))
         } else {
             topSounds.forEachIndexed { i, e ->
                 val row = android.widget.TextView(this@MainActivity)
@@ -1092,9 +1298,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         list.addView(wordTitle)
 
         if (topWords.isEmpty()) {
-            val empty = android.widget.TextView(this@MainActivity)
-            empty.text = "No repeated words yet."
-            list.addView(empty)
+            list.addView(popupEmptyStateCard(
+                "No repeated words yet",
+                "Repeated word patterns will appear here as more speech samples are analyzed.",
+                "📈"
+            ))
         } else {
             topWords.forEachIndexed { i, e ->
                 val row = android.widget.TextView(this@MainActivity)
