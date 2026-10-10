@@ -1361,7 +1361,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .setOnDismissListener { if (liveListening) stopLiveSpeechMode() }
             .create()
         dialog.setCanceledOnTouchOutside(false)
-        dialog.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+        dialog.show()
         styleUnifiedDialog(dialog)
 
         val messageView = dialog.findViewById<android.widget.TextView>(android.R.id.message)
@@ -1659,7 +1659,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 }
             }
         }
-        dialog.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+        dialog.show()
         styleUnifiedDialog(dialog)
     }
 
@@ -1823,7 +1823,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             wordBankRecorder = null
             wordBankDialog = null
         }
-        dialog.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+        dialog.show()
         styleUnifiedDialog(dialog)
     }
 
