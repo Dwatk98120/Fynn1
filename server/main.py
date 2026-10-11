@@ -1,9 +1,11 @@
 try:
     from server.recording_quality import analyze_wav_quality
     from server.phoneme_substitution import analyze_substitutions
+    from server.phoneme_analysis import summarize_observed_phonemes
 except ImportError:
     from recording_quality import analyze_wav_quality
     from phoneme_substitution import analyze_substitutions
+    from phoneme_analysis import summarize_observed_phonemes
 
 import json
 import io, os, re, uuid, json
@@ -37,16 +39,28 @@ def load_models():
         g2p=G2p()
 
 def decode_ctc(logits):
-    ids=torch.argmax(logits,dim=-1).detach().cpu().tolist()[0]
+    text, _, _ = decode_ctc_with_confidence(logits)
+    return text
+
+def decode_ctc_with_confidence(logits):
+    probs=torch.softmax(logits,dim=-1)
+    best_probs,best_ids=torch.max(probs,dim=-1)
+    ids=best_ids.detach().cpu().tolist()[0]
+    confs=best_probs.detach().cpu().tolist()[0]
     vocab=model.config.id2label
-    out=[]; prev=None
-    for i in ids:
-        if i==prev: continue
-        prev=i
-        sym=vocab.get(i,"")
-        if sym in ("[PAD]","[UNK]"): continue
-        out.append(sym)
-    return "".join(out).replace("|"," ").strip()
+    out=[]; token_conf=[]; prev=None; run_conf=[]
+    def flush(prev_id, values):
+        if prev_id is None or not values: return
+        sym=vocab.get(prev_id,"")
+        if sym in ("[PAD]","[UNK]","|",""): return
+        out.append(sym); token_conf.append(float(sum(values)/len(values)))
+    for i,c in zip(ids,confs):
+        if i==prev:
+            run_conf.append(c); continue
+        flush(prev,run_conf); prev=i; run_conf=[c]
+    flush(prev,run_conf)
+    raw_text="".join(out).replace("|"," " ).strip()
+    return raw_text,out,token_conf
 
 ARPABET_TO_IPA={
 "AA":"ɑ","AE":"æ","AH":"ʌ","AO":"ɔ","AW":"aʊ","AY":"aɪ","B":"b","CH":"tʃ","D":"d","DH":"ð",
@@ -122,8 +136,17 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
         with torch.inference_mode():
             inputs=processor(samples,sampling_rate=16000,return_tensors="pt")
             logits=model(inputs.input_values.to(DEVICE)).logits
-        observed=decode_ctc(logits)
+        observed, raw_phoneme_tokens, raw_phoneme_confidences=decode_ctc_with_confidence(logits)
         observed_ipa=normalize_ipa(observed)
+        observed_tokens=tokenize_ipa(observed_ipa)
+        if len(raw_phoneme_confidences)==len(observed_tokens):
+            observed_confidences=raw_phoneme_confidences
+        elif observed_tokens:
+            fallback=sum(raw_phoneme_confidences)/len(raw_phoneme_confidences) if raw_phoneme_confidences else 0.65
+            observed_confidences=[fallback for _ in observed_tokens]
+        else:
+            observed_confidences=[]
+        phoneme_analysis=summarize_observed_phonemes(observed_tokens,observed_confidences)
 
         candidates=[]
         ctx=(context or "").lower()
@@ -165,6 +188,12 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
 
         candidates=sorted(candidates,key=lambda x:(x.get("confidence",0),x.get("score",0)),reverse=True)[:8]
         best=candidates[0] if candidates else None
+        top_phoneme_comparison=None
+        if best:
+            expected_tokens=tokenize_ipa(best.get("expectedPhonemes",""))
+            learned_patterns=profile.get("patternHistory",{}) if isinstance(profile,dict) else {}
+            top_phoneme_comparison=analyze_substitutions(expected_tokens,observed_tokens,learned_patterns=learned_patterns,observed_confidences=observed_confidences)
+            best["phonemeComparison"]=top_phoneme_comparison
         overall=best.get("confidence",0.0) if best else 0.0
         uncertainty="low" if overall>=0.85 else ("moderate" if overall>=0.60 else "high")
 
@@ -174,7 +203,7 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
         recording_id = (recording_id or "").strip() or str(uuid.uuid4())
         observation_id=str(uuid.uuid4())
         created_at=datetime.now(timezone.utc).isoformat()
-        raw_evidence={"acoustic":acoustic,"temporal":temporal}
+        raw_evidence={"acoustic":acoustic,"temporal":temporal,"phonemeConfidence":phoneme_analysis}
         observation=immutable_observation({
             "observationId":observation_id,
             "sessionId":session_id,
@@ -207,6 +236,8 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
             "recordingId":recording_id,
             "observation":observation,
             "transcript":observed,
+            "phonemeAnalysis":phoneme_analysis,
+            "phonemeComparison":top_phoneme_comparison,
             "analysis":{
                 "status":"probabilistic",
                 "observationPolicy":"IMMUTABLE: learning layers may annotate, but may not rewrite transcript, observed phonemes, raw evidence, or audio features.",
@@ -214,6 +245,9 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
                 "possibleFinalConsonantOmission":any(c["possibleFinalOmission"] for c in candidates),
                 "overallConfidence":overall,
                 "uncertaintyBand":uncertainty,
+                "phonemeConfidence":phoneme_analysis.get("overallPhonemeConfidence",0.0),
+                "uncertainPhonemeCount":phoneme_analysis.get("uncertainCount",0),
+                "hasUncertainOrDistortedSounds":phoneme_analysis.get("uncertainCount",0) > 0,
                 "evidence":{
                     "acoustic":acoustic,
                     "temporal":temporal
@@ -283,6 +317,7 @@ def enrich_analysis_result(
     expected_phonemes=None,
     observed_phonemes=None,
     learned_patterns=None,
+    observed_confidences=None,
 ):
     """
     Attach recording-quality and phoneme-change evidence without rewriting
@@ -299,6 +334,7 @@ def enrich_analysis_result(
             expected_phonemes,
             observed_phonemes,
             learned_patterns=learned_patterns or {},
+            observed_confidences=observed_confidences or [],
         )
 
     return result

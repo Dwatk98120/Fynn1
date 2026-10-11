@@ -210,6 +210,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun formatExpandedPhonemeAnalysisForResult(root: org.json.JSONObject): String? {
+        val analysis = root.optJSONObject("phonemeAnalysis") ?: return null
+        val lines = mutableListOf<String>()
+        val confidence = analysis.optDouble("overallPhonemeConfidence", -1.0)
+        val band = analysis.optString("confidenceBand", "").replace("_", " ")
+        if (confidence >= 0.0) {
+            lines += "Phoneme confidence: ${(confidence * 100.0).toInt()}%" + if (band.isNotBlank()) " ($band)" else ""
+        }
+        val uncertain = analysis.optJSONArray("uncertainOrDistorted")
+        if (uncertain != null && uncertain.length() > 0) {
+            lines += "Uncertain / distorted sounds:"
+            for (i in 0 until uncertain.length()) {
+                val item = uncertain.optJSONObject(i) ?: continue
+                val phoneme = item.optString("phoneme", "?")
+                val itemConfidence = item.optDouble("confidence", -1.0)
+                val clarity = item.optString("clarity", "uncertain").replace("_", " ")
+                lines += if (itemConfidence >= 0.0) "• /$phoneme/ — ${(itemConfidence * 100.0).toInt()}% ($clarity)" else "• /$phoneme/ — $clarity"
+            }
+        }
+        return if (lines.isEmpty()) null else lines.joinToString("\
+")
+    }
+
     private fun formatPhonemeComparisonForResult(root: org.json.JSONObject): String? {
         val comparison = root.optJSONObject("phonemeComparison") ?: return null
         val substitutions = comparison.optJSONArray("substitutions")
@@ -226,7 +249,9 @@ class MainActivity : AppCompatActivity() {
                 val observed = item.optString("observed", "?")
                 val position = item.optString("position", "unknown")
                 val learned = item.optBoolean("knownSpeakerPattern", false)
-                lines += "• /$expected/ → /$observed/ ($position)" +
+                val soundConfidence = item.optDouble("observedConfidence", -1.0)
+                val confidenceText = if (soundConfidence >= 0.0) " — ${(soundConfidence * 100.0).toInt()}% sound confidence" else ""
+                lines += "• /$expected/ → /$observed/ ($position)" + confidenceText +
                     if (learned) " — known speaker pattern" else ""
             }
         }

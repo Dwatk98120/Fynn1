@@ -28,3 +28,7 @@ The full-station launcher starts the local API, the Bluetooth helper when alread
 
 ## Current scope
 This phase creates the direct recording workflow and sends recordings through the same analysis endpoint used by Android. Caregiver approval, richer recording history, and dedicated Parent PC learning-center integration can be expanded in a later phase.
+
+
+## Caregiver Review + Recording History
+See `CAREGIVER_REVIEW_AND_HISTORY.md` for the expanded approval and history workflow.
