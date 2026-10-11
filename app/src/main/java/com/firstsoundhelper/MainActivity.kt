@@ -956,6 +956,77 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         dialog.show()
     }
 
+
+    private fun showParentPcPairingWizard() {
+        val savedName = bluetoothPrefs().getString("bluetooth_pc_name", "") ?: ""
+        val savedAddress = bluetoothPrefs().getString("bluetooth_pc_address", "") ?: ""
+        val savedConnected = bluetoothHandshakePrefs.getBoolean("parent_pc_connected", false)
+
+        val content = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(22), popupDp(12), popupDp(22), popupDp(12))
+        }
+
+        content.addView(popupHeader(
+            "Connect to Parent PC",
+            "The app will handle Bluetooth discovery and the Wi-Fi/LAN connection automatically.",
+            "🔗"
+        ))
+
+        val statusText = when {
+            savedConnected -> "Connected to ${if (savedName.isBlank()) "Parent PC" else savedName}"
+            savedAddress.isNotBlank() -> "Saved Parent PC: ${if (savedName.isBlank()) savedAddress else savedName}"
+            else -> "No Parent PC paired yet"
+        }
+        content.addView(popupInfoCard(
+            "Connection status",
+            statusText
+        ))
+
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setView(content)
+            .create()
+
+        content.addView(popupActionButton(
+            if (savedAddress.isBlank()) "Find Parent PC" else "Connect Now",
+            if (savedAddress.isBlank())
+                "Choose your Parent PC once. The app will remember it."
+            else
+                "Use the saved Parent PC and connect automatically.",
+            if (savedAddress.isBlank()) "🔍" else "✓"
+        ) {
+            dialog.dismiss()
+            if (savedAddress.isBlank()) {
+                openBluetoothParentPcSetup()
+            } else {
+                connectTrustedParentPcBluetooth()
+            }
+        })
+
+        content.addView(popupActionButton(
+            "Choose a Different PC",
+            "Open the paired-device list and select another Parent PC.",
+            "💻"
+        ) {
+            dialog.dismiss()
+            openBluetoothParentPcSetup()
+        })
+
+        content.addView(popupActionButton(
+            "Check Connection",
+            "Test the saved Parent PC over the local network.",
+            "↻"
+        ) {
+            dialog.dismiss()
+            checkSavedParentPcConnection(silent = false)
+        })
+
+        content.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
+
+        dialog.setOnShowListener { styleUnifiedDialog(dialog) }
+        dialog.show()
+    }
+
     private fun showBluetoothParentPcDialog() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && !bluetoothPermissionsGranted()) {
             openBluetoothParentPcSetup()
@@ -1082,7 +1153,16 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(10))
         }
 
-        content.addView(popupHeader(
+                content.addView(popupActionButton(
+            "Easy Connect",
+            "Find, remember, and reconnect to the Parent PC automatically.",
+            "🔗"
+        ) {
+            dialog.dismiss()
+            showParentPcPairingWizard()
+        })
+
+content.addView(popupHeader(
             "Parent PC Connection",
             "Connect this phone to the Parent PC for local speech analysis and learning.",
             "🖥️"
