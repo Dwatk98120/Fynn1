@@ -252,6 +252,49 @@ class DirectRecorder(tk.Tk):
                 else:
                     lines.append(f"{i}. {item}")
 
+
+        quality = result.get("recordingQuality") or {}
+        if isinstance(quality, dict) and quality:
+            score = quality.get("score")
+            label = quality.get("label", "")
+            usable = quality.get("usable")
+            if isinstance(score, (int, float)):
+                lines.append(f"\nRecording quality: {int(score * 100)}% ({label})")
+            if usable is False:
+                issues = quality.get("issues") or []
+                if issues:
+                    lines.append("Quality issues: " + ", ".join(str(x).replace("_", " ") for x in issues))
+
+        comparison = result.get("phonemeComparison") or {}
+        if isinstance(comparison, dict) and comparison:
+            substitutions = comparison.get("substitutions") or []
+            deletions = comparison.get("deletions") or []
+            insertions = comparison.get("insertions") or []
+
+            if substitutions:
+                lines.append("\nChanged sounds:")
+                for item in substitutions:
+                    if isinstance(item, dict):
+                        lines.append(
+                            f"• /{item.get('expected','?')}/ → /{item.get('observed','?')}/ "
+                            f"({item.get('position','unknown')})"
+                        )
+
+            if deletions:
+                lines.append("\nDropped sounds:")
+                for item in deletions:
+                    if isinstance(item, dict):
+                        lines.append(
+                            f"• /{item.get('expected','?')}/ dropped "
+                            f"({item.get('position','unknown')})"
+                        )
+
+            if insertions:
+                lines.append("\nInserted sounds:")
+                for item in insertions:
+                    if isinstance(item, dict):
+                        lines.append(f"• extra /{item.get('observed','?')}/")
+
         if not lines:
             lines.append(json.dumps(result, indent=2))
 

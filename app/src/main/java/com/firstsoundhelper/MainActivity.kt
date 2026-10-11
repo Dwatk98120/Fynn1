@@ -187,6 +187,72 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    
+    private fun formatRecordingQualityForResult(root: org.json.JSONObject): String? {
+        val quality = root.optJSONObject("recordingQuality") ?: return null
+        val score = quality.optDouble("score", -1.0)
+        val label = quality.optString("label", "")
+        val usable = quality.optBoolean("usable", false)
+        val issues = quality.optJSONArray("issues")
+
+        val percent = if (score >= 0.0) (score * 100.0).toInt() else -1
+        val issueText = if (issues != null && issues.length() > 0) {
+            (0 until issues.length())
+                .joinToString(", ") { issues.optString(it).replace("_", " ") }
+        } else ""
+
+        return buildString {
+            append("Recording quality: ")
+            if (percent >= 0) append("$percent% ")
+            if (label.isNotBlank()) append("($label)")
+            append(if (usable) " — usable" else " — review recording")
+            if (issueText.isNotBlank()) append("\nIssues: $issueText")
+        }
+    }
+
+    private fun formatPhonemeComparisonForResult(root: org.json.JSONObject): String? {
+        val comparison = root.optJSONObject("phonemeComparison") ?: return null
+        val substitutions = comparison.optJSONArray("substitutions")
+        val deletions = comparison.optJSONArray("deletions")
+        val insertions = comparison.optJSONArray("insertions")
+
+        val lines = mutableListOf<String>()
+
+        if (substitutions != null && substitutions.length() > 0) {
+            lines += "Changed sounds:"
+            for (i in 0 until substitutions.length()) {
+                val item = substitutions.optJSONObject(i) ?: continue
+                val expected = item.optString("expected", "?")
+                val observed = item.optString("observed", "?")
+                val position = item.optString("position", "unknown")
+                val learned = item.optBoolean("knownSpeakerPattern", false)
+                lines += "• /$expected/ → /$observed/ ($position)" +
+                    if (learned) " — known speaker pattern" else ""
+            }
+        }
+
+        if (deletions != null && deletions.length() > 0) {
+            lines += "Dropped sounds:"
+            for (i in 0 until deletions.length()) {
+                val item = deletions.optJSONObject(i) ?: continue
+                val expected = item.optString("expected", "?")
+                val position = item.optString("position", "unknown")
+                lines += "• /$expected/ dropped ($position)"
+            }
+        }
+
+        if (insertions != null && insertions.length() > 0) {
+            lines += "Inserted sounds:"
+            for (i in 0 until insertions.length()) {
+                val item = insertions.optJSONObject(i) ?: continue
+                val observed = item.optString("observed", "?")
+                lines += "• extra /$observed/"
+            }
+        }
+
+        return if (lines.isEmpty()) null else lines.joinToString("\n")
+    }
+
     override fun onCreate(b: Bundle?) {
         super.onCreate(b); setContentView(R.layout.activity_main)
         

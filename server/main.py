@@ -1,3 +1,10 @@
+try:
+    from server.recording_quality import analyze_wav_quality
+    from server.phoneme_substitution import analyze_substitutions
+except ImportError:
+    from recording_quality import analyze_wav_quality
+    from phoneme_substitution import analyze_substitutions
+
 import json
 import io, os, re, uuid, json
 from datetime import datetime, timezone
@@ -268,3 +275,30 @@ def learning_profile(speaker_id: str):
 def learning_integrity():
     """Verify hashes of all stored immutable observations."""
     return learning_store.integrity_status()
+
+
+def enrich_analysis_result(
+    result: dict,
+    audio_path=None,
+    expected_phonemes=None,
+    observed_phonemes=None,
+    learned_patterns=None,
+):
+    """
+    Attach recording-quality and phoneme-change evidence without rewriting
+    the original observation.
+    """
+    if not isinstance(result, dict):
+        return result
+
+    if audio_path is not None:
+        result["recordingQuality"] = analyze_wav_quality(audio_path)
+
+    if expected_phonemes is not None and observed_phonemes is not None:
+        result["phonemeComparison"] = analyze_substitutions(
+            expected_phonemes,
+            observed_phonemes,
+            learned_patterns=learned_patterns or {},
+        )
+
+    return result
