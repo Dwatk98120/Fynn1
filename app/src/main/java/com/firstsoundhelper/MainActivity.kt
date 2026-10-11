@@ -1148,6 +1148,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
     private fun showParentPcConnectionDialog() {
+        val dialog = android.app.Dialog(this@MainActivity)
         val content = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(10))
@@ -1231,7 +1232,7 @@ content.addView(popupHeader(
             }
         })
 
-        val dialog = android.app.Dialog(this@MainActivity)
+        
         content.addView(popupActionButton("Save Connection", null, "✓", true) {
             val url = normalizeParentPcUrl(input.text.toString())
             getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
