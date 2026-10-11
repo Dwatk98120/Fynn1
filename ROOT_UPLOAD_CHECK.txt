@@ -7,7 +7,6 @@ should show these items directly at the top level:
 app/
 gradle/
 parent_pc_local/
-parent_pc_trial/
 server/
 shared/
 build.gradle
@@ -28,3 +27,5 @@ include(":app")
 IMPORTANT:
 Do not upload this ZIP itself as one file to GitHub.
 Extract it first, then upload/push the CONTENTS to the repository root.
+
+Unified Parent PC: former parent_pc_trial features are now under parent_pc_local/.

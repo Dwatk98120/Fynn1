@@ -13,17 +13,49 @@ from pathlib import Path
 import requests
 import sounddevice as sd
 import tkinter as tk
-from tkinter import messagebox, simpledialog, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 ROOT = Path(__file__).resolve().parents[1]
 RECORDINGS_DIR = ROOT / "parent_pc_local" / "recordings"
+ANALYSIS_RESULTS_DIR = ROOT / "parent_pc_local" / "analysis_results"
+CONFIG_PATH = ROOT / "parent_pc_local" / "parent_pc_config.json"
 RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
+ANALYSIS_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
 DTYPE = "int16"
-API_URL = "http://127.0.0.1:8000"
+DEFAULT_API_URL = "http://127.0.0.1:8000"
 
+
+
+def _load_parent_pc_config() -> dict:
+    try:
+        data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_parent_pc_config(data: dict) -> None:
+    CONFIG_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _safe_analysis_filename(wav_path: Path) -> Path:
+    return ANALYSIS_RESULTS_DIR / f"{wav_path.stem}_analysis.json"
+
+
+def _write_analysis_export(wav_path: Path, result: dict) -> Path:
+    out = _safe_analysis_filename(wav_path)
+    payload = dict(result)
+    payload["_parent_pc"] = {
+        "file": str(wav_path),
+        "api_url": payload.get("_api_url", ""),
+        "saved_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    payload.pop("_api_url", None)
+    out.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return out
 
 def _metadata_path(wav_path: Path) -> Path:
     return wav_path.with_suffix(".json")
@@ -61,6 +93,11 @@ class DirectRecorder(tk.Tk):
         self.timer_job = None
         self.current_file: Path | None = None
         self.last_result: dict | None = None
+        self.last_analysis_export: Path | None = None
+        self.batch_running = False
+
+        config = _load_parent_pc_config()
+        self.api_url = tk.StringVar(value=str(config.get("api_url") or DEFAULT_API_URL))
 
         self.speaker_id = tk.StringVar(value="student-1")
         self.context = tk.StringVar()
@@ -88,11 +125,27 @@ class DirectRecorder(tk.Tk):
 
         self.record_tab = tk.Frame(notebook)
         self.history_tab = tk.Frame(notebook)
+        self.dashboard_tab = tk.Frame(notebook)
+        self.evidence_tab = tk.Frame(notebook)
+        self.analytics_tab = tk.Frame(notebook)
+        self.raw_tab = tk.Frame(notebook)
+        self.connection_tab = tk.Frame(notebook)
+
         notebook.add(self.record_tab, text="Record & Analyze")
         notebook.add(self.history_tab, text="Recording History")
+        notebook.add(self.dashboard_tab, text="AI Dashboard")
+        notebook.add(self.evidence_tab, text="Evidence")
+        notebook.add(self.analytics_tab, text="Analytics & Batch")
+        notebook.add(self.raw_tab, text="Raw JSON")
+        notebook.add(self.connection_tab, text="Connection")
 
         self._build_record_tab(self.record_tab)
         self._build_history_tab(self.history_tab)
+        self._build_dashboard_tab(self.dashboard_tab)
+        self._build_evidence_tab(self.evidence_tab)
+        self._build_analytics_tab(self.analytics_tab)
+        self._build_raw_tab(self.raw_tab)
+        self._build_connection_tab(self.connection_tab)
 
     def _build_record_tab(self, parent):
         info = tk.Frame(parent)
@@ -174,6 +227,344 @@ class DirectRecorder(tk.Tk):
         self.history_details = tk.Text(notes_frame, height=8, wrap="word")
         self.history_details.pack(fill="x", padx=8, pady=8)
         self.history.bind("<<TreeviewSelect>>", lambda _e: self.show_history_details())
+
+
+    def _build_dashboard_tab(self, parent):
+        toolbar = tk.Frame(parent)
+        toolbar.pack(fill="x", padx=12, pady=10)
+        tk.Button(toolbar, text="Refresh from Current Result", command=self.refresh_dashboard).pack(side="left")
+        tk.Button(toolbar, text="Rebuild Analytics", command=self.rebuild_analytics).pack(side="left", padx=6)
+
+        self.dashboard_box = tk.Text(parent, wrap="word")
+        self.dashboard_box.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+        self.dashboard_box.insert("1.0", "Analyze or load a recording to populate the AI Dashboard.")
+
+    def _build_evidence_tab(self, parent):
+        toolbar = tk.Frame(parent)
+        toolbar.pack(fill="x", padx=12, pady=10)
+        tk.Button(toolbar, text="Refresh Evidence", command=self.refresh_evidence).pack(side="left")
+
+        self.evidence_box = tk.Text(parent, wrap="word")
+        self.evidence_box.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+        self.evidence_box.insert(
+            "1.0",
+            "Evidence will appear here after analysis.\n\n"
+            "The original observation remains immutable; evidence and interpretation are layered on top."
+        )
+
+    def _build_analytics_tab(self, parent):
+        controls = tk.Frame(parent)
+        controls.pack(fill="x", padx=12, pady=10)
+        tk.Button(controls, text="Batch Folder", command=self.choose_batch_folder).pack(side="left")
+        tk.Button(controls, text="Rebuild Analytics", command=self.rebuild_analytics).pack(side="left", padx=6)
+        tk.Button(controls, text="Open Analysis Results", command=self.open_analysis_results_folder).pack(side="left", padx=6)
+
+        self.analytics_box = tk.Text(parent, wrap="word")
+        self.analytics_box.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+        self.analytics_box.insert("1.0", "No analytics have been built yet.")
+
+    def _build_raw_tab(self, parent):
+        toolbar = tk.Frame(parent)
+        toolbar.pack(fill="x", padx=12, pady=10)
+        tk.Button(toolbar, text="Refresh Raw JSON", command=self.refresh_raw_json).pack(side="left")
+        self.raw_json_box = tk.Text(parent, wrap="none")
+        self.raw_json_box.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+        self.raw_json_box.insert("1.0", "Raw analysis JSON will appear here.")
+
+    def _build_connection_tab(self, parent):
+        frame = tk.LabelFrame(parent, text="Parent PC Local API")
+        frame.pack(fill="x", padx=18, pady=18)
+
+        tk.Label(frame, text="API URL:").grid(row=0, column=0, sticky="w", padx=10, pady=12)
+        tk.Entry(frame, textvariable=self.api_url, width=52).grid(row=0, column=1, sticky="ew", padx=6, pady=12)
+        tk.Button(frame, text="Test Connection", command=self.test_api_connection).grid(row=0, column=2, padx=6, pady=12)
+        tk.Button(frame, text="Save", command=self.save_api_url).grid(row=0, column=3, padx=(0, 10), pady=12)
+        frame.columnconfigure(1, weight=1)
+
+        tk.Label(
+            parent,
+            text=(
+                "Normal use should stay on the local Parent PC address discovered by pairing. "
+                "This manual setting is retained as a diagnostic/fallback control."
+            ),
+            wraplength=760,
+            justify="left"
+        ).pack(fill="x", padx=24, pady=(0, 12))
+
+        self.connection_status = tk.StringVar(value="Not tested")
+        tk.Label(parent, textvariable=self.connection_status, font=("Segoe UI", 11, "bold")).pack(
+            fill="x", padx=24, pady=8
+        )
+
+    def api_base(self) -> str:
+        value = self.api_url.get().strip().rstrip("/")
+        return value or DEFAULT_API_URL
+
+    def save_api_url(self):
+        _save_parent_pc_config({"api_url": self.api_base()})
+        self.connection_status.set("API URL saved")
+
+    def test_api_connection(self):
+        self.connection_status.set("Testing Parent PC Local API…")
+
+        def worker():
+            try:
+                response = requests.get(f"{self.api_base()}/health", timeout=20)
+                response.raise_for_status()
+                data = response.json()
+                msg = (
+                    f"Connected • API {data.get('apiVersion','')} • "
+                    f"model={data.get('model','')} • device={data.get('device','')}"
+                )
+                self.after(0, lambda: self.connection_status.set(msg))
+            except Exception as exc:
+                self.after(0, lambda: self.connection_status.set(f"Connection failed: {exc}"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def refresh_dashboard(self):
+        result = self.last_result
+        if not isinstance(result, dict):
+            self.dashboard_box.delete("1.0", "end")
+            self.dashboard_box.insert("1.0", "Analyze or load a recording to populate the AI Dashboard.")
+            return
+
+        analysis = result.get("analysis") or {}
+        candidates = result.get("candidates") or []
+        lines = [
+            f"TRANSCRIPT: {result.get('transcript', '—')}",
+            f"OVERALL CONFIDENCE: {analysis.get('overallConfidence', '—')}",
+            f"UNCERTAINTY: {analysis.get('uncertaintyBand', '—')}",
+            f"FINAL-CONSONANT PATTERN: {analysis.get('possibleFinalConsonantOmission', False)}",
+            f"INITIAL-CONSONANT PATTERN: {analysis.get('possibleInitialConsonantOmission', False)}",
+            "",
+            "TOP CANDIDATES",
+        ]
+        for i, candidate in enumerate(candidates[:8], 1):
+            if not isinstance(candidate, dict):
+                continue
+            lines.append(
+                f"{i}. {candidate.get('word', candidate.get('candidate', ''))}   "
+                f"confidence={candidate.get('confidence', candidate.get('score', ''))}   "
+                f"{candidate.get('pattern', '')}"
+            )
+            lines.append(
+                f"   expected={candidate.get('expectedPhonemes','')}   "
+                f"observed={candidate.get('observedPhonemes','')}"
+            )
+            if candidate.get("reason"):
+                lines.append(f"   reason={candidate.get('reason')}")
+        if self.last_analysis_export:
+            lines.extend(["", "Saved analysis:", str(self.last_analysis_export)])
+
+        self.dashboard_box.delete("1.0", "end")
+        self.dashboard_box.insert("1.0", "\n".join(lines))
+
+    def refresh_evidence(self):
+        result = self.last_result
+        if not isinstance(result, dict):
+            return
+
+        analysis = result.get("analysis") or {}
+        evidence = analysis.get("evidence") or {}
+        acoustic = evidence.get("acoustic") or {}
+        temporal = evidence.get("temporal") or {}
+        observation = result.get("observation") or {}
+        phoneme = result.get("phonemeAnalysis") or {}
+        learning = analysis.get("learningLayers") or {}
+
+        lines = [
+            "IMMUTABLE OBSERVATION",
+            f"Observation ID: {observation.get('observationId','—')}",
+            f"Observed transcript: {observation.get('transcript', result.get('transcript','—'))}",
+            "RULE: interpretation and learning may annotate this observation but cannot rewrite it.",
+            "",
+            "PHONEME EVIDENCE",
+            f"Overall phoneme confidence: {phoneme.get('overallPhonemeConfidence','—')}",
+            f"Confidence band: {phoneme.get('confidenceBand','—')}",
+            f"Uncertain/distorted count: {phoneme.get('uncertainCount','—')}",
+            "",
+            "ACOUSTIC EVIDENCE",
+            f"RMS: {acoustic.get('rms','—')}",
+            f"Final energy ratio: {acoustic.get('finalEnergyRatio','—')}",
+            f"Final silence ratio: {acoustic.get('finalSilenceRatio','—')}",
+            f"Peak ratio: {acoustic.get('peakRatio','—')}",
+            "",
+            "TEMPORAL EVIDENCE",
+            f"Tail change: {temporal.get('tailChange','—')}",
+            f"Tail window: {temporal.get('tailWindowMs','—')} ms",
+            "",
+            "CANDIDATE EVIDENCE",
+        ]
+
+        for candidate in (result.get("candidates") or [])[:8]:
+            if isinstance(candidate, dict):
+                lines.append(
+                    f"{candidate.get('word', candidate.get('candidate',''))}: "
+                    f"{json.dumps(candidate.get('evidence',{}), ensure_ascii=False)}"
+                )
+
+        lines.extend([
+            "",
+            "LEARNING LAYERS",
+            f"9 Human feedback: {(learning.get('9_humanFeedback') or {}).get('status','—')}",
+            f"10 Speaker adaptation: {(learning.get('10_speakerAdaptation') or {}).get('adaptationBoost','—')}",
+            f"11 Pattern learning ready: {(learning.get('11_patternLearning') or {}).get('learningReady','—')}",
+            f"12 Best next strategy: {(learning.get('12_strategyLearning') or {}).get('bestNextStrategy','—')}",
+            f"13 Self-evaluation accuracy: {(learning.get('13_selfEvaluation') or {}).get('accuracy','—')}",
+        ])
+
+        self.evidence_box.delete("1.0", "end")
+        self.evidence_box.insert("1.0", "\n".join(lines))
+
+    def refresh_raw_json(self):
+        self.raw_json_box.delete("1.0", "end")
+        if isinstance(self.last_result, dict):
+            self.raw_json_box.insert("1.0", json.dumps(self.last_result, indent=2, ensure_ascii=False))
+        else:
+            self.raw_json_box.insert("1.0", "Raw analysis JSON will appear here.")
+
+    def rebuild_analytics(self):
+        total = 0
+        final_omission = 0
+        initial_omission = 0
+        approved = 0
+        rejected = 0
+        corrected = 0
+        words: dict[str, int] = {}
+        changed: dict[str, int] = {}
+        dropped: dict[str, int] = {}
+
+        seen_keys = set()
+
+        def consume(result: dict, review_status: str = ""):
+            nonlocal total, final_omission, initial_omission, approved, rejected, corrected
+            if not isinstance(result, dict):
+                return
+            key = (
+                str((result.get("observation") or {}).get("observationId") or "")
+                or str(result.get("recordingId") or "")
+                or str(id(result))
+            )
+            if key in seen_keys:
+                return
+            seen_keys.add(key)
+            total += 1
+
+            analysis = result.get("analysis") or {}
+            final_omission += int(bool(analysis.get("possibleFinalConsonantOmission")))
+            initial_omission += int(bool(analysis.get("possibleInitialConsonantOmission")))
+
+            for candidate in (result.get("candidates") or [])[:3]:
+                if isinstance(candidate, dict):
+                    word = candidate.get("word") or candidate.get("candidate")
+                    if word:
+                        words[str(word)] = words.get(str(word), 0) + 1
+
+            comparison = result.get("phonemeComparison") or {}
+            for item in comparison.get("substitutions") or []:
+                if isinstance(item, dict):
+                    key2 = f"/{item.get('expected','?')}/→/{item.get('observed','?')}/"
+                    changed[key2] = changed.get(key2, 0) + 1
+            for item in comparison.get("deletions") or []:
+                if isinstance(item, dict):
+                    key2 = f"/{item.get('expected','?')}/ ({item.get('position','unknown')})"
+                    dropped[key2] = dropped.get(key2, 0) + 1
+
+            normalized = review_status.lower()
+            approved += int(normalized == "approved_for_learning")
+            rejected += int(normalized == "rejected")
+            corrected += int(normalized == "corrected_not_approved")
+
+        for wav_path in RECORDINGS_DIR.glob("*.wav"):
+            meta = _load_metadata(wav_path)
+            consume(meta.get("analysisResult") or {}, str(meta.get("reviewStatus") or ""))
+
+        for result_file in ANALYSIS_RESULTS_DIR.glob("*_analysis.json"):
+            try:
+                consume(json.loads(result_file.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+
+        top_words = sorted(words.items(), key=lambda item: item[1], reverse=True)[:15]
+        top_changed = sorted(changed.items(), key=lambda item: item[1], reverse=True)[:12]
+        top_dropped = sorted(dropped.items(), key=lambda item: item[1], reverse=True)[:12]
+
+        lines = [
+            f"Analyzed recordings: {total}",
+            f"Possible final-consonant patterns: {final_omission}",
+            f"Possible initial-consonant patterns: {initial_omission}",
+            f"Approved for learning: {approved}",
+            f"Corrected but not approved: {corrected}",
+            f"Rejected interpretations: {rejected}",
+            "",
+            "Most recurring candidate words:",
+        ]
+        lines.extend([f"  {word}: {count}" for word, count in top_words] or ["  None yet."])
+        lines.extend(["", "Most recurring changed sounds:"])
+        lines.extend([f"  {pattern}: {count}" for pattern, count in top_changed] or ["  None yet."])
+        lines.extend(["", "Most recurring dropped sounds:"])
+        lines.extend([f"  {pattern}: {count}" for pattern, count in top_dropped] or ["  None yet."])
+        lines.extend([
+            "",
+            "These counts summarize model outputs and caregiver review history; they are not clinical measurements."
+        ])
+
+        self.analytics_box.delete("1.0", "end")
+        self.analytics_box.insert("1.0", "\n".join(lines))
+
+    def choose_batch_folder(self):
+        if self.batch_running:
+            messagebox.showinfo("Batch Analysis", "A batch analysis is already running.")
+            return
+        folder = filedialog.askdirectory(title="Choose folder containing WAV recordings")
+        if not folder:
+            return
+        files = sorted(Path(folder).glob("*.wav"))
+        if not files:
+            messagebox.showinfo("Batch Analysis", "No WAV files were found in that folder.")
+            return
+        if not messagebox.askyesno(
+            "Batch Analysis",
+            f"Analyze {len(files)} WAV recordings through the Parent PC local API?"
+        ):
+            return
+        self.batch_running = True
+        threading.Thread(target=self._batch_worker, args=(files,), daemon=True).start()
+
+    def _batch_worker(self, files: list[Path]):
+        ok = 0
+        fail = 0
+        for index, wav_path in enumerate(files, 1):
+            try:
+                with wav_path.open("rb") as f:
+                    response = requests.post(
+                        f"{self.api_base()}/v1/analyze-audio",
+                        files={"audio": (wav_path.name, f, "audio/wav")},
+                        data={
+                            "context": self.context.get().strip(),
+                            "speaker_id": self.speaker_id.get().strip() or "anonymous",
+                            "session_id": str(uuid.uuid4()),
+                            "recording_id": wav_path.stem,
+                        },
+                        timeout=180
+                    )
+                response.raise_for_status()
+                result = response.json()
+                result["_api_url"] = self.api_base()
+                _write_analysis_export(wav_path, result)
+                ok += 1
+            except Exception:
+                fail += 1
+            self.after(0, lambda i=index: self.status.set(f"Batch analysis {i}/{len(files)}"))
+
+        self.batch_running = False
+        self.after(0, self.rebuild_analytics)
+        self.after(0, lambda: self.status.set(f"Batch complete • {ok} succeeded • {fail} failed"))
+
+    def open_analysis_results_folder(self):
+        ANALYSIS_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        os.startfile(str(ANALYSIS_RESULTS_DIR))
 
     def start_recording(self):
         if self.recording:
@@ -301,7 +692,7 @@ class DirectRecorder(tk.Tk):
         try:
             with wav_path.open("rb") as f:
                 response = requests.post(
-                    f"{API_URL}/v1/analyze-audio",
+                    f"{self.api_base()}/v1/analyze-audio",
                     files={"audio": (wav_path.name, f, "audio/wav")},
                     data={
                         "context": context or "",
@@ -333,10 +724,18 @@ class DirectRecorder(tk.Tk):
             })
             _save_metadata(wav_path, meta)
 
+            result["_api_url"] = self.api_base()
+            self.last_analysis_export = _write_analysis_export(wav_path, result)
+            result.pop("_api_url", None)
+
             self.last_result = result
             self.current_file = wav_path
             self.after(0, self._show_result, result)
             self.after(0, self.refresh_history)
+            self.after(0, self.refresh_dashboard)
+            self.after(0, self.refresh_evidence)
+            self.after(0, self.refresh_raw_json)
+            self.after(0, self.rebuild_analytics)
         except Exception as exc:
             self.after(0, self._show_error, str(exc))
 
@@ -497,7 +896,7 @@ class DirectRecorder(tk.Tk):
         def worker():
             try:
                 response = requests.post(
-                    f"{API_URL}/v1/learning/feedback",
+                    f"{self.api_base()}/v1/learning/feedback",
                     data=payload,
                     timeout=30
                 )
@@ -621,6 +1020,10 @@ class DirectRecorder(tk.Tk):
         if isinstance(result, dict):
             self.last_result = result
             self._show_result(result)
+            self.refresh_dashboard()
+            self.refresh_evidence()
+            self.refresh_raw_json()
+            self.rebuild_analytics()
         else:
             self.result_box.delete("1.0", "end")
             self.result_box.insert("1.0", "No saved analysis result. Click Analyze Recording.")

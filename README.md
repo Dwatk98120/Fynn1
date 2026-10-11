@@ -146,13 +146,14 @@ First Sound Helper is a communication-support application. Its speech interpreta
 The app can learn confirmed student-specific meanings locally and use them as candidate suggestions later. It does not automatically decide what a student meant.
 
 
-## Enhanced AI Trial
-This package includes an optional Parent PC trial under `parent_pc_trial/` and an enhanced
-server evidence layer in `server/analysis_engine.py`. The Android client remains compatible
-with the Parent PC Local API and displays candidate confidence when returned by the server.
+## Unified Parent PC Analysis Tools
+The former trial-only Parent PC utilities have been migrated into the main
+`parent_pc_local/direct_recording.py` program. The main Parent PC now includes
+batch WAV analysis, an AI Dashboard, evidence inspection, recurring analytics,
+raw JSON inspection, and manual API configuration/connection testing.
 
-The enhanced server adds acoustic/temporal evidence and a conservative candidate-confidence
-band. These are engineering signals, not clinical measurements.
+The obsolete `parent_pc_trial/` application has been removed so there is only
+one Parent PC workflow to maintain.
 
 ## Android Studio Trial v3
 See `ANDROID_STUDIO_READY.md`. This package includes a Gradle wrapper compatible with the project's Android Gradle Plugin 8.7.3 setup and keeps the Parent PC Local API configurable through `PARENT_PC_LOCAL_API_URL`.
