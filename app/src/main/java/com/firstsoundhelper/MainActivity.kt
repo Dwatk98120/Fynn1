@@ -229,8 +229,7 @@ class MainActivity : AppCompatActivity() {
                 lines += if (itemConfidence >= 0.0) "• /$phoneme/ — ${(itemConfidence * 100.0).toInt()}% ($clarity)" else "• /$phoneme/ — $clarity"
             }
         }
-        return if (lines.isEmpty()) null else lines.joinToString("\
-")
+        return if (lines.isEmpty()) null else lines.joinToString("\n")
     }
 
     private fun formatPhonemeComparisonForResult(root: org.json.JSONObject): String? {
