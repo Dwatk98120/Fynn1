@@ -113,6 +113,80 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    
+    private val bluetoothHandshakePrefs by lazy { getSharedPreferences("parent_pc_connection", MODE_PRIVATE) }
+
+    private fun saveParentPcEndpoint(host: String, port: Int) {
+        bluetoothHandshakePrefs.edit()
+            .putString("parent_pc_host", host)
+            .putInt("parent_pc_port", port)
+            .putString("parent_pc_base_url", "http://$host:$port")
+            .apply()
+    }
+
+    private fun savedParentPcBaseUrl(): String {
+        val saved = bluetoothHandshakePrefs.getString("parent_pc_base_url", null)
+        return saved ?: "http://127.0.0.1:8000"
+    }
+
+    private fun parseBluetoothHandshake(raw: String): Pair<String, Int>? {
+        return try {
+            val obj = org.json.JSONObject(raw)
+            if (obj.optString("type") != "hearlium_parent_pc") return null
+            val host = obj.optString("host").trim()
+            val port = obj.optInt("port", 8000)
+            if (host.isBlank() || port !in 1..65535) null else host to port
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun applyBluetoothHandshake(raw: String, onResult: (Boolean, String) -> Unit) {
+        val parsed = parseBluetoothHandshake(raw)
+        if (parsed == null) {
+            onResult(false, "Bluetooth handshake was not recognized.")
+            return
+        }
+        val (host, port) = parsed
+        saveParentPcEndpoint(host, port)
+
+        Thread {
+            val ok = try {
+                val url = java.net.URL("http://$host:$port/health")
+                val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                    connectTimeout = 2500
+                    readTimeout = 2500
+                    requestMethod = "GET"
+                }
+                val code = conn.responseCode
+                conn.disconnect()
+                code in 200..299
+            } catch (_: Exception) {
+                false
+            }
+            runOnUiThread {
+                if (ok) {
+                    setParentPcConnectionStatus("Parent PC connected", true)
+                    onResult(true, "Parent PC connected at $host:$port")
+                } else {
+                    onResult(false, "Bluetooth found the Parent PC, but Wi-Fi/LAN could not reach $host:$port.")
+                }
+            }
+        }.start()
+    }
+
+    
+    private val parentPcReconnectHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var parentPcReconnectActive = false
+    private var parentPcReconnectFailures = 0
+    private val parentPcReconnectRunnable = object : Runnable {
+        override fun run() {
+            if (!parentPcReconnectActive) return
+            checkSavedParentPcConnection(silent = true)
+            parentPcReconnectHandler.postDelayed(this, 15000L)
+        }
+    }
+
     override fun onCreate(b: Bundle?) {
         super.onCreate(b); setContentView(R.layout.activity_main)
         
@@ -138,7 +212,9 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.studentToolsButton).setOnClickListener { showStudentCommunicationTools() }
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }
-    }
+    
+        startParentPcAutoReconnect()
+}
 
     private fun startRecording() {
         val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
@@ -515,6 +591,10 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
 
+
+    private val hearliumBluetoothServiceUuid: java.util.UUID =
+        java.util.UUID.fromString("7b8d3f52-9f24-4c87-a4e1-3d11f5d8a701")
+
     private fun bluetoothPrefs() =
         getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
 
@@ -551,6 +631,263 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         } else {
             showBluetoothParentPcDialog()
         }
+    }
+
+    
+
+
+    private fun setParentPcConnectionStatus(status: String, connected: Boolean) {
+        bluetoothHandshakePrefs.edit()
+            .putString("parent_pc_status", status)
+            .putBoolean("parent_pc_connected", connected)
+            .putLong("parent_pc_status_time", System.currentTimeMillis())
+            .apply()
+
+        try {
+            val statusViewId = resources.getIdentifier("parentPcStatusText", "id", packageName)
+            if (statusViewId != 0) {
+                findViewById<android.widget.TextView?>(statusViewId)?.text = status
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun startParentPcAutoReconnect() {
+        if (parentPcReconnectActive) return
+        parentPcReconnectActive = true
+        parentPcReconnectHandler.removeCallbacks(parentPcReconnectRunnable)
+        parentPcReconnectHandler.post(parentPcReconnectRunnable)
+    }
+
+    private fun stopParentPcAutoReconnect() {
+        parentPcReconnectActive = false
+        parentPcReconnectHandler.removeCallbacks(parentPcReconnectRunnable)
+    }
+
+    private fun checkSavedParentPcConnection(silent: Boolean = false) {
+        val prefs = bluetoothHandshakePrefs
+        val host = prefs.getString("parent_pc_host", "")?.trim().orEmpty()
+        val port = prefs.getInt("parent_pc_port", 8000)
+
+        if (host.isBlank()) {
+            setParentPcConnectionStatus("Parent PC not configured", false)
+            if (!silent) {
+                showInfoPopup(
+                    "Parent PC not configured",
+                    "No saved Parent PC endpoint is available yet.",
+                    "Use Bluetooth Setup to pair and connect to the Parent PC."
+                )
+            }
+            return
+        }
+
+        Thread {
+            val ok = try {
+                val url = java.net.URL("http://$host:$port/health")
+                val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                    connectTimeout = 1800
+                    readTimeout = 1800
+                    requestMethod = "GET"
+                }
+                val code = conn.responseCode
+                conn.disconnect()
+                code in 200..299
+            } catch (_: Exception) {
+                false
+            }
+
+            runOnUiThread {
+                if (ok) {
+                    parentPcReconnectFailures = 0
+                    setParentPcConnectionStatus("Parent PC connected", true)
+                    if (!silent) {
+                        showInfoPopup(
+                            "Parent PC Connected",
+                            "The saved Parent PC is reachable over the local network.",
+                            "$host:$port"
+                        )
+                    }
+                } else {
+                    parentPcReconnectFailures++
+                    setParentPcConnectionStatus("Parent PC reconnecting…", false)
+
+                    if (!silent) {
+                        showInfoPopup(
+                            "Parent PC unavailable",
+                            "The saved Parent PC could not be reached over Wi-Fi/LAN.",
+                            "Bluetooth pairing can remain active while the app keeps checking the local connection."
+                        )
+                    }
+
+                    if (parentPcReconnectFailures >= 3) {
+                        tryBluetoothReconnectAfterLanFailure()
+                    }
+                }
+            }
+        }.start()
+    }
+
+    private fun tryBluetoothReconnectAfterLanFailure() {
+        val prefs = bluetoothPrefs()
+        val address = prefs.getString("bluetooth_pc_address", "") ?: ""
+        if (address.isBlank()) return
+
+        // Avoid launching overlapping Bluetooth reconnect attempts.
+        if (bluetoothHandshakePrefs.getBoolean("bluetooth_reconnect_in_progress", false)) return
+        bluetoothHandshakePrefs.edit().putBoolean("bluetooth_reconnect_in_progress", true).apply()
+
+        Thread {
+            var socket: android.bluetooth.BluetoothSocket? = null
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S &&
+                    !bluetoothPermissionsGranted()) return@Thread
+
+                val adapter = bluetoothAdapterOrNull() ?: return@Thread
+                if (!adapter.isEnabled) return@Thread
+
+                try { adapter.cancelDiscovery() } catch (_: Exception) {}
+
+                val device = adapter.getRemoteDevice(address)
+                socket = device.createRfcommSocketToServiceRecord(hearliumBluetoothServiceUuid)
+                socket.connect()
+
+                val reader = java.io.BufferedReader(
+                    java.io.InputStreamReader(socket.inputStream, Charsets.UTF_8)
+                )
+                val payload = reader.readLine()?.trim().orEmpty()
+                if (payload.isNotBlank()) {
+                    runOnUiThread {
+                        applyBluetoothHandshake(payload) { ok, _ ->
+                            if (ok) {
+                                parentPcReconnectFailures = 0
+                                setParentPcConnectionStatus("Parent PC connected", true)
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // Silent retry: status remains reconnecting until the next cycle.
+            } finally {
+                try { socket?.close() } catch (_: Exception) {}
+                bluetoothHandshakePrefs.edit()
+                    .putBoolean("bluetooth_reconnect_in_progress", false)
+                    .apply()
+            }
+        }.start()
+    }
+
+    private fun connectTrustedParentPcBluetooth() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && !bluetoothPermissionsGranted()) {
+            openBluetoothParentPcSetup()
+            return
+        }
+
+        val prefs = bluetoothPrefs()
+        val address = prefs.getString("bluetooth_pc_address", "") ?: ""
+        val name = prefs.getString("bluetooth_pc_name", "Parent PC") ?: "Parent PC"
+
+        if (address.isBlank()) {
+            showInfoPopup(
+                "No Parent PC selected",
+                "Choose the Parent PC from the paired Bluetooth device list first.",
+                "Open Bluetooth Setup and select the Windows computer you want to use."
+            )
+            return
+        }
+
+        showInfoPopup(
+            "Connecting to Parent PC",
+            "Starting the Bluetooth connection handshake with $name.",
+            "The app will receive the Parent PC local IP and port, then verify the connection over Wi-Fi/LAN."
+        )
+
+        Thread {
+            var socket: android.bluetooth.BluetoothSocket? = null
+            try {
+                val adapter = bluetoothAdapterOrNull()
+                    ?: throw IllegalStateException("Bluetooth adapter unavailable.")
+                if (!adapter.isEnabled) {
+                    throw IllegalStateException("Bluetooth is turned off.")
+                }
+
+                try { adapter.cancelDiscovery() } catch (_: Exception) {}
+
+                val device = adapter.getRemoteDevice(address)
+                socket = device.createRfcommSocketToServiceRecord(hearliumBluetoothServiceUuid)
+                socket.connect()
+
+                val reader = java.io.BufferedReader(
+                    java.io.InputStreamReader(socket.inputStream, Charsets.UTF_8)
+                )
+                val payload = reader.readLine()?.trim().orEmpty()
+                if (payload.isBlank()) {
+                    throw IllegalStateException("The Parent PC did not return connection information.")
+                }
+
+                runOnUiThread {
+                    applyBluetoothHandshake(payload) { ok, message ->
+                        showInfoPopup(
+                            if (ok) "Parent PC Connected" else "Connection Check",
+                            message,
+                            if (ok) {
+                                "Bluetooth supplied the Parent PC address. Audio and analysis will use the local Wi-Fi/LAN connection."
+                            } else {
+                                "Bluetooth is working, but the phone could not reach the Parent PC API over Wi-Fi/LAN."
+                            }
+                        )
+                    }
+                }
+            } catch (e: SecurityException) {
+                runOnUiThread {
+                    showInfoPopup(
+                        "Bluetooth permission required",
+                        "Android did not allow the Parent PC Bluetooth connection.",
+                        "Allow Nearby Devices/Bluetooth permission and try again."
+                    )
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    showInfoPopup(
+                        "Bluetooth handshake unavailable",
+                        e.message ?: "The Parent PC Bluetooth service could not be reached.",
+                        "Make sure the Parent PC Bluetooth handshake service is running and the computer is paired."
+                    )
+                }
+            } finally {
+                try { socket?.close() } catch (_: Exception) {}
+            }
+        }.start()
+    }
+
+    private fun showBluetoothStage2HandshakeTest() {
+        val input = android.widget.EditText(this).apply {
+            hint = """{"type":"hearlium_parent_pc","host":"192.168.1.25","port":8000}"""
+            setSingleLine(false)
+            minLines = 3
+        }
+
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setTitle("Bluetooth Connection Handshake")
+            .setMessage("Paste or enter the Parent PC handshake payload. In live Bluetooth use, this payload will be received automatically.")
+            .setView(input)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Connect", null)
+            .create()
+
+        dialog.setOnShowListener {
+            styleUnifiedDialog(dialog)
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                applyBluetoothHandshake(input.text.toString()) { ok, message ->
+                    showInfoPopup(
+                        if (ok) "Parent PC Connected" else "Connection Check",
+                        message,
+                        if (ok) "The app saved this Parent PC endpoint for local analysis." else "Check that the phone and Parent PC are on the same Wi-Fi network."
+                    )
+                    if (ok) dialog.dismiss()
+                }
+            }
+        }
+        dialog.show()
     }
 
     private fun showBluetoothParentPcDialog() {
@@ -628,6 +965,22 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
         val dialog = android.app.Dialog(this@MainActivity)
         content.addView(popupActionButton(
+            "Check Connection Now",
+            "Test the saved Parent PC connection over Wi-Fi/LAN.",
+            "✓"
+        ) {
+            checkSavedParentPcConnection(silent = false)
+        })
+
+        content.addView(popupActionButton(
+            "Connect to Parent PC",
+            "Receive the Parent PC local IP and API port over Bluetooth, then test Wi-Fi/LAN.",
+            "🔗"
+        ) {
+            connectTrustedParentPcBluetooth()
+        })
+
+        content.addView(popupActionButton(
             "Open Bluetooth Settings",
             "Pair a new Parent PC or turn Bluetooth on.",
             "⚙️"
@@ -641,6 +994,14 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         ) {
             dialog.dismiss()
             showBluetoothParentPcDialog()
+        })
+        content.addView(popupActionButton(
+            "Handshake Test",
+            "Diagnostic fallback: paste a handshake payload manually.",
+            "🧪"
+        ) {
+            dialog.dismiss()
+            showBluetoothStage2HandshakeTest()
         })
         content.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
 
@@ -3799,6 +4160,17 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
         styleUnifiedDialog(dialog)
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        startParentPcAutoReconnect()
+    }
+
+    override fun onPause() {
+        stopParentPcAutoReconnect()
+        super.onPause()
     }
 
 }
