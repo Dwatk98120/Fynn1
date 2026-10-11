@@ -28,4 +28,3 @@ IMPORTANT:
 Do not upload this ZIP itself as one file to GitHub.
 Extract it first, then upload/push the CONTENTS to the repository root.
 
-Unified Parent PC: former parent_pc_trial features are now under parent_pc_local/.

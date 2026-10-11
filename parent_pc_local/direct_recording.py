@@ -762,10 +762,15 @@ class DirectRecorder(tk.Tk):
                 if isinstance(item, dict):
                     word = item.get("word") or item.get("candidate") or item.get("text") or str(item)
                     score = item.get("score") or item.get("confidence")
+                    similarity = item.get("phonemeSimilarity")
+                    reason = item.get("reason", "")
                     if isinstance(score, (int, float)):
-                        lines.append(f"{i}. {word}  ({score:.3f})")
+                        suffix = f" • phoneme match {int(similarity * 100)}%" if isinstance(similarity, (int, float)) else ""
+                        lines.append(f"{i}. {word}  ({score:.3f}){suffix}")
                     else:
                         lines.append(f"{i}. {word}")
+                    if reason:
+                        lines.append(f"   Why: {reason}")
                 else:
                     lines.append(f"{i}. {item}")
 

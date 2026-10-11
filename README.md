@@ -152,7 +152,6 @@ The former trial-only Parent PC utilities have been migrated into the main
 batch WAV analysis, an AI Dashboard, evidence inspection, recurring analytics,
 raw JSON inspection, and manual API configuration/connection testing.
 
-The obsolete `parent_pc_trial/` application has been removed so there is only
 one Parent PC workflow to maintain.
 
 ## Android Studio Trial v3

@@ -2,10 +2,12 @@ try:
     from server.recording_quality import analyze_wav_quality
     from server.phoneme_substitution import analyze_substitutions
     from server.phoneme_analysis import summarize_observed_phonemes
+    from server.candidate_word_engine import rank_candidate_words
 except ImportError:
     from recording_quality import analyze_wav_quality
     from phoneme_substitution import analyze_substitutions
     from phoneme_analysis import summarize_observed_phonemes
+    from candidate_word_engine import rank_candidate_words
 
 import json
 import io, os, re, uuid, json
@@ -103,7 +105,7 @@ def candidate_words():
 @app.get("/health")
 def health():
     return {"ok":True,"model":MODEL_ID,"device":DEVICE,"apiVersion":"0.5-13-layer",
-            "features":["13-layer-analytics","human-feedback-learning","speaker-adaptation","pattern-learning","strategy-learning","self-evaluation","immutable-observations"]}
+            "features":["13-layer-analytics","human-feedback-learning","speaker-adaptation","pattern-learning","strategy-learning","self-evaluation","immutable-observations","candidate-word-engine-v2"]}
 
 @app.post("/v1/analyze-audio")
 async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""),speaker_profile:Optional[str]=Form(""),human_feedback:Optional[str]=Form(""),session_id:Optional[str]=Form(""),recording_id:Optional[str]=Form(""),speaker_id:Optional[str]=Form("")):
@@ -148,52 +150,27 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
             observed_confidences=[]
         phoneme_analysis=summarize_observed_phonemes(observed_tokens,observed_confidences)
 
-        candidates=[]
-        ctx=(context or "").lower()
-        context_words=[]
-        if "i see a" in ctx: context_words=["cat","dog","ball","car","fish","bird","house"]
-        elif "i want" in ctx: context_words=["go","food","ball","car"]
-        elif "look at the" in ctx: context_words=["cat","dog","ball","car","house"]
-        elif "where is the" in ctx: context_words=["cat","dog","ball","car","house"]
-
-        for w in candidate_words():
-            expected=g2p_ipa(w)
-            initial_missing=phoneme_prefix_missing(expected,observed_ipa)
-            final_missing=phoneme_final_missing(expected,observed_ipa)
-            if initial_missing or final_missing:
-                c={
-                    "word":w,"expectedPhonemes":expected,"observedPhonemes":observed_ipa,
-                    "missingInitial":first_phoneme(expected) if initial_missing else "",
-                    "missingFinal":final_phoneme(expected) if final_missing else "",
-                    "possibleInitialOmission":initial_missing,
-                    "possibleFinalOmission":final_missing,
-                    "pattern":"initial-consonant deletion" if initial_missing else "final-consonant deletion",
-                    "reason":"observed phonemes match the candidate after its initial consonant" if initial_missing else "observed phonemes match the candidate before its final consonant"
-                }
-                boost=0.08 if w in context_words else 0.0
-                ev=evidence_scores(acoustic,temporal,observed_ipa,c)
-                c["evidence"]=ev
-                c["confidence"]=combined_confidence(ev,boost)
-                c["learningAdaptation"]=build_learning_layers(profile=profile,candidate=c)["10_speakerAdaptation"]
-                learned_map=profile.get("heardToMeaning",{}) if isinstance(profile,dict) else {}
-                learned_for_heard=learned_map.get(observed.lower(),{}) if isinstance(learned_map,dict) else {}
-                learned_count=int(learned_for_heard.get(w,0)) if isinstance(learned_for_heard,dict) else 0
-                c["personalizedMappingCount"]=learned_count
-                mapping_boost=min(0.12, 0.03 * learned_count)
-                c["confidence"]=round(min(.99,c["confidence"]+c["learningAdaptation"].get("adaptationBoost",0)+mapping_boost),3)
-                c["score"]=round(min(0.99,c["confidence"]),2)
-                if w in context_words:
-                    c["contextMatch"]=True
-                candidates.append(c)
-
-        candidates=sorted(candidates,key=lambda x:(x.get("confidence",0),x.get("score",0)),reverse=True)[:8]
+        candidates=rank_candidate_words(
+            words=candidate_words(),
+            observed_ipa=observed_ipa,
+            observed_tokens=observed_tokens,
+            observed_confidences=observed_confidences,
+            observed_text=observed,
+            context=context or "",
+            profile=profile,
+            g2p_ipa=g2p_ipa,
+            tokenize_ipa=tokenize_ipa,
+            evidence_scores=evidence_scores,
+            combined_confidence=combined_confidence,
+            acoustic=acoustic,
+            temporal=temporal,
+            build_learning_layers=build_learning_layers,
+            max_results=8,
+        )
         best=candidates[0] if candidates else None
         top_phoneme_comparison=None
         if best:
-            expected_tokens=tokenize_ipa(best.get("expectedPhonemes",""))
-            learned_patterns=profile.get("patternHistory",{}) if isinstance(profile,dict) else {}
-            top_phoneme_comparison=analyze_substitutions(expected_tokens,observed_tokens,learned_patterns=learned_patterns,observed_confidences=observed_confidences)
-            best["phonemeComparison"]=top_phoneme_comparison
+            top_phoneme_comparison=best.get("phonemeComparison")
         overall=best.get("confidence",0.0) if best else 0.0
         uncertainty="low" if overall>=0.85 else ("moderate" if overall>=0.60 else "high")
 
@@ -248,6 +225,16 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
                 "phonemeConfidence":phoneme_analysis.get("overallPhonemeConfidence",0.0),
                 "uncertainPhonemeCount":phoneme_analysis.get("uncertainCount",0),
                 "hasUncertainOrDistortedSounds":phoneme_analysis.get("uncertainCount",0) > 0,
+                "candidateEngine":{
+                    "version":"2",
+                    "knownEnglishWordRanking":True,
+                    "usesDeletionEvidence":True,
+                    "usesSubstitutionEvidence":True,
+                    "usesInsertionEvidence":True,
+                    "usesSpeakerHistory":True,
+                    "usesContext":True,
+                    "preservesMultipleCandidates":True
+                },
                 "evidence":{
                     "acoustic":acoustic,
                     "temporal":temporal

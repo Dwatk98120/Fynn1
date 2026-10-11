@@ -37,8 +37,6 @@ This is a development launcher and still requires Python on the PC. A later phas
 
 ## Unified analysis tools
 The main Direct Recording application now also contains the features that were
-previously isolated in the trial Parent PC app: Batch Folder, AI Dashboard,
 Evidence, Analytics, Raw JSON, and manual API configuration/testing.
 
-The old `parent_pc_trial/` folder has been removed. See
 `TRIAL_FEATURE_MIGRATION.md`.
