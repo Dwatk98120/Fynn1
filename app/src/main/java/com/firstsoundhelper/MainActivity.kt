@@ -516,32 +516,72 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         action: () -> Unit
     ): android.widget.Button =
         android.widget.Button(this@MainActivity).apply {
-            text = buildString {
-                append(icon)
-                append("  ")
-                append(title)
-                if (!description.isNullOrBlank()) {
-                    append("\n")
-                    append(description)
-                }
-                append("   ›")
-            }
-            textSize = if (description.isNullOrBlank()) 15f else 14f
+            text = if (description.isNullOrBlank()) "$icon  $title   ›" else "$icon  $title\n$description"
+            textSize = 14f
             isAllCaps = false
             gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
-            minHeight = popupDp(if (description.isNullOrBlank()) 48 else 60)
-            setPadding(popupDp(14), popupDp(8), popupDp(12), popupDp(8))
-            setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#4D27A6"))
-            background = popupBackground(if (primary) "#6744B0" else "#F3F0FA", 14)
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            minHeight = popupDp(48)
+            setPadding(popupDp(12), popupDp(7), popupDp(10), popupDp(7))
+            setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#39216D"))
+            background = popupBackground(if (primary) "#6744B0" else "#F5F3FA", 12)
             val lp = android.widget.LinearLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            lp.setMargins(0, popupDp(3), 0, popupDp(3))
+            lp.setMargins(0, popupDp(2), 0, popupDp(2))
             layoutParams = lp
             setOnClickListener { action() }
         }
+
+    // Compact menu row: only the title is prominent; supporting text stays secondary.
+    private fun popupMenuRow(icon: String, title: String, detail: String, action: () -> Unit): android.view.View {
+        val row = android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(popupDp(12), popupDp(8), popupDp(10), popupDp(8))
+            background = popupBackground("#F7F6FA", 12)
+            minimumHeight = popupDp(56)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { action() }
+        }
+        row.addView(android.widget.TextView(this@MainActivity).apply {
+            text = icon
+            textSize = 19f
+            gravity = android.view.Gravity.CENTER
+        }, android.widget.LinearLayout.LayoutParams(popupDp(34), popupDp(38)))
+        val labels = android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(6), 0, popupDp(4), 0)
+        }
+        labels.addView(android.widget.TextView(this@MainActivity).apply {
+            text = title
+            textSize = 15f
+            setTextColor(android.graphics.Color.parseColor("#2B2050"))
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        labels.addView(android.widget.TextView(this@MainActivity).apply {
+            text = detail
+            textSize = 12f
+            setTextColor(android.graphics.Color.parseColor("#656172"))
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        row.addView(labels, android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        row.addView(android.widget.TextView(this@MainActivity).apply {
+            text = "›"
+            textSize = 23f
+            setTextColor(android.graphics.Color.parseColor("#75629D"))
+        })
+        return row.apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = popupDp(5) }
+        }
+    }
 
     private fun popupInfoCard(title: String, body: String, icon: String = "✓"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
@@ -3279,54 +3319,77 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val dialog = android.app.Dialog(this@MainActivity)
         val list = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(22))
+            setPadding(popupDp(16), popupDp(8), popupDp(16), popupDp(12))
         }
-
-        list.addView(popupHeader(
-            "Student Communication Tools",
-            "Choose the communication support that is easiest for the student right now.",
-            "🧩"
-        ))
-
+        val header = android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(popupDp(16), popupDp(12), popupDp(10), popupDp(10))
+        }
+        header.addView(android.widget.TextView(this@MainActivity).apply {
+            text = "Communication Tools"
+            textSize = 20f
+            setTextColor(android.graphics.Color.parseColor("#251747"))
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }, android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        header.addView(android.widget.TextView(this@MainActivity).apply {
+            text = "✕"
+            textSize = 20f
+            setPadding(popupDp(12), popupDp(6), popupDp(12), popupDp(6))
+            setOnClickListener { dialog.dismiss() }
+            contentDescription = "Close communication tools"
+        })
+        list.addView(android.widget.TextView(this@MainActivity).apply {
+            text = when (communicationFocus()) {
+                "speech" -> "Speech focus · AAC always available"
+                "aac" -> "AAC focus · Speech always available"
+                else -> "Speech + AAC · Both available anytime"
+            }
+            textSize = 13f
+            setTextColor(android.graphics.Color.parseColor("#5E4B83"))
+            setPadding(popupDp(4), popupDp(3), popupDp(4), popupDp(11))
+        })
         fun tool(icon: String, title: String, description: String, action: () -> Unit) {
-            list.addView(popupActionButton(title, description, icon) {
+            list.addView(popupMenuRow(icon, title, description) {
                 dialog.dismiss()
                 action()
             })
         }
+        tool("⚙️", "Communication Setup", "Change speech and AAC focus") { showCommunicationFocusSetup() }
+        tool("⭐", "Favorite Phrases", "One-tap saved phrases") { showFavoritePhrases() }
+        tool("🖼️", "Picture + Voice Choices", "Visual choices with spoken output") { showPictureVoiceChoices() }
+        tool("🔁", "Try Again Practice", "Practice without pressure") { showTryAgainPractice() }
+        tool("☑️", "Choice Board", "Offer two to six choices") { showChoiceBoard() }
+        tool("💬", "Quick Communication", "Help, break, yes, no and more") { showQuickCommunication() }
+        tool("📈", "Visual Progress", "Review communication activity") { showVisualProgress() }
+        tool("📝", "Caregiver Notes", "Save local support notes") { showSupportNotes() }
+        tool("📚", "Custom Vocabulary", "Personal words and phrases") { showCustomVocabulary() }
+        tool("🔒", "Privacy & Offline", "Manage local student data") { showPrivacyControls() }
+        tool("🗣️", "Communication Modes", "Speech, visual, text and voice") { showCommunicationModes() }
+        tool("🧩", "Visual Sentence Builder", "Create sentences using tiles") { showVisualSentenceBuilder() }
 
-        list.addView(popupInfoCard(
-            "Communication focus",
-            when (communicationFocus()) {
-                "speech" -> "Speech understanding first. AAC is always ready when needed."
-                "aac" -> "AAC tools first. Speech understanding is still available."
-                else -> "Speech and AAC work together. Use whichever helps right now."
-            },
-            "💬"
-        ))
-        tool("⚙️", "Change Communication Setup", "Choose speech focus, speech + AAC, or AAC focus.") { showCommunicationFocusSetup() }
-        tool("⭐", "Favorite Phrases", "Keep important phrases one tap away.") { showFavoritePhrases() }
-        tool("🖼️", "Picture + Voice Choices", "Choose from visual options and hear the choice.") { showPictureVoiceChoices() }
-        tool("🔁", "Try Again Practice", "Practice a word or phrase without pressure.") { showTryAgainPractice() }
-        tool("☑️", "Choice Board", "Offer two to six simple choices.") { showChoiceBoard() }
-        tool("💬", "Quick Communication Needs", "Fast access to help, break, yes, no, and more.") { showQuickCommunication() }
-        tool("📈", "Visual Progress", "See saved practice and communication activity.") { showVisualProgress() }
-        tool("📝", "Teacher / Caregiver Notes", "Keep local notes about helpful communication supports.") { showSupportNotes() }
-        tool("📚", "Custom Vocabulary", "Add words that matter to this student.") { showCustomVocabulary() }
-        tool("🔒", "Privacy & Offline", "Control analysis uploads and remove local student data.") { showPrivacyControls() }
-        tool("🗣️", "Communication Modes", "Switch between speech, visual, text, and recorded voice.") { showCommunicationModes() }
-        tool("🧩", "Visual Sentence Builder", "Build a sentence by tapping word tiles.") { showVisualSentenceBuilder() }
-
-        list.addView(popupInfoCard(
-            "Tip",
-            "Customize these tools around the student's interests, routines, and communication goals.",
-            "❤️"
-        ))
-        list.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
-
-        dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
+        val scroller = ScrollView(this@MainActivity).apply {
+            isFillViewport = false
+            addView(list)
+        }
+        val frame = LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            background = popupBackground("#FFFFFF", 20)
+            addView(header)
+            addView(android.view.View(this@MainActivity).apply {
+                setBackgroundColor(android.graphics.Color.parseColor("#EAE7F0"))
+            }, LinearLayout.LayoutParams(-1, popupDp(1)))
+            addView(scroller, LinearLayout.LayoutParams(-1, 0, 1f))
+        }
+        dialog.setContentView(frame)
         dialog.show()
-        styleUnifiedDialog(dialog)
+        dialog.window?.apply {
+            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+            addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            attributes = attributes.apply { dimAmount = 0.48f }
+            setLayout((resources.displayMetrics.widthPixels * 0.92f).toInt(),
+                (resources.displayMetrics.heightPixels * 0.82f).toInt())
+        }
     }
 
     private fun showFavoritePhrases() {
