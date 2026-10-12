@@ -338,6 +338,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }
     
+        updateCommunicationFocusButtons()
         startParentPcAutoReconnect()
 }
 
@@ -3240,6 +3241,40 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         customVocabularyFile().writeText(a.toString())
     }
 
+    // AAC is always installed and available; this preference only changes presentation.
+    private fun communicationFocus(): String =
+        supportPrefs().getString("communication_focus", "both") ?: "both"
+
+    private fun updateCommunicationFocusButtons() {
+        findViewById<Button>(R.id.studentToolsButton)?.text = when (communicationFocus()) {
+            "speech" -> "AAC Communication (Available Anytime)"
+            "aac" -> "AAC Communication Tools"
+            else -> "Speech + AAC Communication Tools"
+        }
+    }
+
+    private fun showCommunicationFocusSetup() {
+        val labels = arrayOf(
+            "Speech Understanding Focus",
+            "Speech + AAC Together (Recommended)",
+            "AAC Communication Focus"
+        )
+        val values = arrayOf("speech", "both", "aac")
+        val current = values.indexOf(communicationFocus()).coerceAtLeast(0)
+        val dialog = android.app.AlertDialog.Builder(this@MainActivity)
+            .setTitle("Communication Setup")
+            .setSingleChoiceItems(labels, current) { d, index ->
+                supportPrefs().edit().putString("communication_focus", values[index]).apply()
+                updateCommunicationFocusButtons()
+                Toast.makeText(this@MainActivity, "Communication setup saved", Toast.LENGTH_SHORT).show()
+                d.dismiss()
+            }
+            .setNegativeButton("Close", null)
+            .create()
+        dialog.setOnShowListener { styleUnifiedDialog(dialog) }
+        dialog.show()
+    }
+
     private fun showStudentCommunicationTools() {
         val dialog = android.app.Dialog(this@MainActivity)
         val list = LinearLayout(this@MainActivity).apply {
@@ -3260,6 +3295,16 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             })
         }
 
+        list.addView(popupInfoCard(
+            "Communication focus",
+            when (communicationFocus()) {
+                "speech" -> "Speech understanding first. AAC is always ready when needed."
+                "aac" -> "AAC tools first. Speech understanding is still available."
+                else -> "Speech and AAC work together. Use whichever helps right now."
+            },
+            "💬"
+        ))
+        tool("⚙️", "Change Communication Setup", "Choose speech focus, speech + AAC, or AAC focus.") { showCommunicationFocusSetup() }
         tool("⭐", "Favorite Phrases", "Keep important phrases one tap away.") { showFavoritePhrases() }
         tool("🖼️", "Picture + Voice Choices", "Choose from visual options and hear the choice.") { showPictureVoiceChoices() }
         tool("🔁", "Try Again Practice", "Practice a word or phrase without pressure.") { showTryAgainPractice() }
@@ -4285,6 +4330,12 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             "Review privacy, personalized learning, and the pilot checklist before regular use.",
             "🛡️"
         ))
+
+        list.addView(popupActionButton(
+            "Communication Setup",
+            "Choose Speech Focus, Speech + AAC, or AAC Focus. All tools remain available.",
+            "💬"
+        ) { showCommunicationFocusSetup() })
 
         val statusCard = popupInfoCard(
             "Setup status",
