@@ -470,13 +470,8 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             }
 
             is android.widget.TextView -> {
-                if (view.textSize >= 20f) {
-                    view.setTextColor(android.graphics.Color.parseColor("#21124D"))
-                    view.setTypeface(view.typeface, android.graphics.Typeface.BOLD)
-                } else {
-                    view.setTextColor(android.graphics.Color.parseColor("#53505D"))
-                    view.setLineSpacing(0f, 1.08f)
-                }
+                // Keep each custom popup's intended title, description and status colors.
+                // Native alert title/message are styled explicitly in styleUnifiedDialog.
             }
         }
 
@@ -490,7 +485,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     private fun popupHeader(title: String, subtitle: String? = null, icon: String = "✨"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(4), popupDp(2), popupDp(4), popupDp(6))
+            setPadding(popupDp(2), popupDp(2), popupDp(2), popupDp(8))
 
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = "$icon  $title"
@@ -517,12 +512,25 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         action: () -> Unit
     ): android.widget.Button =
         android.widget.Button(this@MainActivity).apply {
-            text = if (description.isNullOrBlank()) "$icon  $title   ›" else "$icon  $title\n$description"
+            val heading = "$icon  $title"
+            val label = if (description.isNullOrBlank()) "$heading   ›" else "$heading\n$description"
+            text = android.text.SpannableString(label).apply {
+                if (!description.isNullOrBlank()) {
+                    val start = heading.length + 1
+                    setSpan(android.text.style.RelativeSizeSpan(0.85f), start, length,
+                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(android.text.style.ForegroundColorSpan(
+                        android.graphics.Color.parseColor(if (primary) "#EEE8FC" else "#696477")
+                    ), start, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(android.text.style.StyleSpan(android.graphics.Typeface.NORMAL), start, length,
+                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+            }
             textSize = 14f
             isAllCaps = false
             gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
-            minHeight = popupDp(44)
-            setPadding(popupDp(12), popupDp(6), popupDp(10), popupDp(6))
+            minHeight = popupDp(48)
+            setPadding(popupDp(12), popupDp(7), popupDp(10), popupDp(7))
             setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#39216D"))
             background = popupBackground(if (primary) "#6744B0" else "#F7F6FA", 12)
             val lp = android.widget.LinearLayout.LayoutParams(
@@ -1335,10 +1343,30 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         dialog.setContentView(scroll)
         dialog.show()
         styleUnifiedDialog(dialog)
-        val maxHeight = (resources.displayMetrics.heightPixels * 0.78f).toInt()
-        scroll.layoutParams = android.widget.FrameLayout.LayoutParams(
-            android.view.ViewGroup.LayoutParams.MATCH_PARENT, maxHeight
-        )
+        // Fit the connection sheet to its contents. Only cap tall expanded settings.
+        // A fixed 78% height created a large empty white panel in the collapsed state.
+        val maxHeight = (resources.displayMetrics.heightPixels * 0.80f).toInt()
+        scroll.post {
+            val desiredHeight = content.measuredHeight + popupDp(8)
+            scroll.layoutParams = android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                minOf(desiredHeight, maxHeight)
+            )
+        }
+        toggle.setOnClickListener {
+            advanced.visibility = if (advanced.visibility == android.view.View.VISIBLE)
+                android.view.View.GONE else android.view.View.VISIBLE
+            scroll.post {
+                content.measure(
+                    android.view.View.MeasureSpec.makeMeasureSpec(scroll.width, android.view.View.MeasureSpec.EXACTLY),
+                    android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED)
+                )
+                scroll.layoutParams = android.widget.FrameLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    minOf(content.measuredHeight + popupDp(8), maxHeight)
+                )
+            }
+        }
     }
 
     private fun testParentPcConnection(base: String) {
