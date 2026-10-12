@@ -259,3 +259,33 @@ class LearningStore:
             if _hash(obs) == rec.get("observationHash"):
                 valid += 1
         return {"observations": total, "hashValid": valid, "hashInvalid": total - valid}
+def record_confirmed_substitution_patterns(profile: dict, phoneme_comparison: dict) -> dict:
+    """
+    Add approved substitution evidence into patternHistory using both a generic
+    directional key and a position-specific key. Call only for examples already
+    approved for learning.
+    """
+    if not isinstance(profile, dict):
+        return profile
+    history = profile.setdefault("patternHistory", {})
+    if not isinstance(history, dict):
+        history = {}
+        profile["patternHistory"] = history
+
+    for item in (phoneme_comparison or {}).get("substitutions", []) or []:
+        if not isinstance(item, dict):
+            continue
+        expected = str(item.get("expected") or "").strip()
+        observed = str(item.get("observed") or "").strip()
+        position = str(item.get("position") or "unknown").strip()
+        if not expected or not observed:
+            continue
+
+        generic = f"{expected}->{observed}"
+        history[generic] = int(history.get(generic, 0) or 0) + 1
+
+        if position and position != "unknown":
+            positional = f"{generic}@{position}"
+            history[positional] = int(history.get(positional, 0) or 0) + 1
+
+    return profile

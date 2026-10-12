@@ -771,6 +771,16 @@ class DirectRecorder(tk.Tk):
                         lines.append(f"{i}. {word}")
                     if reason:
                         lines.append(f"   Why: {reason}")
+                    learned_sub = item.get("learnedSubstitutionEvidence") or {}
+                    if isinstance(learned_sub, dict) and learned_sub.get("hasConfirmedPatternSupport"):
+                        support = learned_sub.get("weightedSupport", 0)
+                        patterns = learned_sub.get("matchedPatterns") or []
+                        summary = ", ".join(
+                            f"/{p.get('expected','?')}/→/{p.get('observed','?')}/"
+                            + (f" {p.get('position')}" if p.get("position") not in (None, "", "unknown") else "")
+                            for p in patterns[:3] if isinstance(p, dict)
+                        )
+                        lines.append(f"   Learned speaker support: {summary} • weight {support}")
                 else:
                     lines.append(f"{i}. {item}")
 
@@ -785,6 +795,33 @@ class DirectRecorder(tk.Tk):
                 issues = quality.get("issues") or []
                 if issues:
                     lines.append("Quality issues: " + ", ".join(str(x).replace("_", " ") for x in issues))
+
+        prosody = result.get("prosody") or {}
+        if isinstance(prosody, dict) and prosody.get("available"):
+            lines.append("\nTemporal / prosody:")
+            duration = prosody.get("durationSeconds")
+            pause_count = prosody.get("pauseCount")
+            avg_pause = prosody.get("averagePauseSeconds")
+            rate_band = prosody.get("speechRateBand")
+            sps = prosody.get("syllablesPerSecond")
+            rhythm = prosody.get("rhythmConsistency")
+            ending = (prosody.get("endOfUtterance") or {}).get("pattern")
+            if isinstance(duration, (int, float)):
+                lines.append(f"• Duration: {duration:.2f} seconds")
+            if isinstance(pause_count, int):
+                if isinstance(avg_pause, (int, float)) and pause_count > 0:
+                    lines.append(f"• Pauses: {pause_count} • average {avg_pause:.2f} sec")
+                else:
+                    lines.append(f"• Pauses: {pause_count}")
+            if rate_band:
+                if isinstance(sps, (int, float)):
+                    lines.append(f"• Speech rate: {rate_band} ({sps:.2f} syllable peaks/sec)")
+                else:
+                    lines.append(f"• Speech rate: {rate_band}")
+            if isinstance(rhythm, (int, float)):
+                lines.append(f"• Rhythm consistency: {int(rhythm * 100)}%")
+            if ending:
+                lines.append(f"• Ending pattern: {str(ending).replace('_', ' ')}")
 
         phoneme_analysis = result.get("phonemeAnalysis") or {}
         if isinstance(phoneme_analysis, dict) and phoneme_analysis:

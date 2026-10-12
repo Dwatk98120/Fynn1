@@ -3,11 +3,13 @@ try:
     from server.phoneme_substitution import analyze_substitutions
     from server.phoneme_analysis import summarize_observed_phonemes
     from server.candidate_word_engine import rank_candidate_words
+    from server.temporal_prosody import analyze_temporal_prosody
 except ImportError:
     from recording_quality import analyze_wav_quality
     from phoneme_substitution import analyze_substitutions
     from phoneme_analysis import summarize_observed_phonemes
     from candidate_word_engine import rank_candidate_words
+    from temporal_prosody import analyze_temporal_prosody
 
 import json
 import io, os, re, uuid, json
@@ -134,6 +136,7 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
 
         acoustic=acoustic_features(samples,sr)
         temporal=temporal_features(samples,sr)
+        prosody_evidence=analyze_temporal_prosody(temp_path)
 
         with torch.inference_mode():
             inputs=processor(samples,sampling_rate=16000,return_tensors="pt")
@@ -180,7 +183,7 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
         recording_id = (recording_id or "").strip() or str(uuid.uuid4())
         observation_id=str(uuid.uuid4())
         created_at=datetime.now(timezone.utc).isoformat()
-        raw_evidence={"acoustic":acoustic,"temporal":temporal,"phonemeConfidence":phoneme_analysis}
+        raw_evidence={"acoustic":acoustic,"temporal":temporal,"phonemeConfidence":phoneme_analysis,"prosody":prosody_evidence}
         observation=immutable_observation({
             "observationId":observation_id,
             "sessionId":session_id,
@@ -214,6 +217,7 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
             "observation":observation,
             "transcript":observed,
             "phonemeAnalysis":phoneme_analysis,
+            "prosody":prosody_evidence,
             "phonemeComparison":top_phoneme_comparison,
             "analysis":{
                 "status":"probabilistic",
@@ -225,6 +229,10 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
                 "phonemeConfidence":phoneme_analysis.get("overallPhonemeConfidence",0.0),
                 "uncertainPhonemeCount":phoneme_analysis.get("uncertainCount",0),
                 "hasUncertainOrDistortedSounds":phoneme_analysis.get("uncertainCount",0) > 0,
+                "prosodyAvailable":bool(prosody_evidence.get("available")),
+                "pauseCount":prosody_evidence.get("pauseCount",0),
+                "speechRateBand":prosody_evidence.get("speechRateBand","unknown"),
+                "rhythmConsistency":prosody_evidence.get("rhythmConsistency"),
                 "candidateEngine":{
                     "version":"2",
                     "knownEnglishWordRanking":True,
@@ -233,6 +241,8 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
                     "usesInsertionEvidence":True,
                     "usesSpeakerHistory":True,
                     "usesContext":True,
+                    "usesConfirmedSubstitutionPatterns":True,
+                    "usesPositionSpecificPatterns":True,
                     "preservesMultipleCandidates":True
                 },
                 "evidence":{

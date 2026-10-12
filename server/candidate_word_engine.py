@@ -56,21 +56,82 @@ def _mapping_count(profile: dict, observed_text: str, word: str) -> int:
         return 0
 
 
-def _learned_pattern_support(profile: dict, comparison: dict) -> int:
-    ph = profile.get("patternHistory", {}) if isinstance(profile, dict) else {}
-    if not isinstance(ph, dict):
+def _pattern_count(pattern_history: dict, key: str) -> int:
+    try:
+        value = pattern_history.get(key, 0)
+        if isinstance(value, dict):
+            for field in ("approvedCount", "count", "confirmedCount"):
+                if field in value:
+                    return int(value.get(field, 0) or 0)
+            return 0
+        return int(value or 0)
+    except Exception:
         return 0
 
-    total = 0
+
+def _learned_pattern_evidence(profile: dict, comparison: dict) -> dict:
+    """
+    Score only directional patterns that match the candidate's expected->observed
+    relationship. Because the profile is updated only from approved examples, this
+    acts as confirmed speaker-specific evidence rather than a rewrite of observation.
+    """
+    ph = profile.get("patternHistory", {}) if isinstance(profile, dict) else {}
+    if not isinstance(ph, dict):
+        ph = {}
+
+    matched = []
+    total_count = 0
+    weighted_support = 0.0
+
     for item in comparison.get("substitutions", []) or []:
         if not isinstance(item, dict):
             continue
-        key = f"{item.get('expected')}->{item.get('observed')}"
+
+        expected = str(item.get("expected") or "")
+        observed = str(item.get("observed") or "")
+        position = str(item.get("position") or "unknown")
+
+        generic_key = f"{expected}->{observed}"
+        positional_key = f"{generic_key}@{position}"
+
+        generic_count = _pattern_count(ph, generic_key)
+        positional_count = _pattern_count(ph, positional_key)
+
+        # Positional confirmation is more specific and therefore carries more weight.
+        effective_count = generic_count + (2 * positional_count)
+        if effective_count <= 0:
+            continue
+
+        conf = item.get("observedConfidence")
         try:
-            total += int(ph.get(key, 0) or 0)
+            conf_weight = max(0.35, min(1.0, float(conf))) if conf is not None else 0.70
         except Exception:
-            pass
-    return total
+            conf_weight = 0.70
+
+        item_support = effective_count * conf_weight
+        weighted_support += item_support
+        total_count += effective_count
+        matched.append({
+            "expected": expected,
+            "observed": observed,
+            "position": position,
+            "genericCount": generic_count,
+            "positionalCount": positional_count,
+            "effectiveCount": effective_count,
+            "observedConfidence": round(conf_weight, 3),
+            "weightedSupport": round(item_support, 3),
+        })
+
+    # Saturating boost: repeated approved evidence helps, but can never dominate.
+    boost = min(0.14, 0.022 * weighted_support)
+
+    return {
+        "matchedPatterns": matched,
+        "confirmedPatternCount": total_count,
+        "weightedSupport": round(weighted_support, 3),
+        "boost": round(boost, 3),
+        "hasConfirmedPatternSupport": bool(matched),
+    }
 
 
 def rank_candidate_words(
@@ -210,8 +271,17 @@ def rank_candidate_words(
         mapping_count = _mapping_count(profile, observed_text, word)
         mapping_boost = min(0.12, 0.03 * mapping_count)
 
-        learned_pattern_count = _learned_pattern_support(profile, comparison)
-        pattern_boost = min(0.08, 0.012 * learned_pattern_count)
+        learned_pattern_evidence = _learned_pattern_evidence(profile, comparison)
+        learned_pattern_count = int(learned_pattern_evidence.get("confirmedPatternCount", 0) or 0)
+        pattern_boost = float(learned_pattern_evidence.get("boost", 0.0) or 0.0)
+        if learned_pattern_evidence.get("hasConfirmedPatternSupport"):
+            patterns = learned_pattern_evidence.get("matchedPatterns") or []
+            readable = ", ".join(
+                f"/{p.get('expected','?')}/→/{p.get('observed','?')}/"
+                + (f" ({p.get('position')})" if p.get("position") not in (None, "", "unknown") else "")
+                for p in patterns[:3]
+            )
+            reasons.append(f"confirmed speaker pattern support: {readable}")
 
         learning_adaptation = build_learning_layers(
             profile=profile,
@@ -232,6 +302,7 @@ def rank_candidate_words(
         candidate["speakerWordHistoryCount"] = word_count
         candidate["personalizedMappingCount"] = mapping_count
         candidate["learnedPatternSupportCount"] = learned_pattern_count
+        candidate["learnedSubstitutionEvidence"] = learned_pattern_evidence
         candidate["rankingEvidence"] = {
             "baseEvidenceConfidence": round(base_conf, 3),
             "phonemeSimilarityBoost": round(similarity_boost, 3),
@@ -239,6 +310,7 @@ def rank_candidate_words(
             "speakerWordHistoryBoost": round(word_history_boost, 3),
             "personalizedMappingBoost": round(mapping_boost, 3),
             "learnedPatternBoost": round(pattern_boost, 3),
+            "confirmedPatternWeightedSupport": learned_pattern_evidence.get("weightedSupport", 0.0),
             "speakerAdaptationBoost": round(adaptation_boost, 3),
         }
         candidate["confidence"] = round(final_conf, 3)

@@ -210,6 +210,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun formatTemporalProsodyForResult(root: org.json.JSONObject): String? {
+        val prosody = root.optJSONObject("prosody") ?: return null
+        if (!prosody.optBoolean("available", false)) return null
+
+        val lines = mutableListOf<String>()
+        lines += "Timing & speech pattern:"
+
+        val duration = prosody.optDouble("durationSeconds", -1.0)
+        if (duration >= 0.0) lines += "• Duration: %.2f sec".format(duration)
+
+        val pauseCount = prosody.optInt("pauseCount", 0)
+        val avgPause = prosody.optDouble("averagePauseSeconds", -1.0)
+        if (pauseCount > 0 && avgPause >= 0.0) {
+            lines += "• Pauses: $pauseCount • average %.2f sec".format(avgPause)
+        } else {
+            lines += "• Pauses: $pauseCount"
+        }
+
+        val rate = prosody.optString("speechRateBand", "")
+        val sps = prosody.optDouble("syllablesPerSecond", -1.0)
+        if (rate.isNotBlank()) {
+            lines += if (sps >= 0.0) "• Speech rate: $rate (%.2f syllable peaks/sec)".format(sps)
+            else "• Speech rate: $rate"
+        }
+
+        val rhythm = prosody.optDouble("rhythmConsistency", -1.0)
+        if (rhythm >= 0.0) lines += "• Rhythm consistency: ${(rhythm * 100.0).toInt()}%"
+
+        val ending = prosody.optJSONObject("endOfUtterance")?.optString("pattern", "") ?: ""
+        if (ending.isNotBlank()) lines += "• Ending pattern: ${ending.replace("_", " ")}"
+
+        return lines.joinToString("\n")
+    }
+
     private fun formatExpandedPhonemeAnalysisForResult(root: org.json.JSONObject): String? {
         val analysis = root.optJSONObject("phonemeAnalysis") ?: return null
         val lines = mutableListOf<String>()
@@ -357,9 +392,9 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             lp.dimAmount = 0.48f
             w.attributes = lp
             w.decorView.post {
-                val width = (resources.displayMetrics.widthPixels * 0.91f).toInt()
+                val width = (resources.displayMetrics.widthPixels * 0.92f).toInt()
                 w.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
-                w.decorView.background = popupBackground("#FFFFFF", 26)
+                w.decorView.background = popupBackground("#FFFFFF", 22)
                 w.decorView.setPadding(popupDp(2), popupDp(2), popupDp(2), popupDp(2))
             }
         }
@@ -368,7 +403,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         if (alertTitleId != 0) {
             dialog.findViewById<android.widget.TextView?>(alertTitleId)?.apply {
                 setTextColor(android.graphics.Color.parseColor("#21124D"))
-                textSize = 22f
+                textSize = 19f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             }
         }
@@ -453,11 +488,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     private fun popupHeader(title: String, subtitle: String? = null, icon: String = "✨"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(8), popupDp(4), popupDp(8), popupDp(12))
+            setPadding(popupDp(4), popupDp(2), popupDp(4), popupDp(8))
 
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = "$icon  $title"
-                textSize = 24f
+                textSize = 20f
                 setTextColor(android.graphics.Color.parseColor("#21124D"))
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
@@ -465,7 +500,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             if (!subtitle.isNullOrBlank()) {
                 addView(android.widget.TextView(this@MainActivity).apply {
                     text = subtitle
-                    textSize = 15f
+                    textSize = 13f
                     setTextColor(android.graphics.Color.parseColor("#666270"))
                     setPadding(0, popupDp(6), 0, 0)
                 })
@@ -490,19 +525,19 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 }
                 append("   ›")
             }
-            textSize = if (description.isNullOrBlank()) 16f else 15f
+            textSize = if (description.isNullOrBlank()) 15f else 14f
             isAllCaps = false
             gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
-            minHeight = popupDp(if (description.isNullOrBlank()) 58 else 70)
-            setPadding(popupDp(18), popupDp(10), popupDp(14), popupDp(10))
+            minHeight = popupDp(if (description.isNullOrBlank()) 48 else 60)
+            setPadding(popupDp(14), popupDp(8), popupDp(12), popupDp(8))
             setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#4D27A6"))
-            background = popupBackground(if (primary) "#6D4DB3" else "#F1ECFC", 18)
+            background = popupBackground(if (primary) "#6744B0" else "#F3F0FA", 14)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             val lp = android.widget.LinearLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            lp.setMargins(0, popupDp(5), 0, popupDp(5))
+            lp.setMargins(0, popupDp(3), 0, popupDp(3))
             layoutParams = lp
             setOnClickListener { action() }
         }
@@ -510,12 +545,12 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     private fun popupInfoCard(title: String, body: String, icon: String = "✓"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(16), popupDp(14), popupDp(16), popupDp(14))
-            background = popupBackground("#F7F4FD", 18)
+            setPadding(popupDp(13), popupDp(10), popupDp(13), popupDp(10))
+            background = popupBackground("#F8F7FB", 14)
 
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = "$icon  $title"
-                textSize = 17f
+                textSize = 15f
                 setTextColor(android.graphics.Color.parseColor("#40218F"))
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
@@ -1175,79 +1210,66 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val dialog = android.app.Dialog(this@MainActivity)
         val content = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(10))
+            setPadding(popupDp(18), popupDp(14), popupDp(18), popupDp(12))
         }
-
-                content.addView(popupActionButton(
+        content.addView(popupHeader(
+            "Parent PC Connection",
+            "Connect securely over your local Wi-Fi network.",
+            "🖥️"
+        ))
+        content.addView(popupActionButton(
             "Easy Connect",
-            "Find, remember, and reconnect to the Parent PC automatically.",
-            "🔗"
+            "Find and reconnect to your Parent PC automatically.",
+            "🔗", true
         ) {
             dialog.dismiss()
             showParentPcPairingWizard()
         })
-
-content.addView(popupHeader(
-            "Parent PC Connection",
-            "Connect this phone to the Parent PC for local speech analysis and learning.",
-            "🖥️"
-        ))
-
+        val savedAddress = parentPcApiBase()
         content.addView(popupInfoCard(
-            "Local connection",
-            "Enter the Parent PC address shown by the local server. Both devices should be on the same local network.",
-            "🟢"
-        ).apply {
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.setMargins(0, popupDp(5), 0, popupDp(12))
-            layoutParams = lp
-        })
-
+            "Connection status",
+            if (savedAddress.isBlank()) "No Parent PC address saved yet. Use Easy Connect to get started."
+            else "Saved Parent PC: $savedAddress",
+            if (savedAddress.isBlank()) "○" else "✓"
+        ))
         content.addView(popupInfoCard(
             "Bluetooth pairing",
             selectedBluetoothParentPcSummary(),
             "📶"
-        ).apply {
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.setMargins(0, 0, 0, popupDp(8))
-            layoutParams = lp
-        })
-
-        content.addView(popupActionButton(
-            "Bluetooth Setup",
-            "Pair or choose the Parent PC and remember it for future sessions.",
-            "📶"
-        ) { openBluetoothParentPcSetup() })
-
-        val label = TextView(this@MainActivity).apply {
-            text = "Parent PC address"
-            textSize = 15f
-            setTextColor(android.graphics.Color.parseColor("#32245C"))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setPadding(0, popupDp(4), 0, popupDp(5))
+        ))
+        val advanced = LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = android.view.View.GONE
         }
-        content.addView(label)
-
-        val input = EditText(this@MainActivity).apply {
-            hint = "Example: 192.168.1.25:8000"
-            setText(parentPcApiBase())
-            isSingleLine = true
-            background = popupBackground("#F7F4FD", 14)
-            setPadding(popupDp(14), popupDp(12), popupDp(14), popupDp(12))
-        }
-        content.addView(input)
-
-        content.addView(popupActionButton(
-            "Test Connection",
-            "Check whether the Parent PC service can be reached.",
+        val toggle = popupActionButton(
+            "Advanced settings",
+            "Manual address, Bluetooth setup, and connection testing.",
             "⚙️"
         ) {
+            advanced.visibility = if (advanced.visibility == android.view.View.VISIBLE)
+                android.view.View.GONE else android.view.View.VISIBLE
+        }
+        content.addView(toggle)
+        advanced.addView(popupActionButton(
+            "Bluetooth Setup", "Choose or pair a Parent PC.", "📶"
+        ) { openBluetoothParentPcSetup() })
+        advanced.addView(TextView(this@MainActivity).apply {
+            text = "Parent PC address"
+            textSize = 14f
+            setTextColor(android.graphics.Color.parseColor("#32245C"))
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, popupDp(9), 0, popupDp(4))
+        })
+        val input = EditText(this@MainActivity).apply {
+            hint = "192.168.1.25:8000"
+            setText(savedAddress)
+            isSingleLine = true
+            textSize = 15f
+            background = popupBackground("#F7F4FD", 12)
+            setPadding(popupDp(12), popupDp(10), popupDp(12), popupDp(10))
+        }
+        advanced.addView(input)
+        advanced.addView(popupActionButton("Test Connection", null, "↗") {
             val url = normalizeParentPcUrl(input.text.toString())
             if (url.isBlank()) {
                 Toast.makeText(this@MainActivity, "Enter the Parent PC address first.", Toast.LENGTH_SHORT).show()
@@ -1255,20 +1277,26 @@ content.addView(popupHeader(
                 testParentPcConnection(url)
             }
         })
-
-        
-        content.addView(popupActionButton("Save Connection", null, "✓", true) {
+        advanced.addView(popupActionButton("Save Connection", null, "✓", true) {
             val url = normalizeParentPcUrl(input.text.toString())
             getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
                 .edit().putString("parent_pc_url", url).apply()
             status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC saved: $url"
             dialog.dismiss()
         })
-        content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
-
-        dialog.setContentView(ScrollView(this@MainActivity).apply { addView(content) })
+        content.addView(advanced)
+        content.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
+        val scroll = ScrollView(this@MainActivity).apply {
+            isFillViewport = false
+            addView(content)
+        }
+        dialog.setContentView(scroll)
         dialog.show()
         styleUnifiedDialog(dialog)
+        val maxHeight = (resources.displayMetrics.heightPixels * 0.78f).toInt()
+        scroll.layoutParams = android.widget.FrameLayout.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT, maxHeight
+        )
     }
 
     private fun testParentPcConnection(base: String) {
