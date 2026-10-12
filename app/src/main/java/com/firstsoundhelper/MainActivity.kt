@@ -452,20 +452,21 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         when (view) {
             is android.widget.Button -> {
                 view.isAllCaps = false
-                view.textSize = 15f
-                view.minHeight = popupDp(54)
-                view.setPadding(popupDp(16), popupDp(9), popupDp(14), popupDp(9))
+                view.textSize = 14f
+                view.minHeight = popupDp(46)
+                view.minimumHeight = popupDp(46)
+                view.setPadding(popupDp(12), popupDp(7), popupDp(12), popupDp(7))
                 view.setTextColor(android.graphics.Color.parseColor("#4D27A6"))
-                view.background = popupBackground("#F1ECFC", 18)
+                view.background = popupBackground("#F5F3FA", 12)
                 view.setTypeface(view.typeface, android.graphics.Typeface.BOLD)
             }
 
             is android.widget.EditText -> {
-                view.textSize = 16f
+                view.textSize = 14f
                 view.setTextColor(android.graphics.Color.parseColor("#3F3B48"))
                 view.setHintTextColor(android.graphics.Color.parseColor("#88838F"))
                 view.background = popupBackground("#F7F4FD", 14)
-                view.setPadding(popupDp(14), popupDp(11), popupDp(14), popupDp(11))
+                view.setPadding(popupDp(12), popupDp(9), popupDp(12), popupDp(9))
             }
 
             is android.widget.TextView -> {
@@ -489,11 +490,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     private fun popupHeader(title: String, subtitle: String? = null, icon: String = "✨"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(4), popupDp(2), popupDp(4), popupDp(8))
+            setPadding(popupDp(4), popupDp(2), popupDp(4), popupDp(6))
 
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = "$icon  $title"
-                textSize = 20f
+                textSize = 18f
                 setTextColor(android.graphics.Color.parseColor("#21124D"))
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
@@ -520,10 +521,10 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             textSize = 14f
             isAllCaps = false
             gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
-            minHeight = popupDp(48)
-            setPadding(popupDp(12), popupDp(7), popupDp(10), popupDp(7))
+            minHeight = popupDp(44)
+            setPadding(popupDp(12), popupDp(6), popupDp(10), popupDp(6))
             setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#39216D"))
-            background = popupBackground(if (primary) "#6744B0" else "#F5F3FA", 12)
+            background = popupBackground(if (primary) "#6744B0" else "#F7F6FA", 12)
             val lp = android.widget.LinearLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -538,9 +539,9 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val row = android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(popupDp(12), popupDp(8), popupDp(10), popupDp(8))
+            setPadding(popupDp(12), popupDp(6), popupDp(10), popupDp(6))
             background = popupBackground("#F7F6FA", 12)
-            minimumHeight = popupDp(56)
+            minimumHeight = popupDp(50)
             isClickable = true
             isFocusable = true
             setOnClickListener { action() }
@@ -549,7 +550,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             text = icon
             textSize = 19f
             gravity = android.view.Gravity.CENTER
-        }, android.widget.LinearLayout.LayoutParams(popupDp(34), popupDp(38)))
+        }, android.widget.LinearLayout.LayoutParams(popupDp(32), popupDp(34)))
         val labels = android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(popupDp(6), 0, popupDp(4), 0)
@@ -579,14 +580,14 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = popupDp(5) }
+            ).apply { bottomMargin = popupDp(4) }
         }
     }
 
     private fun popupInfoCard(title: String, body: String, icon: String = "✓"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(13), popupDp(10), popupDp(13), popupDp(10))
+            setPadding(popupDp(12), popupDp(8), popupDp(12), popupDp(8))
             background = popupBackground("#F8F7FB", 14)
 
             addView(android.widget.TextView(this@MainActivity).apply {
@@ -597,9 +598,9 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             })
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = body
-                textSize = 15f
+                textSize = 13f
                 setTextColor(android.graphics.Color.parseColor("#53505D"))
-                setPadding(0, popupDp(8), 0, 0)
+                setPadding(0, popupDp(5), 0, 0)
                 setLineSpacing(0f, 1.1f)
             })
         }

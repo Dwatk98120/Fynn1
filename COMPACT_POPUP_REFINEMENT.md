@@ -1,0 +1,1 @@
+Compact popup pass: redesigned Student Communication Tools with fixed-height scrollable menu, persistent close control, concise secondary descriptions and shared compact menu-row helper. All AAC actions retained. Other legacy dialogs retain existing styling; full app-wide redesign is still pending.
