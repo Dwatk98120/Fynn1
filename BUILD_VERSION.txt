@@ -1,0 +1,4 @@
+Hearlium Parent PC Windows Installer Builder
+Updated from FirstSoundHelper_v6_AppWide_Popup_Refinement_FULL_READY.zip
+Includes Parent PC server, temporal/prosody, learned substitutions, candidate engine, caregiver review and pairing.
+Windows .exe/.iss compilation not performed in this Linux environment.

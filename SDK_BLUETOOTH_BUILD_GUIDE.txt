@@ -1,0 +1,16 @@
+Hearlium Bluetooth .NET SDK auto-detection
+
+The Bluetooth helper targets .NET 8 for Windows (net8.0-windows10.0.19041.0).
+The builder accepts installed SDK 8, 9, 10, or newer; it does NOT require SDK 8 specifically.
+An SDK 10 installation can build a .NET 8-targeted project when the needed targeting packs are available or can be restored.
+
+1. Extract the complete ZIP.
+2. Run BUILD_HEARLIUM_INSTALLER.bat from the extracted folder.
+3. The script lists SDKs via dotnet --list-sdks and reports the active SDK.
+4. If missing, install Windows x64 .NET SDK (not runtime) from https://dotnet.microsoft.com/en-us/download/dotnet/8.0
+5. Restart the terminal after installation. Run dotnet --list-sdks to confirm.
+6. Bluetooth publish failures are recorded in hearlium_build.log.
+7. For a standalone Bluetooth test, run parent_pc_local\build_bluetooth_service.bat.
+
+No SDK? The full installer intentionally stops rather than shipping broken pairing.
+The compiled Bluetooth helper is self-contained, so target PCs do not need a .NET runtime just to run the helper.

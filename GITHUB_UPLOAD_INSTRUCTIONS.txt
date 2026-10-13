@@ -1,0 +1,11 @@
+FIRST SOUND HELPER — Fynn1 GitHub APK build
+1. Open this ZIP and extract its contents.
+2. Copy the CONTENTS directly to the ROOT of Fynn1's main branch.
+   Do not upload the enclosing ZIP as a single repository file.
+3. Confirm app/src/main/res/layout/activity_main.xml contains activeRecordingIndicator.
+4. In GitHub Actions, run Build Android APK on the main branch.
+5. Download the NEW APK artifact, install it, and look for:
+   'Not Recording · INDICATOR V2' between Record speech and Stop.
+6. During recording the status should pulse red.
+This ZIP is Android source, not an already compiled APK.
+Build and on-device behavior are not yet verified.
