@@ -1,0 +1,14 @@
+HEARLIUM INSTALLER BUILDER - EXTRACTION CHECK
+
+1. Right-click the ZIP in Downloads and choose Extract All.
+2. Open the newly extracted folder containing BUILD_HEARLIUM_INSTALLER.bat.
+3. Confirm HearliumParentPC.spec is alongside the BAT file.
+4. Confirm parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj exists.
+5. Double-click BUILD_HEARLIUM_INSTALLER.bat.
+
+If the preflight check reports missing source, re-extract the ENTIRE ZIP.
+This builder includes the previous speech-analysis and Uvicorn console fixes.
+Bluetooth compilation requires a compatible Windows .NET SDK and its target packs;
+if that optional step fails, the core installer may still build.
+
+Validation: ZIP contents and Python syntax only; Windows compilation not run here.
