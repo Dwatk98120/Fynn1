@@ -1,3 +1,4 @@
+from pathlib import Path
 try:
     from server.recording_quality import analyze_wav_quality
     from server.phoneme_substitution import analyze_substitutions
@@ -136,7 +137,7 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
 
         acoustic=acoustic_features(samples,sr)
         temporal=temporal_features(samples,sr)
-        prosody_evidence=analyze_temporal_prosody(temp_path)
+        prosody_evidence=analyze_temporal_prosody(raw)
 
         with torch.inference_mode():
             inputs=processor(samples,sampling_rate=16000,return_tensors="pt")
@@ -257,7 +258,18 @@ async def analyze_audio(audio:UploadFile=File(...),context:Optional[str]=Form(""
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(500,detail=f"analysis_failed: {type(e).__name__}")
+        import traceback
+        trace = traceback.format_exc()
+        print("\n[HEARLIUM ANALYSIS ERROR]", type(e).__name__, str(e), flush=True)
+        print(trace, flush=True)
+        try:
+            log_dir = Path(__file__).resolve().parent.parent / "logs"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            with (log_dir / "analysis_errors.log").open("a", encoding="utf-8") as log:
+                log.write(f"\n[{datetime.now().isoformat()}] /v1/analyze-audio\n{trace}\n")
+        except Exception as log_error:
+            print("Unable to write analysis log:", log_error, flush=True)
+        raise HTTPException(500, detail=f"analysis_failed: {type(e).__name__}")
 
 
 @app.post("/v1/learning/feedback")
