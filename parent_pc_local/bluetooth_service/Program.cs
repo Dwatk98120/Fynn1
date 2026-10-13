@@ -28,9 +28,10 @@ internal static class Program
             {
                 string payload = BuildHandshake();
                 using var writer = new DataWriter(args.Socket.OutputStream)
-                {
-                   UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8,
-                    ByteOrder = ByteOrder.LittleEndian
+{
+    UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8,
+    ByteOrder = ByteOrder.LittleEndian
+};
                 };
                 writer.WriteString(payload + "\n");
                 await writer.StoreAsync();
