@@ -338,9 +338,36 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }
     
-        updateCommunicationFocusButtons()
+        setRecordingIndicator(false)
         startParentPcAutoReconnect()
 }
+
+    private var recordingPulse: android.animation.ObjectAnimator? = null
+
+    private fun setRecordingIndicator(active: Boolean) {
+        val indicator = findViewById<android.widget.TextView>(R.id.activeRecordingIndicator)
+        recordingPulse?.cancel()
+        recordingPulse = null
+        indicator.clearAnimation()
+        indicator.visibility = android.view.View.VISIBLE
+        indicator.alpha = 1f
+        if (active) {
+            indicator.text = "● RECORDING"
+            indicator.setTextColor(android.graphics.Color.rgb(211, 47, 47))
+            recordingPulse = android.animation.ObjectAnimator.ofFloat(
+                indicator, android.view.View.ALPHA, 1f, 0.18f
+            ).apply {
+                duration = 550L
+                repeatCount = android.animation.ValueAnimator.INFINITE
+                repeatMode = android.animation.ValueAnimator.REVERSE
+                interpolator = android.view.animation.LinearInterpolator()
+                start()
+            }
+        } else {
+            indicator.text = "● Not Recording"
+            indicator.setTextColor(android.graphics.Color.rgb(110, 110, 110))
+        }
+    }
 
     private fun startRecording() {
         val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
@@ -350,7 +377,19 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.recordButton).isEnabled=false
         findViewById<Button>(R.id.stopButton).isEnabled=true
         status.text="Listening…"
-        recorder!!.startRecording()
+        try {
+            recorder!!.startRecording()
+            setRecordingIndicator(true)
+        } catch (e: Exception) {
+            recording = false
+            setRecordingIndicator(false)
+            recorder?.release()
+            recorder = null
+            findViewById<Button>(R.id.recordButton).isEnabled = true
+            findViewById<Button>(R.id.stopButton).isEnabled = false
+            status.text = "Unable to start recording: ${e.message}"
+            return
+        }
         recordingThread=Thread {
             val buf=ByteArray(maxOf(min,4096))
             while(recording) { val n=recorder!!.read(buf,0,buf.size); if(n>0) synchronized(pcm){pcm.write(buf,0,n)} }
@@ -359,6 +398,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
     private fun stopRecording() {
         recording=false
+        setRecordingIndicator(false)
         try{recorder?.stop()}catch(_:Exception){}
         recorder?.release(); recorder=null
         findViewById<Button>(R.id.recordButton).isEnabled=true
@@ -393,9 +433,9 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             lp.dimAmount = 0.48f
             w.attributes = lp
             w.decorView.post {
-                val width = (resources.displayMetrics.widthPixels * 0.92f).toInt()
+                val width = (resources.displayMetrics.widthPixels * 0.91f).toInt()
                 w.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
-                w.decorView.background = popupBackground("#FFFFFF", 22)
+                w.decorView.background = popupBackground("#FFFFFF", 26)
                 w.decorView.setPadding(popupDp(2), popupDp(2), popupDp(2), popupDp(2))
             }
         }
@@ -404,7 +444,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         if (alertTitleId != 0) {
             dialog.findViewById<android.widget.TextView?>(alertTitleId)?.apply {
                 setTextColor(android.graphics.Color.parseColor("#21124D"))
-                textSize = 19f
+                textSize = 22f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             }
         }
@@ -452,26 +492,30 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         when (view) {
             is android.widget.Button -> {
                 view.isAllCaps = false
-                view.textSize = 14f
-                view.minHeight = popupDp(46)
-                view.minimumHeight = popupDp(46)
-                view.setPadding(popupDp(12), popupDp(7), popupDp(12), popupDp(7))
+                view.textSize = 15f
+                view.minHeight = popupDp(54)
+                view.setPadding(popupDp(16), popupDp(9), popupDp(14), popupDp(9))
                 view.setTextColor(android.graphics.Color.parseColor("#4D27A6"))
-                view.background = popupBackground("#F5F3FA", 12)
+                view.background = popupBackground("#F1ECFC", 18)
                 view.setTypeface(view.typeface, android.graphics.Typeface.BOLD)
             }
 
             is android.widget.EditText -> {
-                view.textSize = 14f
+                view.textSize = 16f
                 view.setTextColor(android.graphics.Color.parseColor("#3F3B48"))
                 view.setHintTextColor(android.graphics.Color.parseColor("#88838F"))
                 view.background = popupBackground("#F7F4FD", 14)
-                view.setPadding(popupDp(12), popupDp(9), popupDp(12), popupDp(9))
+                view.setPadding(popupDp(14), popupDp(11), popupDp(14), popupDp(11))
             }
 
             is android.widget.TextView -> {
-                // Keep each custom popup's intended title, description and status colors.
-                // Native alert title/message are styled explicitly in styleUnifiedDialog.
+                if (view.textSize >= 20f) {
+                    view.setTextColor(android.graphics.Color.parseColor("#21124D"))
+                    view.setTypeface(view.typeface, android.graphics.Typeface.BOLD)
+                } else {
+                    view.setTextColor(android.graphics.Color.parseColor("#53505D"))
+                    view.setLineSpacing(0f, 1.08f)
+                }
             }
         }
 
@@ -485,11 +529,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     private fun popupHeader(title: String, subtitle: String? = null, icon: String = "✨"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(2), popupDp(2), popupDp(2), popupDp(8))
+            setPadding(popupDp(8), popupDp(4), popupDp(8), popupDp(12))
 
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = "$icon  $title"
-                textSize = 18f
+                textSize = 24f
                 setTextColor(android.graphics.Color.parseColor("#21124D"))
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
@@ -497,7 +541,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             if (!subtitle.isNullOrBlank()) {
                 addView(android.widget.TextView(this@MainActivity).apply {
                     text = subtitle
-                    textSize = 13f
+                    textSize = 15f
                     setTextColor(android.graphics.Color.parseColor("#666270"))
                     setPadding(0, popupDp(6), 0, 0)
                 })
@@ -512,103 +556,50 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         action: () -> Unit
     ): android.widget.Button =
         android.widget.Button(this@MainActivity).apply {
-            val heading = "$icon  $title"
-            val label = if (description.isNullOrBlank()) "$heading   ›" else "$heading\n$description"
-            text = android.text.SpannableString(label).apply {
+            text = buildString {
+                append(icon)
+                append("  ")
+                append(title)
                 if (!description.isNullOrBlank()) {
-                    val start = heading.length + 1
-                    setSpan(android.text.style.RelativeSizeSpan(0.85f), start, length,
-                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    setSpan(android.text.style.ForegroundColorSpan(
-                        android.graphics.Color.parseColor(if (primary) "#EEE8FC" else "#696477")
-                    ), start, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    setSpan(android.text.style.StyleSpan(android.graphics.Typeface.NORMAL), start, length,
-                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    append("\n")
+                    append(description)
                 }
+                append("   ›")
             }
-            textSize = 14f
+            textSize = if (description.isNullOrBlank()) 16f else 15f
             isAllCaps = false
             gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
-            minHeight = popupDp(48)
-            setPadding(popupDp(12), popupDp(7), popupDp(10), popupDp(7))
-            setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#39216D"))
-            background = popupBackground(if (primary) "#6744B0" else "#F7F6FA", 12)
+            minHeight = popupDp(if (description.isNullOrBlank()) 58 else 70)
+            setPadding(popupDp(18), popupDp(10), popupDp(14), popupDp(10))
+            setTextColor(android.graphics.Color.parseColor(if (primary) "#FFFFFF" else "#4D27A6"))
+            background = popupBackground(if (primary) "#6D4DB3" else "#F1ECFC", 18)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
             val lp = android.widget.LinearLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            lp.setMargins(0, popupDp(2), 0, popupDp(2))
+            lp.setMargins(0, popupDp(5), 0, popupDp(5))
             layoutParams = lp
             setOnClickListener { action() }
         }
 
-    // Compact menu row: only the title is prominent; supporting text stays secondary.
-    private fun popupMenuRow(icon: String, title: String, detail: String, action: () -> Unit): android.view.View {
-        val row = android.widget.LinearLayout(this@MainActivity).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(popupDp(12), popupDp(6), popupDp(10), popupDp(6))
-            background = popupBackground("#F7F6FA", 12)
-            minimumHeight = popupDp(50)
-            isClickable = true
-            isFocusable = true
-            setOnClickListener { action() }
-        }
-        row.addView(android.widget.TextView(this@MainActivity).apply {
-            text = icon
-            textSize = 19f
-            gravity = android.view.Gravity.CENTER
-        }, android.widget.LinearLayout.LayoutParams(popupDp(32), popupDp(34)))
-        val labels = android.widget.LinearLayout(this@MainActivity).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(6), 0, popupDp(4), 0)
-        }
-        labels.addView(android.widget.TextView(this@MainActivity).apply {
-            text = title
-            textSize = 15f
-            setTextColor(android.graphics.Color.parseColor("#2B2050"))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        })
-        labels.addView(android.widget.TextView(this@MainActivity).apply {
-            text = detail
-            textSize = 12f
-            setTextColor(android.graphics.Color.parseColor("#656172"))
-            maxLines = 2
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        })
-        row.addView(labels, android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        row.addView(android.widget.TextView(this@MainActivity).apply {
-            text = "›"
-            textSize = 23f
-            setTextColor(android.graphics.Color.parseColor("#75629D"))
-        })
-        return row.apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = popupDp(4) }
-        }
-    }
-
     private fun popupInfoCard(title: String, body: String, icon: String = "✓"): android.widget.LinearLayout =
         android.widget.LinearLayout(this@MainActivity).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(popupDp(12), popupDp(8), popupDp(12), popupDp(8))
-            background = popupBackground("#F8F7FB", 14)
+            setPadding(popupDp(16), popupDp(14), popupDp(16), popupDp(14))
+            background = popupBackground("#F7F4FD", 18)
 
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = "$icon  $title"
-                textSize = 15f
+                textSize = 17f
                 setTextColor(android.graphics.Color.parseColor("#40218F"))
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             addView(android.widget.TextView(this@MainActivity).apply {
                 text = body
-                textSize = 13f
+                textSize = 15f
                 setTextColor(android.graphics.Color.parseColor("#53505D"))
-                setPadding(0, popupDp(5), 0, 0)
+                setPadding(0, popupDp(8), 0, 0)
                 setLineSpacing(0f, 1.1f)
             })
         }
@@ -673,7 +664,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
             .setTitle("Analyze Speech")
             .setView(box)
-            .setPositiveButton("Analyze") { _, _ ->
+            .setPositiveButton("Send to Parent PC") { _, _ ->
                 pendingAnalyzeContext = input.text.toString().trim()
                 uploadForAnalysis()
             }
@@ -697,7 +688,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             return
         }
         if(pcm.size()==0){result.text="Record a short word or phrase first.";return}
-        status.text="Analyzing phonemes…"; result.text="Listening for initial and final consonant patterns and comparing possible words…"
+        status.text="Sending recording to Parent PC…"; result.text="Uploading recorded audio securely over your local Wi-Fi connection…"
         Thread {
             try {
                 val client=OkHttpClient.Builder().connectTimeout(20,TimeUnit.SECONDS).readTimeout(120,TimeUnit.SECONDS).build()
@@ -708,6 +699,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     .addFormDataPart("speaker_id", speakerId())
                     .addFormDataPart("audio","speech.wav",wavBytes().toRequestBody("audio/wav".toMediaType()))
                     .build()
+                runOnUiThread { status.text = "Parent PC analyzing recording…" }
                 val req=Request.Builder().url("$base/v1/analyze-audio").post(body).build()
                 client.newCall(req).execute().use { r ->
                     val txt=r.body?.string()?:""
@@ -1260,66 +1252,79 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val dialog = android.app.Dialog(this@MainActivity)
         val content = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(popupDp(18), popupDp(14), popupDp(18), popupDp(12))
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(10))
         }
-        content.addView(popupHeader(
-            "Parent PC Connection",
-            "Connect securely over your local Wi-Fi network.",
-            "🖥️"
-        ))
-        content.addView(popupActionButton(
+
+                content.addView(popupActionButton(
             "Easy Connect",
-            "Find and reconnect to your Parent PC automatically.",
-            "🔗", true
+            "Find, remember, and reconnect to the Parent PC automatically.",
+            "🔗"
         ) {
             dialog.dismiss()
             showParentPcPairingWizard()
         })
-        val savedAddress = parentPcApiBase()
-        content.addView(popupInfoCard(
-            "Connection status",
-            if (savedAddress.isBlank()) "No Parent PC address saved yet. Use Easy Connect to get started."
-            else "Saved Parent PC: $savedAddress",
-            if (savedAddress.isBlank()) "○" else "✓"
+
+content.addView(popupHeader(
+            "Parent PC Connection",
+            "Connect this phone to the Parent PC for local speech analysis and learning.",
+            "🖥️"
         ))
+
+        content.addView(popupInfoCard(
+            "Local connection",
+            "Enter the Parent PC address shown by the local server. Both devices should be on the same local network.",
+            "🟢"
+        ).apply {
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.setMargins(0, popupDp(5), 0, popupDp(12))
+            layoutParams = lp
+        })
+
         content.addView(popupInfoCard(
             "Bluetooth pairing",
             selectedBluetoothParentPcSummary(),
             "📶"
-        ))
-        val advanced = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            visibility = android.view.View.GONE
-        }
-        val toggle = popupActionButton(
-            "Advanced settings",
-            "Manual address, Bluetooth setup, and connection testing.",
-            "⚙️"
-        ) {
-            advanced.visibility = if (advanced.visibility == android.view.View.VISIBLE)
-                android.view.View.GONE else android.view.View.VISIBLE
-        }
-        content.addView(toggle)
-        advanced.addView(popupActionButton(
-            "Bluetooth Setup", "Choose or pair a Parent PC.", "📶"
+        ).apply {
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.setMargins(0, 0, 0, popupDp(8))
+            layoutParams = lp
+        })
+
+        content.addView(popupActionButton(
+            "Bluetooth Setup",
+            "Pair or choose the Parent PC and remember it for future sessions.",
+            "📶"
         ) { openBluetoothParentPcSetup() })
-        advanced.addView(TextView(this@MainActivity).apply {
+
+        val label = TextView(this@MainActivity).apply {
             text = "Parent PC address"
-            textSize = 14f
+            textSize = 15f
             setTextColor(android.graphics.Color.parseColor("#32245C"))
             setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setPadding(0, popupDp(9), 0, popupDp(4))
-        })
-        val input = EditText(this@MainActivity).apply {
-            hint = "192.168.1.25:8000"
-            setText(savedAddress)
-            isSingleLine = true
-            textSize = 15f
-            background = popupBackground("#F7F4FD", 12)
-            setPadding(popupDp(12), popupDp(10), popupDp(12), popupDp(10))
+            setPadding(0, popupDp(4), 0, popupDp(5))
         }
-        advanced.addView(input)
-        advanced.addView(popupActionButton("Test Connection", null, "↗") {
+        content.addView(label)
+
+        val input = EditText(this@MainActivity).apply {
+            hint = "Example: 192.168.1.25:8000"
+            setText(parentPcApiBase())
+            isSingleLine = true
+            background = popupBackground("#F7F4FD", 14)
+            setPadding(popupDp(14), popupDp(12), popupDp(14), popupDp(12))
+        }
+        content.addView(input)
+
+        content.addView(popupActionButton(
+            "Test Connection",
+            "Check whether the Parent PC service can be reached.",
+            "⚙️"
+        ) {
             val url = normalizeParentPcUrl(input.text.toString())
             if (url.isBlank()) {
                 Toast.makeText(this@MainActivity, "Enter the Parent PC address first.", Toast.LENGTH_SHORT).show()
@@ -1327,46 +1332,20 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                 testParentPcConnection(url)
             }
         })
-        advanced.addView(popupActionButton("Save Connection", null, "✓", true) {
+
+        
+        content.addView(popupActionButton("Save Connection", null, "✓", true) {
             val url = normalizeParentPcUrl(input.text.toString())
             getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
                 .edit().putString("parent_pc_url", url).apply()
             status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC saved: $url"
             dialog.dismiss()
         })
-        content.addView(advanced)
-        content.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
-        val scroll = ScrollView(this@MainActivity).apply {
-            isFillViewport = false
-            addView(content)
-        }
-        dialog.setContentView(scroll)
+        content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
+
+        dialog.setContentView(ScrollView(this@MainActivity).apply { addView(content) })
         dialog.show()
         styleUnifiedDialog(dialog)
-        // Fit the connection sheet to its contents. Only cap tall expanded settings.
-        // A fixed 78% height created a large empty white panel in the collapsed state.
-        val maxHeight = (resources.displayMetrics.heightPixels * 0.80f).toInt()
-        scroll.post {
-            val desiredHeight = content.measuredHeight + popupDp(8)
-            scroll.layoutParams = android.widget.FrameLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                minOf(desiredHeight, maxHeight)
-            )
-        }
-        toggle.setOnClickListener {
-            advanced.visibility = if (advanced.visibility == android.view.View.VISIBLE)
-                android.view.View.GONE else android.view.View.VISIBLE
-            scroll.post {
-                content.measure(
-                    android.view.View.MeasureSpec.makeMeasureSpec(scroll.width, android.view.View.MeasureSpec.EXACTLY),
-                    android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED)
-                )
-                scroll.layoutParams = android.widget.FrameLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    minOf(content.measuredHeight + popupDp(8), maxHeight)
-                )
-            }
-        }
     }
 
     private fun testParentPcConnection(base: String) {
@@ -3310,115 +3289,48 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         customVocabularyFile().writeText(a.toString())
     }
 
-    // AAC is always installed and available; this preference only changes presentation.
-    private fun communicationFocus(): String =
-        supportPrefs().getString("communication_focus", "both") ?: "both"
-
-    private fun updateCommunicationFocusButtons() {
-        findViewById<Button>(R.id.studentToolsButton)?.text = when (communicationFocus()) {
-            "speech" -> "AAC Communication (Available Anytime)"
-            "aac" -> "AAC Communication Tools"
-            else -> "Speech + AAC Communication Tools"
-        }
-    }
-
-    private fun showCommunicationFocusSetup() {
-        val labels = arrayOf(
-            "Speech Understanding Focus",
-            "Speech + AAC Together (Recommended)",
-            "AAC Communication Focus"
-        )
-        val values = arrayOf("speech", "both", "aac")
-        val current = values.indexOf(communicationFocus()).coerceAtLeast(0)
-        val dialog = android.app.AlertDialog.Builder(this@MainActivity)
-            .setTitle("Communication Setup")
-            .setSingleChoiceItems(labels, current) { d, index ->
-                supportPrefs().edit().putString("communication_focus", values[index]).apply()
-                updateCommunicationFocusButtons()
-                Toast.makeText(this@MainActivity, "Communication setup saved", Toast.LENGTH_SHORT).show()
-                d.dismiss()
-            }
-            .setNegativeButton("Close", null)
-            .create()
-        dialog.setOnShowListener { styleUnifiedDialog(dialog) }
-        dialog.show()
-    }
-
     private fun showStudentCommunicationTools() {
         val dialog = android.app.Dialog(this@MainActivity)
         val list = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(popupDp(16), popupDp(8), popupDp(16), popupDp(12))
+            setPadding(popupDp(22), popupDp(18), popupDp(22), popupDp(22))
         }
-        val header = android.widget.LinearLayout(this@MainActivity).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(popupDp(16), popupDp(12), popupDp(10), popupDp(10))
-        }
-        header.addView(android.widget.TextView(this@MainActivity).apply {
-            text = "Communication Tools"
-            textSize = 20f
-            setTextColor(android.graphics.Color.parseColor("#251747"))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        }, android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        header.addView(android.widget.TextView(this@MainActivity).apply {
-            text = "✕"
-            textSize = 20f
-            setPadding(popupDp(12), popupDp(6), popupDp(12), popupDp(6))
-            setOnClickListener { dialog.dismiss() }
-            contentDescription = "Close communication tools"
-        })
-        list.addView(android.widget.TextView(this@MainActivity).apply {
-            text = when (communicationFocus()) {
-                "speech" -> "Speech focus · AAC always available"
-                "aac" -> "AAC focus · Speech always available"
-                else -> "Speech + AAC · Both available anytime"
-            }
-            textSize = 13f
-            setTextColor(android.graphics.Color.parseColor("#5E4B83"))
-            setPadding(popupDp(4), popupDp(3), popupDp(4), popupDp(11))
-        })
+
+        list.addView(popupHeader(
+            "Student Communication Tools",
+            "Choose the communication support that is easiest for the student right now.",
+            "🧩"
+        ))
+
         fun tool(icon: String, title: String, description: String, action: () -> Unit) {
-            list.addView(popupMenuRow(icon, title, description) {
+            list.addView(popupActionButton(title, description, icon) {
                 dialog.dismiss()
                 action()
             })
         }
-        tool("⚙️", "Communication Setup", "Change speech and AAC focus") { showCommunicationFocusSetup() }
-        tool("⭐", "Favorite Phrases", "One-tap saved phrases") { showFavoritePhrases() }
-        tool("🖼️", "Picture + Voice Choices", "Visual choices with spoken output") { showPictureVoiceChoices() }
-        tool("🔁", "Try Again Practice", "Practice without pressure") { showTryAgainPractice() }
-        tool("☑️", "Choice Board", "Offer two to six choices") { showChoiceBoard() }
-        tool("💬", "Quick Communication", "Help, break, yes, no and more") { showQuickCommunication() }
-        tool("📈", "Visual Progress", "Review communication activity") { showVisualProgress() }
-        tool("📝", "Caregiver Notes", "Save local support notes") { showSupportNotes() }
-        tool("📚", "Custom Vocabulary", "Personal words and phrases") { showCustomVocabulary() }
-        tool("🔒", "Privacy & Offline", "Manage local student data") { showPrivacyControls() }
-        tool("🗣️", "Communication Modes", "Speech, visual, text and voice") { showCommunicationModes() }
-        tool("🧩", "Visual Sentence Builder", "Create sentences using tiles") { showVisualSentenceBuilder() }
 
-        val scroller = ScrollView(this@MainActivity).apply {
-            isFillViewport = false
-            addView(list)
-        }
-        val frame = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            background = popupBackground("#FFFFFF", 20)
-            addView(header)
-            addView(android.view.View(this@MainActivity).apply {
-                setBackgroundColor(android.graphics.Color.parseColor("#EAE7F0"))
-            }, LinearLayout.LayoutParams(-1, popupDp(1)))
-            addView(scroller, LinearLayout.LayoutParams(-1, 0, 1f))
-        }
-        dialog.setContentView(frame)
+        tool("⭐", "Favorite Phrases", "Keep important phrases one tap away.") { showFavoritePhrases() }
+        tool("🖼️", "Picture + Voice Choices", "Choose from visual options and hear the choice.") { showPictureVoiceChoices() }
+        tool("🔁", "Try Again Practice", "Practice a word or phrase without pressure.") { showTryAgainPractice() }
+        tool("☑️", "Choice Board", "Offer two to six simple choices.") { showChoiceBoard() }
+        tool("💬", "Quick Communication Needs", "Fast access to help, break, yes, no, and more.") { showQuickCommunication() }
+        tool("📈", "Visual Progress", "See saved practice and communication activity.") { showVisualProgress() }
+        tool("📝", "Teacher / Caregiver Notes", "Keep local notes about helpful communication supports.") { showSupportNotes() }
+        tool("📚", "Custom Vocabulary", "Add words that matter to this student.") { showCustomVocabulary() }
+        tool("🔒", "Privacy & Offline", "Control analysis uploads and remove local student data.") { showPrivacyControls() }
+        tool("🗣️", "Communication Modes", "Switch between speech, visual, text, and recorded voice.") { showCommunicationModes() }
+        tool("🧩", "Visual Sentence Builder", "Build a sentence by tapping word tiles.") { showVisualSentenceBuilder() }
+
+        list.addView(popupInfoCard(
+            "Tip",
+            "Customize these tools around the student's interests, routines, and communication goals.",
+            "❤️"
+        ))
+        list.addView(popupActionButton("Close", null, "×") { dialog.dismiss() })
+
+        dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
         dialog.show()
-        dialog.window?.apply {
-            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
-            addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            attributes = attributes.apply { dimAmount = 0.48f }
-            setLayout((resources.displayMetrics.widthPixels * 0.92f).toInt(),
-                (resources.displayMetrics.heightPixels * 0.82f).toInt())
-        }
+        styleUnifiedDialog(dialog)
     }
 
     private fun showFavoritePhrases() {
@@ -4422,12 +4334,6 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             "Review privacy, personalized learning, and the pilot checklist before regular use.",
             "🛡️"
         ))
-
-        list.addView(popupActionButton(
-            "Communication Setup",
-            "Choose Speech Focus, Speech + AAC, or AAC Focus. All tools remain available.",
-            "💬"
-        ) { showCommunicationFocusSetup() })
 
         val statusCard = popupInfoCard(
             "Setup status",
