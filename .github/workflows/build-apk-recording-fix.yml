@@ -4,10 +4,7 @@ on:
   push:
     branches:
       - hearlium-parent-pc-integration
-    paths:
-      - 'tools/apply_recording_indicator_fix.py'
-      - '.github/workflows/build-apk-recording-fix.yml'
-  workflow_dispatch:
+  
 
 jobs:
   build:
