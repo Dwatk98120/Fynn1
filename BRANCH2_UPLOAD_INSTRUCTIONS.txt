@@ -1,0 +1,23 @@
+HEARLIUM / FIRST SOUND HELPER — BRANCH 2 ONLY
+
+Target branch: hearlium-parent-pc-integration
+Do not upload to main.
+
+1. Extract this ZIP.
+2. On GitHub, select branch hearlium-parent-pc-integration.
+3. Upload the CONTENTS of this ZIP (not the ZIP itself).
+4. Ensure .github/workflows/build-apk-recording-fix.yml is replaced.
+5. Commit the changes directly to hearlium-parent-pc-integration.
+6. Open Actions and look for 'Hearlium Branch 2 - Build Android APK'.
+7. Download the 'first-sound-helper-branch2-apk' artifact when green.
+
+If NO workflow run appears:
+- Verify the .github/workflows file was committed to Branch 2.
+- Check repository Settings > Actions > General for permissions and disabled workflows.
+- GitHub Actions runs may be blocked by repository or organization policy.
+- Check that the commit was not created by a GitHub Actions GITHUB_TOKEN.
+- A successful push is necessary; uploading a ZIP as one file does not install its contents.
+
+This package merges the earlier Android recording UI changes with Parent PC source.
+The Android workflow builds an APK; it does not build the Windows installer.
+The archive has been checked, but compilation and on-device testing have not been performed.
