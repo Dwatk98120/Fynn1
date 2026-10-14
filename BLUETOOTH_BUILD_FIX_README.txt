@@ -1,0 +1,1 @@
+Bluetooth build fix: removed explicit Microsoft.Windows.SDK.Contracts 10.0.26100 package, which conflicts with the Windows 10.0.19041 target. The .NET 8 Windows target supplies Windows SDK references. Extract into a NEW folder and run parent_pc_local\setup_and_start.bat. This change has not been compiled on Windows here.

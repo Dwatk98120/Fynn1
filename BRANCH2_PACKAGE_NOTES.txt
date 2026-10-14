@@ -1,0 +1,7 @@
+Fynn1 branch 2: hearlium-parent-pc-integration
+GitHub branch checked 2026-10-13; commit e383f749c1c711cfba7fbbf542a7d786a29477d3.
+This ZIP is based on the locally available Parent PC source snapshot with the Bluetooth target and datetime logging fixes; it is NOT a new GitHub checkout.
+For exact unmodified branch 2 source: https://github.com/Dwatk98120/Fynn1/archive/refs/heads/hearlium-parent-pc-integration.zip
+To start local backend: parent_pc_local\setup_and_start.bat
+To build Windows installer: BUILD_HEARLIUM_INSTALLER.bat (Windows build unverified).
+Keep existing learning data backups before installing.
