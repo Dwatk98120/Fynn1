@@ -1,0 +1,27 @@
+HEARLIUM BRANCH 2 - PHONEME DECODING REPAIR
+Target: hearlium-parent-pc-integration ONLY. Do not modify main.
+
+CHANGES
+- Fixed the model CTC decoding path: use processor.tokenizer phoneme symbols instead of model.config.id2label (which may only contain LABEL_0, LABEL_1, etc.).
+- Properly collapse repeated CTC frames and discard the blank/special tokens.
+- Keep per-symbol model probability measurements.
+- Fail with a clear 503 model-configuration error if the tokenizer is missing, mismatched, or emits placeholder labels. Do not invent speech sounds.
+- Mark the observed sequence as phonemes, not verified word transcription.
+- Include decoder module in the PyInstaller hidden imports.
+- Added small synthetic unit tests (tests/test_ctc_phoneme_decoder.py).
+
+LIMITATIONS
+- These changes are code-level tested, not validated with actual student recordings or the downloaded speech model.
+- Confidence values are model output probabilities, NOT measured speech recognition accuracy.
+- Parent PC launcher and Android code are preserved from the previous combined Branch 2 ZIP.
+- The Android workflow remains configured for automatic push builds on Branch 2; Windows installer must be built locally.
+
+TEST
+python -m unittest discover -s tests -p test_ctc_phoneme_decoder.py -v
+Then rebuild Windows Parent PC installer with BUILD_HEARLIUM_INSTALLER.bat.
+Start backend and visit http://127.0.0.1:8000/health; record and analyze again.
+
+UPLOAD
+Extract the ZIP and upload its CONTENTS to hearlium-parent-pc-integration.
+Ensure new file server/ctc_phoneme_decoder.py is included.
+Do not upload or merge into main.
