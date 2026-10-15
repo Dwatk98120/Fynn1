@@ -1,7 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_submodules, collect_data_files
-from pathlib import Path
-PROJECT_ROOT = Path(SPECPATH).resolve()
 
 # The launcher dispatches --server / --record / --pair in the same frozen EXE.
 datas = []
@@ -21,14 +19,14 @@ for pkg in ['torch', 'transformers', 'tokenizers', 'numpy', 'sounddevice', 'soun
 # Include any non-Python model/data assets bundled with this project.
 datas.extend(collect_data_files('certifi'))
 a = Analysis(
-    [str(PROJECT_ROOT / 'parent_pc_local' / 'hearlium_launcher.py')],
-    pathex=[str(PROJECT_ROOT / 'parent_pc_local'), str(PROJECT_ROOT / 'server'), str(PROJECT_ROOT)],
+    ['parent_pc_local/hearlium_launcher.py'],
+    pathex=['parent_pc_local', 'server', '.'],
     binaries=binaries,
     datas=datas,
     hiddenimports=sorted(set(hiddenimports + ['main', 'direct_recording', 'pair_phone',
         'hearlium_parent_pc_gui', 'temporal_prosody', 'candidate_word_engine',
         'learning_engine', 'learning_store', 'analysis_engine', 'phoneme_analysis',
-        'phoneme_substitution', 'recording_quality', 'ctc_phoneme_decoder'])),
+        'phoneme_substitution', 'recording_quality'])),
     hookspath=[], hooksconfig={}, runtime_hooks=[], excludes=[], noarchive=False,
 )
 pyz = PYZ(a.pure)

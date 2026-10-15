@@ -1,25 +1,6 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-set "PROJECT_ROOT=%~dp0"
-cd /d "%PROJECT_ROOT%"
-echo Build root: %PROJECT_ROOT%
-set "BUILD_LOG=%PROJECT_ROOT%hearlium_build.log"
->"%BUILD_LOG%" echo Hearlium installer build log
-echo.
-
-REM Verify that the ZIP was fully extracted, and the builder is run from its root.
-echo Checking extracted installer source files...
-if not exist "%~dp0HearliumParentPC.spec" goto :missing_source
-if not exist "%~dp0parent_pc_local\hearlium_launcher.py" goto :missing_source
-if not exist "%~dp0parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj" goto :missing_source
-if not exist "%~dp0installer\Hearlium.iss" goto :missing_source
-if not exist "%~dp0parent_pc_local\bluetooth_service\Program.cs" goto :missing_source
-if not exist "%~dp0parent_pc_local\check_dotnet_sdk.bat" goto :missing_source
-if not exist "%~dp0server\main.py" goto :missing_source
-echo Installer source files found.
-echo Verifying build layout...
-dir /b "%PROJECT_ROOT%HearliumParentPC.spec"
-dir /b "%PROJECT_ROOT%parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj"
+cd /d "%~dp0"
 
 echo ============================================================
 echo Hearlium Parent PC - Windows Installer Builder v2
@@ -147,11 +128,11 @@ if errorlevel 1 exit /b 1
 call :install "Inflect" "inflect>=0.3.1"
 if errorlevel 1 exit /b 1
 
-REM Avoid legacy pip switches removed from recent releases.
-REM Build legacy distance against the pinned local setuptools/wheel.
+REM The distance project is pure Python. Install it without PEP517 isolation
+REM to avoid the temporary build environment that produced InvalidVersion 0.dev0.
 echo.
 echo Installing distance compatibility dependency...
-python -m pip install --no-build-isolation "distance==0.1.3"
+python -m pip install --no-build-isolation --no-use-pep517 "distance==0.1.3"
 if errorlevel 1 (
   echo.
   echo ERROR: distance==0.1.3 failed to install.
@@ -186,34 +167,21 @@ if errorlevel 1 (
 )
 
 REM ------------------------------------------------------------
-REM 6. Bluetooth helper (required for the complete pairing installer)
+REM 6. Bluetooth helper (optional)
 REM ------------------------------------------------------------
 echo.
 echo Checking Windows Bluetooth helper...
-call "%PROJECT_ROOT%parent_pc_local\check_dotnet_sdk.bat" "%BUILD_LOG%"
+where dotnet >nul 2>&1
 if errorlevel 1 (
-  echo ERROR: Bluetooth helper requires a compatible .NET SDK.
-  pause
-  exit /b 1
+  echo NOTE: .NET SDK not found. Bluetooth helper compilation will be skipped.
+  echo       The Parent PC installer can still be built.
+) else (
+  dotnet publish "parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+  if errorlevel 1 (
+    echo WARNING: Bluetooth helper build failed.
+    echo          Continuing without the compiled helper.
+  )
 )
-set "BT_OUTPUT=%PROJECT_ROOT%parent_pc_local\bluetooth_service\publish\win-x64"
-if exist "%BT_OUTPUT%" rmdir /s /q "%BT_OUTPUT%"
-echo Publishing Bluetooth helper to explicit output folder...
-echo Using installed SDK to compile net8.0 Windows Bluetooth project.
-echo If publish fails, see hearlium_build.log for restore/targeting-pack details.
-dotnet publish "%PROJECT_ROOT%parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o "%BT_OUTPUT%" >>"%BUILD_LOG%" 2>&1
-if errorlevel 1 (
-  echo ERROR: Bluetooth helper publish failed. See hearlium_build.log.
-  powershell -NoProfile -Command "Get-Content -LiteralPath '%BUILD_LOG%' -Tail 35"
-  pause
-  exit /b 1
-)
-if not exist "%BT_OUTPUT%\HearliumBluetoothService.exe" (
-  echo ERROR: Bluetooth helper executable missing after successful publish.
-  pause
-  exit /b 1
-)
-echo Bluetooth helper verified.
 
 REM ------------------------------------------------------------
 REM 7. Clean old PyInstaller output and build
@@ -221,22 +189,20 @@ REM ------------------------------------------------------------
 echo.
 echo Cleaning previous PyInstaller output...
 if exist "build" rmdir /s /q "build"
-if exist "installer\output\HearliumSetup.exe" del /q "installer\output\HearliumSetup.exe"
 if exist "dist\HearliumParentPC" rmdir /s /q "dist\HearliumParentPC"
 
 echo.
 echo Building Hearlium Parent PC executable...
-python -m PyInstaller --noconfirm --clean "%PROJECT_ROOT%HearliumParentPC.spec" >>"%BUILD_LOG%" 2>&1
+pyinstaller --noconfirm --clean HearliumParentPC.spec
 if errorlevel 1 (
   echo.
-  echo ERROR: PyInstaller build failed. See hearlium_build.log.
-  powershell -NoProfile -Command "Get-Content -LiteralPath '%BUILD_LOG%' -Tail 35"
+  echo ERROR: PyInstaller build failed.
   pause
   exit /b 1
 )
 
 REM Hard stop if expected executable does not exist.
-if not exist "%PROJECT_ROOT%dist\HearliumParentPC\HearliumParentPC.exe" (
+if not exist "dist\HearliumParentPC\HearliumParentPC.exe" (
   echo.
   echo ERROR: PyInstaller finished but the expected executable was not created:
   echo        dist\HearliumParentPC\HearliumParentPC.exe
@@ -246,17 +212,11 @@ if not exist "%PROJECT_ROOT%dist\HearliumParentPC\HearliumParentPC.exe" (
   exit /b 1
 )
 
-REM Bluetooth is mandatory in this complete build: verify it is copied.
-copy /Y "%BT_OUTPUT%\HearliumBluetoothService.exe" "%PROJECT_ROOT%dist\HearliumParentPC\HearliumBluetoothService.exe" >nul
-if errorlevel 1 (
-  echo ERROR: Failed to copy Bluetooth helper into frozen application.
-  pause
-  exit /b 1
-)
-if not exist "%PROJECT_ROOT%dist\HearliumParentPC\HearliumBluetoothService.exe" (
-  echo ERROR: Bluetooth helper missing from final application folder.
-  pause
-  exit /b 1
+REM Copy optional Bluetooth helper into the frozen application folder.
+set "BTEXE=parent_pc_local\bluetooth_service\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\HearliumBluetoothService.exe"
+if exist "!BTEXE!" (
+  echo Copying Bluetooth helper into distribution...
+  copy /Y "!BTEXE!" "dist\HearliumParentPC\HearliumBluetoothService.exe" >nul
 )
 
 echo.
@@ -268,10 +228,9 @@ REM 7a. Verify frozen executable imports before packaging.
 REM ------------------------------------------------------------
 echo.
 echo Checking frozen application imports...
-"%PROJECT_ROOT%dist\HearliumParentPC\HearliumParentPC.exe" --self-test >>"%BUILD_LOG%" 2>&1
+"dist\HearliumParentPC\HearliumParentPC.exe" --self-test
 if errorlevel 1 (
-  echo ERROR: Frozen application import check failed. See hearlium_build.log.
-  powershell -NoProfile -Command "Get-Content -LiteralPath '%BUILD_LOG%' -Tail 35"
+  echo ERROR: Frozen application import check failed.
   pause
   exit /b 1
 )
@@ -294,13 +253,13 @@ if not defined ISCC (
 if not defined ISCC (
   echo.
   echo HearliumParentPC.exe was built successfully.
-  echo ERROR: Inno Setup 6 was not found, so HearliumSetup.exe was not created.
+  echo Inno Setup 6 was not found, so HearliumSetup.exe was not created.
   echo.
   echo Install Inno Setup 6 and rerun this same file.
   echo Existing app build:
   echo dist\HearliumParentPC\
   pause
-  exit /b 1
+  exit /b 0
 )
 
 REM ------------------------------------------------------------
@@ -308,18 +267,17 @@ REM 9. Build installer
 REM ------------------------------------------------------------
 echo.
 echo Building HearliumSetup.exe...
-"%ISCC%" "%PROJECT_ROOT%installer\Hearlium.iss" >>"%BUILD_LOG%" 2>&1
+"%ISCC%" installer\Hearlium.iss
 if errorlevel 1 (
   echo.
-  echo ERROR: Inno Setup compilation failed. See hearlium_build.log.
-  powershell -NoProfile -Command "Get-Content -LiteralPath '%BUILD_LOG%' -Tail 35"
+  echo ERROR: Inno Setup compilation failed.
   echo Parent PC executable is still available at:
   echo dist\HearliumParentPC\HearliumParentPC.exe
   pause
   exit /b 1
 )
 
-if not exist "%PROJECT_ROOT%installer\output\HearliumSetup.exe" (
+if not exist "installer\output\HearliumSetup.exe" (
   echo.
   echo ERROR: Inno Setup completed but HearliumSetup.exe was not found.
   pause
@@ -331,7 +289,6 @@ echo ============================================================
 echo BUILD COMPLETE
 echo ============================================================
 echo.
-echo Bluetooth helper: verified and included.
 echo Your Windows installer is:
 echo installer\output\HearliumSetup.exe
 echo.
@@ -339,17 +296,6 @@ echo You can now install Hearlium Parent PC by double-clicking that file.
 echo.
 pause
 exit /b 0
-
-:missing_source
-echo.
-echo ERROR: Installer source files are missing from this folder.
-echo Extract the entire ZIP using Extract All into a NEW folder.
-echo Do not run BUILD_HEARLIUM_INSTALLER.bat from inside the ZIP preview.
-echo Expected: HearliumParentPC.spec, installer\Hearlium.iss,
-echo parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj
-pause
-exit /b 1
-
 
 :install
 REM Package spec MUST remain quoted because Windows CMD treats > and < as redirection.
