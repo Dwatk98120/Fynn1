@@ -167,22 +167,37 @@ if errorlevel 1 (
 )
 
 REM ------------------------------------------------------------
-REM 6. Bluetooth helper (optional)
+REM 6. Bluetooth helper (required)
 REM ------------------------------------------------------------
 echo.
-echo Checking Windows Bluetooth helper...
+echo Checking Windows Bluetooth helper (.NET 8 SDK required)...
 where dotnet >nul 2>&1
 if errorlevel 1 (
-  echo NOTE: .NET SDK not found. Bluetooth helper compilation will be skipped.
-  echo       The Parent PC installer can still be built.
-) else (
-  dotnet publish "parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
-  if errorlevel 1 (
-    echo WARNING: Bluetooth helper build failed.
-    echo          Continuing without the compiled helper.
-  )
+  echo ERROR: dotnet SDK not found. Install .NET 8 SDK x64.
+  pause
+  exit /b 1
+)
+dotnet --list-sdks | findstr /R /C:"^8\." >nul
+if errorlevel 1 (
+  echo ERROR: .NET 8 SDK not found. Install .NET 8 SDK x64.
+  pause
+  exit /b 1
+)
+set "BTEXE=parent_pc_local\bluetooth_service\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\HearliumBluetoothService.exe"
+if exist "!BTEXE!" del /F /Q "!BTEXE!"
+dotnet publish "parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+if errorlevel 1 (
+  echo ERROR: Bluetooth helper build failed. Installer aborted.
+  pause
+  exit /b 1
+)
+if not exist "!BTEXE!" (
+  echo ERROR: Bluetooth helper EXE not produced. Installer aborted.
+  pause
+  exit /b 1
 )
 
+REM ------------------------------------------------------------
 REM ------------------------------------------------------------
 REM 7. Clean old PyInstaller output and build
 REM ------------------------------------------------------------
@@ -212,11 +227,18 @@ if not exist "dist\HearliumParentPC\HearliumParentPC.exe" (
   exit /b 1
 )
 
-REM Copy optional Bluetooth helper into the frozen application folder.
-set "BTEXE=parent_pc_local\bluetooth_service\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\HearliumBluetoothService.exe"
-if exist "!BTEXE!" (
-  echo Copying Bluetooth helper into distribution...
-  copy /Y "!BTEXE!" "dist\HearliumParentPC\HearliumBluetoothService.exe" >nul
+REM Copy required Bluetooth helper into the frozen application folder.
+echo Copying required Bluetooth helper into distribution...
+copy /Y "!BTEXE!" "dist\HearliumParentPC\HearliumBluetoothService.exe" >nul
+if errorlevel 1 (
+  echo ERROR: Failed to copy Bluetooth helper. Installer aborted.
+  pause
+  exit /b 1
+)
+if not exist "dist\HearliumParentPC\HearliumBluetoothService.exe" (
+  echo ERROR: Bluetooth helper missing from distribution.
+  pause
+  exit /b 1
 )
 
 echo.

@@ -26,7 +26,7 @@ a = Analysis(
     hiddenimports=sorted(set(hiddenimports + ['main', 'direct_recording', 'pair_phone',
         'hearlium_parent_pc_gui', 'temporal_prosody', 'candidate_word_engine',
         'learning_engine', 'learning_store', 'analysis_engine', 'phoneme_analysis',
-        'phoneme_substitution', 'recording_quality'])),
+        'phoneme_substitution', 'recording_quality', 'reference_audio', 'reference_audio_gui'])),
     hookspath=[], hooksconfig={}, runtime_hooks=[], excludes=[], noarchive=False,
 )
 pyz = PYZ(a.pure)
