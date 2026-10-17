@@ -37,13 +37,4 @@ jobs:
       - name: Build debug APK with indicator
         run: ./gradlew assembleDebug --stacktrace --no-daemon
       - name: Upload fixed APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: first-sound-helper-RECORDING-FIX-apk
-           - name: Verify PC analysis button
-        run: |
-          grep -Fq 'SEND & ANALYZE ON PC' app/src/main/java/com/firstsoundhelper/MainActivity.kt
-          grep -Fq 'uploadForAnalysis' app/src/main/java/com/firstsoundhelper/MainActivity.kt
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
-          retention-days: 14
+        uses: action
