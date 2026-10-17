@@ -4414,6 +4414,3 @@ content.addView(popupHeader(
     }
 
 }
-
-     
-           
