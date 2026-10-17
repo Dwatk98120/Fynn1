@@ -183,7 +183,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-set "BTEXE=parent_pc_local\bluetooth_service\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\HearliumBluetoothService.exe"
+set "BTEXE=parent_pc_local\bluetooth_service\bin\Release\net8.0-windows10.0.22000.0\win-x64\publish\HearliumBluetoothService.exe"
 if exist "!BTEXE!" del /F /Q "!BTEXE!"
 dotnet publish "parent_pc_local\bluetooth_service\HearliumBluetoothService.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 if errorlevel 1 (

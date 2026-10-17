@@ -1,0 +1,7 @@
+Hearlium Bluetooth Windows SDK target repair
+
+Changed the Bluetooth service target framework from net8.0-windows10.0.19041.0 to net8.0-windows10.0.22000.0 and updated the matching expected publish path in BUILD_HEARLIUM_INSTALLER.bat.
+
+Build the installer using BUILD_HEARLIUM_INSTALLER.bat. Requires .NET 8 SDK x64. Windows SDK 22000 target may require an appropriate targeting pack downloaded by dotnet restore.
+
+Not compiled on Windows in this environment. This change resolves the target version mismatch shown in the screenshot but other compiler errors may still need review.
