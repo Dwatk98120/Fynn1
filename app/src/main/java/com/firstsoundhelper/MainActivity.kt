@@ -338,36 +338,8 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }
     
-        setRecordingIndicator(false)
         startParentPcAutoReconnect()
 }
-
-    private var recordingPulse: android.animation.ObjectAnimator? = null
-
-    private fun setRecordingIndicator(active: Boolean) {
-        val indicator = findViewById<android.widget.TextView>(R.id.activeRecordingIndicator)
-        recordingPulse?.cancel()
-        recordingPulse = null
-        indicator.clearAnimation()
-        indicator.visibility = android.view.View.VISIBLE
-        indicator.alpha = 1f
-        if (active) {
-            indicator.text = "● RECORDING"
-            indicator.setTextColor(android.graphics.Color.rgb(211, 47, 47))
-            recordingPulse = android.animation.ObjectAnimator.ofFloat(
-                indicator, android.view.View.ALPHA, 1f, 0.18f
-            ).apply {
-                duration = 550L
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                repeatMode = android.animation.ValueAnimator.REVERSE
-                interpolator = android.view.animation.LinearInterpolator()
-                start()
-            }
-        } else {
-            indicator.text = "● Not Recording"
-            indicator.setTextColor(android.graphics.Color.rgb(110, 110, 110))
-        }
-    }
 
     private fun startRecording() {
         val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
@@ -377,19 +349,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.recordButton).isEnabled=false
         findViewById<Button>(R.id.stopButton).isEnabled=true
         status.text="Listening…"
-        try {
-            recorder!!.startRecording()
-            setRecordingIndicator(true)
-        } catch (e: Exception) {
-            recording = false
-            setRecordingIndicator(false)
-            recorder?.release()
-            recorder = null
-            findViewById<Button>(R.id.recordButton).isEnabled = true
-            findViewById<Button>(R.id.stopButton).isEnabled = false
-            status.text = "Unable to start recording: ${e.message}"
-            return
-        }
+        recorder!!.startRecording()
         recordingThread=Thread {
             val buf=ByteArray(maxOf(min,4096))
             while(recording) { val n=recorder!!.read(buf,0,buf.size); if(n>0) synchronized(pcm){pcm.write(buf,0,n)} }
@@ -398,7 +358,6 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
     private fun stopRecording() {
         recording=false
-        setRecordingIndicator(false)
         try{recorder?.stop()}catch(_:Exception){}
         recorder?.release(); recorder=null
         findViewById<Button>(R.id.recordButton).isEnabled=true
@@ -634,43 +593,35 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
     private fun showAnalyzeContextDialog() {
-        val box = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 24, 40, 8)
+        // Explicit, full-width action buttons prevent the missing-positive-button
+        // problem seen on some Samsung font-size and display-size settings.
+        val content = android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(20), popupDp(18), popupDp(20), popupDp(14))
         }
-
-        val prompt = TextView(this@MainActivity).apply {
-            text = "Optional context"
-            textSize = 18f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        }
-
-        val helper = TextView(this@MainActivity).apply {
-            text = "Add a short clue if it may help the analysis. You can leave this blank."
-            textSize = 14f
-            setPadding(0, 8, 0, 10)
-        }
-
+        content.addView(popupHeader("Analyze Speech", "Send recording to the Parent PC", "🎙️"))
         val input = EditText(this@MainActivity).apply {
-            hint = "Example: I see a ___"
+            hint = "Optional context, e.g. counting 1 to 12"
             setText(pendingAnalyzeContext)
             isSingleLine = true
+            setPadding(popupDp(12), popupDp(14), popupDp(12), popupDp(14))
         }
-
-        box.addView(prompt)
-        box.addView(helper)
-        box.addView(input)
-
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-            .setTitle("Analyze Speech")
-            .setView(box)
-            .setPositiveButton("Send to Parent PC") { _, _ ->
-                pendingAnalyzeContext = input.text.toString().trim()
-                uploadForAnalysis()
-            }
-            .setNegativeButton("Cancel", null)
-            .create()
-        dialog.setOnShowListener { styleUnifiedDialog(dialog) }
+        content.addView(input)
+        val dialog = android.app.Dialog(this@MainActivity)
+        content.addView(popupActionButton("SEND & ANALYZE ON PC", "Verify receipt, then return analysis", "➤", true) {
+            pendingAnalyzeContext = input.text.toString().trim()
+            dialog.dismiss()
+            uploadForAnalysis()
+        })
+        content.addView(popupActionButton("Test PC Connection", "Check the saved PC address", "⚙️") {
+            val base = parentPcApiBase()
+            if (base.isBlank()) {
+                status.text = "No Parent PC address saved"
+                result.text = "Open Parent PC Connection and save the PC address."
+            } else testParentPcConnection(base)
+        })
+        content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
+        dialog.setContentView(android.widget.ScrollView(this@MainActivity).apply { addView(content) })
         dialog.show()
         styleUnifiedDialog(dialog)
     }
@@ -679,48 +630,89 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val base = parentPcApiBase()
         if (base.isBlank()) {
             status.text = "Parent PC not configured"
-            result.text = "Parent PC is required for analysis. Tap Parent PC Connection and enter or discover your Parent PC."
+            result.text = "Open Parent PC Connection and connect to your PC before sending."
             return
         }
         if (getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false)) {
             status.text = "Offline mode is on"
-            result.text = "Analysis upload is disabled. You can still use sentence building, word bank, phrases, choices, and playback."
+            result.text = "Turn off Offline Mode to send audio to the Parent PC."
             return
         }
-        if(pcm.size()==0){result.text="Record a short word or phrase first.";return}
-        status.text="Sending recording to Parent PC…"; result.text="Uploading recorded audio securely over your local Wi-Fi connection…"
+        if (pcm.size() == 0) {
+            result.text = "Record speech first. Nothing was sent."
+            return
+        }
+        val recordingId = currentRecordingId.ifBlank {
+            UUID.randomUUID().toString().also { currentRecordingId = it }
+        }
+        val audioBytes = wavBytes()
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(audioBytes).joinToString("") { "%02x".format(it) }
+        status.text = "Sending to Parent PC…"
+        result.text = "Recording ID: $recordingId\nWaiting for PC receipt confirmation…"
         Thread {
             try {
-                val client=OkHttpClient.Builder().connectTimeout(20,TimeUnit.SECONDS).readTimeout(120,TimeUnit.SECONDS).build()
-                val body=MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("context",pendingAnalyzeContext)
-                    .addFormDataPart("session_id", currentSessionId)
-                    .addFormDataPart("recording_id", currentRecordingId.ifBlank { UUID.randomUUID().toString().also { currentRecordingId = it } })
-                    .addFormDataPart("speaker_id", speakerId())
-                    .addFormDataPart("audio","speech.wav",wavBytes().toRequestBody("audio/wav".toMediaType()))
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(20, TimeUnit.SECONDS)
+                    .readTimeout(120, TimeUnit.SECONDS)
                     .build()
-                runOnUiThread { status.text = "Parent PC analyzing recording…" }
-                val req=Request.Builder().url("$base/v1/analyze-audio").post(body).build()
-                client.newCall(req).execute().use { r ->
-                    val txt=r.body?.string()?:""
-                    runOnUiThread {
-                        if (r.isSuccessful) {
-                            status.text = "Analysis complete"
-                            result.text = formatAnalysisResult(txt)
-                        } else {
-                            status.text = "Parent PC analysis failed"
-                            result.text = if (txt.trimStart().startsWith("<")) {
-                                "The Parent PC server returned an unexpected web page instead of analysis data."
-                            } else {
-                                "Parent PC error ${r.code}: " + txt.take(500)
-                            }
-                        }
+                fun body() = MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("context", pendingAnalyzeContext)
+                    .addFormDataPart("session_id", currentSessionId)
+                    .addFormDataPart("recording_id", recordingId)
+                    .addFormDataPart("speaker_id", speakerId())
+                    .addFormDataPart("audio", "speech.wav", audioBytes.toRequestBody("audio/wav".toMediaType()))
+                    .build()
+                // A separate receipt request makes upload success independently visible
+                // before the slow AI analysis begins. The PC verifies size and checksum.
+                val receiptRequest = Request.Builder().url("$base/v1/recording-receipt")
+                    .post(body()).build()
+                client.newCall(receiptRequest).execute().use { response ->
+                    val responseText = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        throw IOException(if (response.code == 404 || response.code == 405) "PC server is outdated: receipt endpoint missing (HTTP ${response.code}). Install and launch matching Parent PC build." else "PC did not accept transfer (HTTP ${response.code}): ${responseText.take(240)}")
+                    }
+                    val ack = JSONObject(responseText)
+                    if (ack.optString("recordingId") != recordingId ||
+                        ack.optString("sha256") != digest ||
+                        ack.optLong("bytes") != audioBytes.size.toLong()) {
+                        throw IOException("PC receipt verification failed. Do not assume the recording arrived.")
                     }
                 }
-            } catch(e:Exception) { runOnUiThread { status.text="Could not reach analysis server"; result.text=e.message ?: "Network error" } }
+                runOnUiThread {
+                    status.text = "PC verified audio transfer ✓"
+                    result.text = "PC verified ${audioBytes.size} bytes\nRecording ID: $recordingId\nReceipt is transport-only; sending for analysis…"
+                }
+                val analysisRequest = Request.Builder().url("$base/v1/analyze-audio")
+                    .post(body()).build()
+                runOnUiThread { status.text = "Waiting for PC analysis…" }
+                client.newCall(analysisRequest).execute().use { response ->
+                    val txt = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        runOnUiThread {
+                            status.text = "PC received audio; analysis failed"
+                            result.text = "Recording ID: $recordingId\nAnalysis HTTP ${response.code}: ${txt.take(500)}"
+                        }
+                        return@Thread
+                    }
+                    val analysis = JSONObject(txt)
+                    if (analysis.optString("recordingId") != recordingId ||
+                        !analysis.has("observation")) {
+                        throw IOException("Analysis response did not match the sent recording ID.")
+                    }
+                    runOnUiThread {
+                        status.text = "Analysis returned to phone ✓"
+                        result.text = "PC received and analyzed recording $recordingId\n\n" + formatAnalysisResult(txt)
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    status.text = "Transfer or analysis not confirmed"
+                    result.text = "Recording ID: $recordingId\n${e.message ?: "Connection error"}\nCheck Parent PC Connection and retry."
+                }
+            }
         }.start()
     }
-
 
     private fun sendLearningFeedback(word: String, approvedForLearning: Boolean) {
         val observationId = latestObservationId
@@ -1338,7 +1330,7 @@ content.addView(popupHeader(
             val url = normalizeParentPcUrl(input.text.toString())
             getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
                 .edit().putString("parent_pc_url", url).apply()
-            status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC saved: $url"
+            status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC address saved (not yet verified): $url"
             dialog.dismiss()
         })
         content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
@@ -4422,3 +4414,6 @@ content.addView(popupHeader(
     }
 
 }
+
+     
+           
