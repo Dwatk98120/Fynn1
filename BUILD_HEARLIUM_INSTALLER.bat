@@ -154,10 +154,28 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM ------------------------------------------------------------
+REM Speech recognition dependencies verified on Windows Python 3.12.
+REM PyAV 19 produced: unexpected keyword argument metadata_errors.
+REM Pin the tested PyAV 16.1.0 and verify the audio decoder API.
+REM ------------------------------------------------------------
+call :install "Faster-Whisper" "faster-whisper>=1.1,<2"
+if errorlevel 1 exit /b 1
+call :install "PyAV tested decoder" "av==16.1.0"
+if errorlevel 1 exit /b 1
+
+echo Checking dependency consistency...
+python -m pip check
+if errorlevel 1 goto :depfail
+
+echo Checking PortAudio, Whisper and PyAV decoder API...
+python -c "import av, sounddevice, soundfile; from faster_whisper import WhisperModel; import inspect; assert av.__version__ == '16.1.0', av.__version__; assert 'metadata_errors' in inspect.signature(av.open).parameters; print('PortAudio, Faster-Whisper and PyAV 16.1.0: OK')"
+if errorlevel 1 goto :depfail
+
 REM Validate the critical imports before building.
 echo.
 echo Verifying installed runtime packages...
-python -c "import fastapi, uvicorn, multipart, numpy, soundfile, sounddevice, requests, transformers, torch; from g2p_en import G2p; print('Dependency import check: OK')"
+python -c "import fastapi, uvicorn, multipart, numpy, soundfile, sounddevice, requests, transformers, torch; from g2p_en import G2p; from faster_whisper import WhisperModel; import av; print('Dependency import check: OK')"
 if errorlevel 1 (
   echo.
   echo ERROR: One or more runtime imports failed.
@@ -281,7 +299,7 @@ if not defined ISCC (
   echo Existing app build:
   echo dist\HearliumParentPC\
   pause
-  exit /b 0
+  exit /b 1
 )
 
 REM ------------------------------------------------------------

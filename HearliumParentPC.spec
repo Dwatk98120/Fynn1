@@ -7,7 +7,7 @@ binaries = []
 hiddenimports = []
 for pkg in ['torch', 'transformers', 'tokenizers', 'numpy', 'sounddevice', 'soundfile',
             'requests', 'fastapi', 'uvicorn', 'g2p_en', 'nltk', 'inflect', 'distance',
-            'safetensors', 'huggingface_hub', 'multipart']:
+            'safetensors', 'huggingface_hub', 'multipart', 'faster_whisper', 'ctranslate2', 'av']:
     try:
         d, b, h = collect_all(pkg)
         datas.extend(d)
