@@ -1,3 +1,5 @@
+> HISTORICAL NOTE: This document may describe an earlier PyAV/Faster-Whisper build. The current no-PyAV build excludes both packages and disables independent word ASR. See NO_PYAV_BUILD_NOTES.md.
+
 HEARLIUM PARENT PC - WINDOWS INSTALLER DEPENDENCY REPAIR
 =======================================================
 Source: Hearlium_Enhanced_Decipher_Dual_Engine_20261017(1).zip
