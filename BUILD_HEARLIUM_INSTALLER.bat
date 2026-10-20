@@ -38,17 +38,8 @@ if not exist "installer\prereqs\vc_redist.x64.exe" (
   exit /b 1
 )
 
-REM Attempt to install runtime on the BUILD computer as well. Torch needs it
-REM during import verification. Administrator permission may be requested.
-echo.
-echo Installing or repairing Microsoft Visual C++ x64 runtime on this PC...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=(Resolve-Path 'installer\prereqs\vc_redist.x64.exe').Path; Start-Process -FilePath $p -ArgumentList '/install /passive /norestart' -Verb RunAs -Wait"
-if errorlevel 1 (
-  echo.
-  echo WARNING: Could not confirm VC++ runtime installation.
-  echo If Torch reports a c10.dll error, install vc_redist.x64.exe manually.
-  echo.
-)
+REM Never elevate/install prerequisites on the BUILD computer automatically.
+echo VC++ redistributable staged for the final installer.
 
 REM ------------------------------------------------------------
 REM 2. Recreate clean build environment
@@ -102,30 +93,30 @@ if errorlevel 1 exit /b 1
 call :install "python-multipart" "python-multipart==0.0.20"
 if errorlevel 1 exit /b 1
 
-call :install "NumPy" "numpy>=1.26,<3"
+call :install "NumPy" "numpy==1.26.4"
 if errorlevel 1 exit /b 1
 
-call :install "SoundFile" "soundfile>=0.12"
+call :install "SoundFile" "soundfile==0.13.1"
 if errorlevel 1 exit /b 1
 
-call :install "SoundDevice" "sounddevice>=0.5.0"
+call :install "SoundDevice" "sounddevice==0.5.2"
 if errorlevel 1 exit /b 1
 
-call :install "Requests" "requests>=2.32"
+call :install "Requests" "requests==2.32.3"
 if errorlevel 1 exit /b 1
 
-call :install "Transformers" "transformers>=4.48,<6"
+call :install "Transformers" "transformers==4.49.0"
 if errorlevel 1 exit /b 1
 
-call :install "Torch" "torch>=2.4"
+call :install "Torch" "torch==2.6.0"
 if errorlevel 1 exit /b 1
 
 REM g2p-en pulls in an old 'distance' package that can fail to build with
 REM newer packaging metadata. Install the known dependencies explicitly.
-call :install "NLTK" "nltk>=3.2.4"
+call :install "NLTK" "nltk==3.9.1"
 if errorlevel 1 exit /b 1
 
-call :install "Inflect" "inflect>=0.3.1"
+call :install "Inflect" "inflect==7.5.0"
 if errorlevel 1 exit /b 1
 
 REM The distance project is pure Python. Install it without PEP517 isolation
@@ -154,10 +145,31 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM ------------------------------------------------------------
+REM ------------------------------------------------------------
+REM Restore Faster-Whisper using binary wheels; never compile PyAV.
+REM ------------------------------------------------------------
+echo Installing pinned Faster-Whisper and native dependencies...
+python -m pip install --only-binary=:all: -r server\requirements-word-asr.txt
+if errorlevel 1 goto :depfail
+
+echo Checking dependency consistency...
+python -m pip check
+if errorlevel 1 goto :depfail
+python -m pip freeze > installer\resolved-dependencies.txt
+
+echo Checking native PyAV and Faster-Whisper dependencies...
+python "installer\verify_audio_dependencies.py"
+if errorlevel 1 goto :depfail
+
+REM Download and validate the actual offline model before freezing.
+python "installer\prepare_whisper_model.py"
+if errorlevel 1 goto :depfail
+
 REM Validate the critical imports before building.
 echo.
 echo Verifying installed runtime packages...
-python -c "import fastapi, uvicorn, multipart, numpy, soundfile, sounddevice, requests, transformers, torch; from g2p_en import G2p; print('Dependency import check: OK')"
+python -c "import fastapi, uvicorn, multipart, numpy, soundfile, sounddevice, requests, transformers, torch, av, ctranslate2, faster_whisper; from g2p_en import G2p; print('Dependency import check: OK')"
 if errorlevel 1 (
   echo.
   echo ERROR: One or more runtime imports failed.
@@ -281,7 +293,7 @@ if not defined ISCC (
   echo Existing app build:
   echo dist\HearliumParentPC\
   pause
-  exit /b 0
+  exit /b 1
 )
 
 REM ------------------------------------------------------------
