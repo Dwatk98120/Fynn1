@@ -80,6 +80,8 @@ class MainActivity : AppCompatActivity() {
     private var currentRecordingId: String = ""
     private var latestObservationId: String = ""
     private var latestRecordingId: String = ""
+    private var latestAnalysisJson: String = ""
+    private var latestSuggestedText: String = ""
     private var wordBankDialog: android.app.Dialog? = null
     private var wordBankRecorder: MediaRecorder? = null
     private var wordBankRecordingFile: File? = null
@@ -333,41 +335,18 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.stopButton).setOnClickListener { stopRecording() }
         findViewById<Button>(R.id.analyzeButton).setOnClickListener { showAnalyzeContextDialog() }
         findViewById<Button>(R.id.savedRecordingsButton).setOnClickListener { showSavedRecordings() }
+        findViewById<Button>(R.id.analysisDetailsButton).apply { isEnabled = false; setOnClickListener { showAnalysisDetails() } }
+        findViewById<Button>(R.id.caregiverReviewButton).apply { isEnabled = false; setOnClickListener { showCaregiverReview() } }
         findViewById<Button>(R.id.liveRecordingButton).setOnClickListener { startLiveSpeechMode() }
         findViewById<Button>(R.id.studentToolsButton).setOnClickListener { showStudentCommunicationTools() }
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }
     
-        setRecordingIndicator(false)
+        // Persistent release marker: visible before recording or network activity.
+        // If absent on the phone, an older/different APK is installed.
+        status.text = "Hearlium Android v5 • Response Trace • Ready"
         startParentPcAutoReconnect()
 }
-
-    private var recordingPulse: android.animation.ObjectAnimator? = null
-
-    private fun setRecordingIndicator(active: Boolean) {
-        val indicator = findViewById<android.widget.TextView>(R.id.activeRecordingIndicator)
-        recordingPulse?.cancel()
-        recordingPulse = null
-        indicator.clearAnimation()
-        indicator.visibility = android.view.View.VISIBLE
-        indicator.alpha = 1f
-        if (active) {
-            indicator.text = "● RECORDING · INDICATOR V2"
-            indicator.setTextColor(android.graphics.Color.rgb(211, 47, 47))
-            recordingPulse = android.animation.ObjectAnimator.ofFloat(
-                indicator, android.view.View.ALPHA, 1f, 0.18f
-            ).apply {
-                duration = 550L
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                repeatMode = android.animation.ValueAnimator.REVERSE
-                interpolator = android.view.animation.LinearInterpolator()
-                start()
-            }
-        } else {
-            indicator.text = "● Not Recording"
-            indicator.setTextColor(android.graphics.Color.rgb(110, 110, 110))
-        }
-    }
 
     private fun startRecording() {
         val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
@@ -377,19 +356,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.recordButton).isEnabled=false
         findViewById<Button>(R.id.stopButton).isEnabled=true
         status.text="Listening…"
-        try {
-            recorder!!.startRecording()
-            setRecordingIndicator(true)
-        } catch (e: Exception) {
-            recording = false
-            setRecordingIndicator(false)
-            recorder?.release()
-            recorder = null
-            findViewById<Button>(R.id.recordButton).isEnabled = true
-            findViewById<Button>(R.id.stopButton).isEnabled = false
-            status.text = "Unable to start recording: ${e.message}"
-            return
-        }
+        recorder!!.startRecording()
         recordingThread=Thread {
             val buf=ByteArray(maxOf(min,4096))
             while(recording) { val n=recorder!!.read(buf,0,buf.size); if(n>0) synchronized(pcm){pcm.write(buf,0,n)} }
@@ -398,7 +365,6 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
 
     private fun stopRecording() {
         recording=false
-        setRecordingIndicator(false)
         try{recorder?.stop()}catch(_:Exception){}
         recorder?.release(); recorder=null
         findViewById<Button>(R.id.recordButton).isEnabled=true
@@ -634,43 +600,43 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
     private fun showAnalyzeContextDialog() {
-        val box = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 24, 40, 8)
+        // Explicit, full-width action buttons prevent the missing-positive-button
+        // problem seen on some Samsung font-size and display-size settings.
+        val content = android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(20), popupDp(18), popupDp(20), popupDp(14))
         }
-
-        val prompt = TextView(this@MainActivity).apply {
-            text = "Optional context"
-            textSize = 18f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        }
-
-        val helper = TextView(this@MainActivity).apply {
-            text = "Add a short clue if it may help the analysis. You can leave this blank."
-            textSize = 14f
-            setPadding(0, 8, 0, 10)
-        }
-
+        content.addView(popupHeader("Analyze Speech", "Send recording to the Parent PC", "🎙️"))
         val input = EditText(this@MainActivity).apply {
-            hint = "Example: I see a ___"
+            hint = "Optional context, e.g. counting 1 to 12"
             setText(pendingAnalyzeContext)
             isSingleLine = true
+            setPadding(popupDp(12), popupDp(14), popupDp(12), popupDp(14))
         }
-
-        box.addView(prompt)
-        box.addView(helper)
-        box.addView(input)
-
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-            .setTitle("Analyze Speech")
-            .setView(box)
-            .setPositiveButton("Analyze") { _, _ ->
-                pendingAnalyzeContext = input.text.toString().trim()
-                uploadForAnalysis()
+        content.addView(input)
+        val countingTest = android.widget.CheckBox(this@MainActivity).apply {
+            text = "Known Speech Test: counting 1 to 12"
+            isChecked = pendingAnalyzeContext == "KNOWN_TEST_COUNT_1_TO_12"
+            setOnCheckedChangeListener { _, checked ->
+                if (checked) input.setText("Counting 1 to 12 (known speech test)")
             }
-            .setNegativeButton("Cancel", null)
-            .create()
-        dialog.setOnShowListener { styleUnifiedDialog(dialog) }
+        }
+        content.addView(countingTest)
+        val dialog = android.app.Dialog(this@MainActivity)
+        content.addView(popupActionButton("SEND & ANALYZE ON PC", "Verify receipt, then return analysis", "➤", true) {
+            pendingAnalyzeContext = if (countingTest.isChecked) "KNOWN_TEST_COUNT_1_TO_12" else input.text.toString().trim()
+            dialog.dismiss()
+            uploadForAnalysis()
+        })
+        content.addView(popupActionButton("Test PC Connection", "Check the saved PC address", "⚙️") {
+            val base = parentPcApiBase()
+            if (base.isBlank()) {
+                status.text = "No Parent PC address saved"
+                result.text = "Open Parent PC Connection and save the PC address."
+            } else testParentPcConnection(base)
+        })
+        content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
+        dialog.setContentView(android.widget.ScrollView(this@MainActivity).apply { addView(content) })
         dialog.show()
         styleUnifiedDialog(dialog)
     }
@@ -679,47 +645,95 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         val base = parentPcApiBase()
         if (base.isBlank()) {
             status.text = "Parent PC not configured"
-            result.text = "Parent PC is required for analysis. Tap Parent PC Connection and enter or discover your Parent PC."
+            result.text = "Open Parent PC Connection and connect to your PC before sending."
             return
         }
         if (getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false)) {
             status.text = "Offline mode is on"
-            result.text = "Analysis upload is disabled. You can still use sentence building, word bank, phrases, choices, and playback."
+            result.text = "Turn off Offline Mode to send audio to the Parent PC."
             return
         }
-        if(pcm.size()==0){result.text="Record a short word or phrase first.";return}
-        status.text="Analyzing phonemes…"; result.text="Listening for initial and final consonant patterns and comparing possible words…"
+        if (pcm.size() == 0) {
+            result.text = "Record speech first. Nothing was sent."
+            return
+        }
+        val recordingId = currentRecordingId.ifBlank {
+            UUID.randomUUID().toString().also { currentRecordingId = it }
+        }
+        val audioBytes = wavBytes()
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(audioBytes).joinToString("") { "%02x".format(it) }
+        status.text = "Sending to Parent PC…"
+        result.text = "Recording ID: $recordingId\nWaiting for PC receipt confirmation…"
         Thread {
             try {
-                val client=OkHttpClient.Builder().connectTimeout(20,TimeUnit.SECONDS).readTimeout(120,TimeUnit.SECONDS).build()
-                val body=MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("context",pendingAnalyzeContext)
-                    .addFormDataPart("session_id", currentSessionId)
-                    .addFormDataPart("recording_id", currentRecordingId.ifBlank { UUID.randomUUID().toString().also { currentRecordingId = it } })
-                    .addFormDataPart("speaker_id", speakerId())
-                    .addFormDataPart("audio","speech.wav",wavBytes().toRequestBody("audio/wav".toMediaType()))
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(20, TimeUnit.SECONDS)
+                    .readTimeout(120, TimeUnit.SECONDS)
                     .build()
-                val req=Request.Builder().url("$base/v1/analyze-audio").post(body).build()
-                client.newCall(req).execute().use { r ->
-                    val txt=r.body?.string()?:""
-                    runOnUiThread {
-                        if (r.isSuccessful) {
-                            status.text = "Analysis complete"
-                            result.text = formatAnalysisResult(txt)
-                        } else {
-                            status.text = "Parent PC analysis failed"
-                            result.text = if (txt.trimStart().startsWith("<")) {
-                                "The Parent PC server returned an unexpected web page instead of analysis data."
-                            } else {
-                                "Parent PC error ${r.code}: " + txt.take(500)
-                            }
-                        }
+                fun body() = MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("context", pendingAnalyzeContext)
+                    .addFormDataPart("session_id", currentSessionId)
+                    .addFormDataPart("recording_id", recordingId)
+                    .addFormDataPart("speaker_id", speakerId())
+                    .addFormDataPart("audio", "speech.wav", audioBytes.toRequestBody("audio/wav".toMediaType()))
+                    .build()
+                // A separate receipt request makes upload success independently visible
+                // before the slow AI analysis begins. The PC verifies size and checksum.
+                val receiptRequest = Request.Builder().url("$base/v1/recording-receipt")
+                    .post(body()).build()
+                client.newCall(receiptRequest).execute().use { response ->
+                    val responseText = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        throw IOException(if (response.code == 404 || response.code == 405) "PC server is outdated: receipt endpoint missing (HTTP ${response.code}). Install and launch matching Parent PC build." else "PC did not accept transfer (HTTP ${response.code}): ${responseText.take(240)}")
+                    }
+                    val ack = JSONObject(responseText)
+                    if (ack.optString("recordingId") != recordingId ||
+                        ack.optString("sha256") != digest ||
+                        ack.optLong("bytes") != audioBytes.size.toLong()) {
+                        throw IOException("PC receipt verification failed. Do not assume the recording arrived.")
                     }
                 }
-            } catch(e:Exception) { runOnUiThread { status.text="Could not reach analysis server"; result.text=e.message ?: "Network error" } }
+                runOnUiThread {
+                    status.text = "PC verified audio transfer ✓"
+                    result.text = "PC verified ${audioBytes.size} bytes\nRecording ID: $recordingId\nReceipt is transport-only; sending for analysis…"
+                }
+                val analysisRequest = Request.Builder().url("$base/v1/analyze-audio")
+                    .post(body()).build()
+                runOnUiThread { status.text = "Waiting for PC analysis…" }
+                client.newCall(analysisRequest).execute().use { response ->
+                    val txt = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        runOnUiThread {
+                            status.text = "PC received audio; analysis failed"
+                            result.text = "Recording ID: $recordingId\nAnalysis HTTP ${response.code}: ${txt.take(500)}"
+                        }
+                        return@Thread
+                    }
+                    val analysis = JSONObject(txt)
+                    if (analysis.optString("recordingId") != recordingId ||
+                        !analysis.has("observation")) {
+                        throw IOException("Analysis response did not match the sent recording ID.")
+                    }
+                    runOnUiThread {
+                        status.text = "Analysis returned to phone ✓"
+                        latestAnalysisJson = txt
+                        result.text = formatAnalysisResult(txt)
+                        // Visible build marker helps distinguish a stale APK or
+                        // alternate display path from a missing server result.
+                        status.text = "Hearlium Android v5 • PC analysis received"
+                        findViewById<Button>(R.id.analysisDetailsButton).isEnabled = true
+                        findViewById<Button>(R.id.caregiverReviewButton).isEnabled = true
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    status.text = "Transfer or analysis not confirmed"
+                    result.text = "Recording ID: $recordingId\n${e.message ?: "Connection error"}\nCheck Parent PC Connection and retry."
+                }
+            }
         }.start()
     }
-
 
     private fun sendLearningFeedback(word: String, approvedForLearning: Boolean) {
         val observationId = latestObservationId
@@ -1337,7 +1351,7 @@ content.addView(popupHeader(
             val url = normalizeParentPcUrl(input.text.toString())
             getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
                 .edit().putString("parent_pc_url", url).apply()
-            status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC saved: $url"
+            status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC address saved (not yet verified): $url"
             dialog.dismiss()
         })
         content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
@@ -1382,7 +1396,143 @@ content.addView(popupHeader(
 
     override fun onDestroy(){ recording=false; try{recorder?.release()}catch(_:Exception){}; super.onDestroy() }
 
+    // Only explicitly named wordRecognition.text can be shown as English.
+    // The server may return the full analysis inside several transport wrappers.
+    private fun locateWordRecognition(node: JSONObject, depth: Int = 0): JSONObject? {
+        if (depth > 6) return null
+        node.optJSONObject("wordRecognition")?.let { return it }
+        for (key in arrayOf("analysisResult", "analysis", "result", "data", "payload")) {
+            node.optJSONObject(key)?.let { child ->
+                locateWordRecognition(child, depth + 1)?.let { return it }
+            }
+        }
+        return null
+    }
+
+    private fun locateObservation(node: JSONObject, depth: Int = 0): JSONObject? {
+        if (depth > 6) return null
+        node.optJSONObject("observation")?.let { return it }
+        for (key in arrayOf("analysisResult", "analysis", "result", "data", "payload")) {
+            node.optJSONObject(key)?.let { child ->
+                locateObservation(child, depth + 1)?.let { return it }
+            }
+        }
+        return null
+    }
+
     private fun formatAnalysisResult(json: String): String {
+        return try {
+            val root = JSONObject(json)
+            val recognition = locateWordRecognition(root)
+            val observation = locateObservation(root)
+            val words = recognition?.optString("text", "")?.trim().orEmpty()
+            val recognizerStatus = recognition?.optString("status", "missing") ?: "missing"
+            val valid = words.isNotBlank() && recognizerStatus !in setOf("error", "failed", "unavailable")
+            latestRecordingId = root.optString("recordingId", currentRecordingId)
+            latestObservationId = observation?.optString("observationId", "").orEmpty()
+            latestSuggestedText = if (valid) words else ""
+            val sounds = observation?.optString("transcript", "")?.trim().orEmpty()
+            buildString {
+                append("HEARLIUM ANDROID v5 • RESPONSE TRACE\n\n")
+                append("POSSIBLE SPOKEN WORDS (FASTER-WHISPER)\n")
+                append(if (valid) words else "English transcription unavailable; Parent PC response did not contain a usable wordRecognition.text.")
+                append("\nAI suggestion — caregiver confirmation required.\n\n")
+                append("OBSERVED SPEECH SOUNDS (PHONEMES)\n")
+                append(if (sounds.isNotBlank()) sounds else "No phoneme observation returned.")
+                append("\nThese sounds are not English words.\n\n")
+                append("DIAGNOSTICS: wordRecognition=")
+                append(if (recognition == null) "missing" else "present ($recognizerStatus)")
+                append("; observation=")
+                append(if (observation == null) "missing" else "present")
+                append("; response keys=")
+                append(root.keys().asSequence().toList().joinToString(", ").take(180))
+                if (latestRecordingId.isNotBlank()) append("\nRecording ID: $latestRecordingId")
+            }
+        } catch (e: Exception) {
+            latestSuggestedText = ""
+            "HEARLIUM ANDROID v5 • RESPONSE TRACE\nAnalysis JSON parse error: ${e.javaClass.simpleName}: ${e.message.orEmpty().take(160)}"
+        }
+    }
+
+    private fun showAnalysisDetails() {
+        if (latestAnalysisJson.isBlank()) return
+        val technical = formatDetailedAnalysis(latestAnalysisJson)
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Analysis details")
+            .setMessage(technical)
+            .setPositiveButton("Close", null)
+            .show()
+    }
+
+    private fun showCaregiverReview() {
+        if (latestObservationId.isBlank()) {
+            Toast.makeText(this, "Analyze a recording first.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val field = EditText(this).apply {
+            setSingleLine(false)
+            setText(latestSuggestedText)
+            hint = "What was actually said?"
+            setPadding(32, 24, 32, 24)
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Review speech — edit if needed")
+            .setMessage("Check the words below. One tap saves your confirmation. Sentence feedback does not automatically train pronunciation models.")
+            .setView(field)
+            .setPositiveButton("✓ Confirm & Save") { _, _ ->
+                val corrected = field.text.toString().trim()
+                if (corrected.isBlank()) {
+                    Toast.makeText(this, "Enter what was said before saving.", Toast.LENGTH_LONG).show()
+                } else {
+                    submitCaregiverReview(corrected, true)
+                }
+            }
+            .setNeutralButton("Not Sure") { _, _ -> submitCaregiverReview("", false, "unsure") }
+            .setNegativeButton("Reject") { _, _ -> submitCaregiverReview("", false, "rejected") }
+            .show()
+    }
+
+    private fun submitCaregiverReview(text: String, approved: Boolean, decision: String = "confirmed") {
+        // Multiword utterances are stored as feedback only; the server must not
+        // train one pronunciation entry from an entire sentence.
+        val singleWord = text.trim().split(Regex("\\s+")).size == 1
+        val approveForLearning = approved && singleWord
+        val observationId = latestObservationId
+        val recordingId = latestRecordingId
+        val base = parentPcApiBase()
+        if (base.isBlank() || observationId.isBlank()) {
+            Toast.makeText(this, "Parent PC connection or observation missing.", Toast.LENGTH_LONG).show()
+            return
+        }
+        Thread {
+            try {
+                val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("observation_id", observationId)
+                    .addFormDataPart("recording_id", recordingId)
+                    .addFormDataPart("speaker_id", speakerId())
+                    .addFormDataPart("corrected_word", text)
+                    .addFormDataPart("review_decision", decision)
+                    .addFormDataPart("approved_for_learning", approveForLearning.toString())
+                    .build()
+                val client = OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build()
+                client.newCall(Request.Builder().url("$base/v1/learning/feedback").post(body).build()).execute().use { response ->
+                    val details = response.body?.string().orEmpty()
+                    runOnUiThread {
+                        if (response.isSuccessful) {
+                            Toast.makeText(this, if (approveForLearning) "Confirmed learning example saved on Parent PC." else "Review saved on Parent PC. No automatic learning applied.", Toast.LENGTH_LONG).show()
+                            if (text.isNotBlank()) result.text = "Caregiver confirmed: $text\n\n" + result.text
+                        } else {
+                            Toast.makeText(this, "Review not saved: HTTP ${response.code} ${details.take(140)}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread { Toast.makeText(this, "Review not saved: ${e.message}", Toast.LENGTH_LONG).show() }
+            }
+        }.start()
+    }
+
+    private fun formatDetailedAnalysis(json: String): String {
         return try {
             val obj = JSONObject(json)
             val transcript = obj.optString("transcript", "").ifBlank { "—" }
@@ -1394,24 +1544,53 @@ content.addView(popupHeader(
             val analysis = obj.optJSONObject("analysis")
             val candidates = obj.optJSONArray("candidates")
             val lines = mutableListOf<String>()
-            lines += "Heard: $transcript"
-            if (recordingId.isNotBlank()) lines += "Recording ID: $recordingId"
-            if (observationId.isNotBlank()) lines += "Observation ID: $observationId"
-            val overall = analysis?.optDouble("overallConfidence", -1.0) ?: -1.0
+            val wordRecognition = obj.optJSONObject("wordRecognition")
+            val wordStatus = wordRecognition?.optString("status", "unavailable") ?: "unavailable"
+            val wordText = wordRecognition?.optString("text", "")?.trim().orEmpty()
+            lines += "POSSIBLE SPOKEN WORDS"
+            if (wordStatus == "candidate_transcription" && wordText.isNotBlank()) {
+                lines += wordText
+                lines += "AI suggestion only — listen and confirm before learning."
+            } else {
+                lines += "No reliable word transcription available yet."
+                lines += "Word recognizer status: $wordStatus"
+                lines += "Listen to the saved recording; do not assume the sound symbols are words."
+            }
+            lines += ""
+            lines += "SOUND OBSERVATION (technical, unverified)"
+            if (transcript != "—") {
+                lines += transcript
+            } else {
+                lines += "No sound transcription available."
+            }
+            lines += "This sound sequence is not a word-for-word transcript."
+            val knownTest = obj.optJSONObject("knownSpeechTest")
+            if (knownTest != null) {
+                lines += ""
+                lines += "KNOWN SPEECH TEST — COUNTING 1 TO 12"
+                lines += "Expected: " + knownTest.optString("expectedSequence")
+                lines += "Recognition status: " + knownTest.optString("recognitionStatus", "unverified")
+                lines += "The expected sequence was not inserted into the model output."
+                lines += "Word accuracy cannot be calculated from phoneme output alone."
+            }
+
+            val overall = if (analysis?.isNull("overallConfidence") == false && analysis.has("overallConfidence")) analysis.optDouble("overallConfidence", -1.0) else -1.0
             val uncertainty = analysis?.optString("uncertaintyBand", "") ?: ""
             if (overall >= 0.0) {
-                lines += "AI candidate confidence: ${String.format(Locale.US, "%.2f", overall)}" +
+                lines += "Candidate ranking score (not recognition accuracy): ${String.format(Locale.US, "%.2f", overall)}" +
                     if (uncertainty.isNotBlank()) " ($uncertainty uncertainty)" else ""
             }
+            if (overall < 0.0) lines += "Candidate confidence: not measured for this recording."
+            lines += "Consonant findings require human confirmation before learning."
             if (analysis?.optBoolean("possibleInitialConsonantOmission", false) == true) {
-                lines += "Possible initial-consonant deletion detected."
+                lines += "Unverified candidate: possible initial-consonant deletion."
             }
             if (analysis?.optBoolean("possibleFinalConsonantOmission", false) == true) {
-                lines += "Possible final-consonant deletion detected."
+                lines += "Unverified candidate: possible final-consonant deletion."
             }
             if ((analysis?.optBoolean("possibleInitialConsonantOmission", false) != true) &&
                 (analysis?.optBoolean("possibleFinalConsonantOmission", false) != true)) {
-                lines += "No initial- or final-consonant deletion pattern was identified in the candidate set."
+                lines += "No sufficiently supported consonant-deletion candidate; this does not rule out a speech pattern."
             }
             if (candidates != null && candidates.length() > 0) {
                 lines += ""
@@ -1429,6 +1608,10 @@ content.addView(popupHeader(
             }
             lines += ""
             lines += "These are probabilistic speech observations, not a clinical diagnosis."
+            lines += ""
+            lines += "RECORD DETAILS"
+            if (recordingId.isNotBlank()) lines += "Recording ID: $recordingId"
+            if (observationId.isNotBlank()) lines += "Observation ID: $observationId"
             lines.joinToString("\n")
         } catch (_: Exception) {
             json
@@ -4419,4 +4602,6 @@ content.addView(popupHeader(
         stopParentPcAutoReconnect()
         super.onPause()
     }
+
+}
 
