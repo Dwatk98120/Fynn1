@@ -6,7 +6,16 @@
 <Button android:id="@+id/parentPcConnectionButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent PC Connection" android:layout_marginBottom="8dp"/>
 <Button android:id="@+id/recordButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎙️ Record speech"/>
 <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:orientation="horizontal" android:gravity="center" android:layout_marginTop="4dp" android:layout_marginBottom="4dp" android:background="#FFF0F0">
-<TextView android:id="@+id/activeRecordingIndicator" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center" android:padding="8dp" android:text="● Not Recording" android:textColor="#666666" android:textSize="18sp" android:textStyle="bold" android:visibility="visible"/>
+<TextView
+    android:id="@+id/buildVersionLabel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="HEARLIUM ANDROID v5 • RESPONSE TRACE"
+    android:textSize="12sp"
+    android:textColor="#315C4C"
+    android:textStyle="bold"
+    android:layout_marginBottom="8dp"/>
+        <TextView android:id="@+id/activeRecordingIndicator" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center" android:padding="8dp" android:text="● Not Recording" android:textColor="#666666" android:textSize="18sp" android:textStyle="bold" android:visibility="visible"/>
 </LinearLayout>
 <Button android:id="@+id/stopButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Stop" android:enabled="false"
         android:backgroundTint="#D9D2E8" 
