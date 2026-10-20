@@ -8,7 +8,7 @@
 <Button android:id="@+id/stopButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Stop" android:enabled="false" android:backgroundTint="#D9D2E8" android:textColor="#4B4653" android:textStyle="bold"/>
 <Button android:id="@+id/liveRecordingButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎙 Live Recording" android:layout_marginTop="8dp"/>
 <TextView android:id="@+id/liveStatusIndicator" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="● LIVE — Listening" android:textColor="#D32F2F" android:textStyle="bold" android:textSize="16sp" android:gravity="center" android:paddingTop="6dp" android:paddingBottom="6dp" android:visibility="gone"/>
-<Button android:id="@+id/pilotReadinessButton" android:layout_width="match_parent" android:layout_height="wrap_content"android :text="🛡️ Caregiver Setup &amp; Pilot Readiness" android:layout_marginTop="8dp"/>
+<Button android:id="@+id/pilotReadinessButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🛡️ Caregiver Setup &amp; Pilot Readiness" android:layout_marginTop="8dp"/>
 <Button android:id="@+id/communicationDictionaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧠 Communication Interpretation Tools" android:layout_marginTop="8dp"/>
 <Button android:id="@+id/studentToolsButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧩 Student Communication Tools" android:layout_marginTop="8dp"/>
 <Button android:id="@+id/analyzeButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Analyze speech" android:layout_marginTop="8dp"/>
