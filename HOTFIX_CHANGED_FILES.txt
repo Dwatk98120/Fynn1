@@ -1,4 +1,13 @@
-LATEST: WINDOWS UTF-8 LEARNING LEDGER TEST WRITE FIX — 2026-10-23
+LATEST: ANDROID CAPTURE DURABILITY + SAFE SAVED RETRY — 2026-10-23
+Modified: app/src/main/java/com/firstsoundhelper/MainActivity.kt,
+app/build.gradle, .github/workflows/build-apk-recording-fix.yml,
+.github/workflows/build-apk.yml, BUILD_VERSION.txt, HOTFIX_CHANGED_FILES.txt.
+Added: app/src/main/java/com/firstsoundhelper/LocalSpeechRecordingStore.kt,
+android_no_live_verify.py, server/tests/test_phase3_android_capture_durability_hotfix.py,
+PHASE3_ANDROID_CAPTURE_DURABILITY_HOTFIX_20261023.md.
+Android 3.3.2/code 8. Inno 0.4.5 unchanged. Main frozen.
+
+PREVIOUS: WINDOWS UTF-8 LEARNING LEDGER TEST WRITE FIX — 2026-10-23
 Modified: server/tests/test_phase3_learning_ledger.py, BUILD_VERSION.txt,
 HOTFIX_CHANGED_FILES.txt.
 Added: PHASE3_WINDOWS_UTF8_LEDGER_WRITE_TEST_HOTFIX_20261023.md.
