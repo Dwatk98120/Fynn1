@@ -1,3 +1,27 @@
+LATEST: WINDOWS UTF-8 LEARNING LEDGER TEST WRITE FIX — 2026-10-23
+Modified: server/tests/test_phase3_learning_ledger.py, BUILD_VERSION.txt,
+HOTFIX_CHANGED_FILES.txt.
+Added: PHASE3_WINDOWS_UTF8_LEDGER_WRITE_TEST_HOTFIX_20261023.md.
+Only regression-test fixture writing and build notes changed. App code unchanged.
+
+PREVIOUS: WINDOWS UTF-8 REGRESSION TEST COMPATIBILITY — 2026-10-23
+Modified: server/tests/test_phase3_feedback_rollback_reliability_hotfix.py,
+server/tests/test_phase3_learning_ledger.py, BUILD_VERSION.txt,
+HOTFIX_CHANGED_FILES.txt.
+Added: PHASE3_WINDOWS_UTF8_TEST_COMPATIBILITY_HOTFIX_20261023.md.
+Only regression test source and build notes changed. Application code unchanged.
+
+PREVIOUS: PHASE 3 REQUEST-ID RECONCILIATION + RETRY — 2026-10-23
+Baseline: Learning_Reconciliation_Android_NoLive_Hotfix_20261023.zip
+Modified: server/learning_store.py, server/main.py,
+parent_pc_local/direct_recording.py, parent_pc_local/phase3_learning_gui.py,
+server/tests/test_phase3_learning_ledger.py,
+server/tests/test_phase3_feedback_rollback_reliability_hotfix.py,
+installer/Hearlium.iss, BUILD_VERSION.txt, HOTFIX_CHANGED_FILES.txt.
+Added: PHASE3_REQUEST_ID_RECONCILIATION_RETRY_HOTFIX_20261023.md.
+Main unchanged. Android files unchanged from 3.3/code 6.
+
+HISTORICAL CHANGE SUMMARY:
 PHASE 3 API DIAGNOSTICS HOTFIX — comparison with protected Phase 3 Startup QuickResponse ZIP
 
 MODIFIED:
