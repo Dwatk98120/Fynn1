@@ -342,9 +342,6 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }
     
-        // Persistent release marker: visible before recording or network activity.
-        // If absent on the phone, an older/different APK is installed.
-        status.text = "Hearlium Android v5 • Response Trace • Ready"
         startParentPcAutoReconnect()
 }
 
@@ -719,9 +716,6 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                         status.text = "Analysis returned to phone ✓"
                         latestAnalysisJson = txt
                         result.text = formatAnalysisResult(txt)
-                        // Visible build marker helps distinguish a stale APK or
-                        // alternate display path from a missing server result.
-                        status.text = "Hearlium Android v5 • PC analysis received"
                         findViewById<Button>(R.id.analysisDetailsButton).isEnabled = true
                         findViewById<Button>(R.id.caregiverReviewButton).isEnabled = true
                     }
@@ -1396,61 +1390,32 @@ content.addView(popupHeader(
 
     override fun onDestroy(){ recording=false; try{recorder?.release()}catch(_:Exception){}; super.onDestroy() }
 
-    // Only explicitly named wordRecognition.text can be shown as English.
-    // The server may return the full analysis inside several transport wrappers.
-    private fun locateWordRecognition(node: JSONObject, depth: Int = 0): JSONObject? {
-        if (depth > 6) return null
-        node.optJSONObject("wordRecognition")?.let { return it }
-        for (key in arrayOf("analysisResult", "analysis", "result", "data", "payload")) {
-            node.optJSONObject(key)?.let { child ->
-                locateWordRecognition(child, depth + 1)?.let { return it }
-            }
-        }
-        return null
-    }
-
-    private fun locateObservation(node: JSONObject, depth: Int = 0): JSONObject? {
-        if (depth > 6) return null
-        node.optJSONObject("observation")?.let { return it }
-        for (key in arrayOf("analysisResult", "analysis", "result", "data", "payload")) {
-            node.optJSONObject(key)?.let { child ->
-                locateObservation(child, depth + 1)?.let { return it }
-            }
-        }
-        return null
-    }
-
     private fun formatAnalysisResult(json: String): String {
         return try {
-            val root = JSONObject(json)
-            val recognition = locateWordRecognition(root)
-            val observation = locateObservation(root)
+            val obj = JSONObject(json)
+            latestRecordingId = obj.optString("recordingId", "")
+            latestObservationId = obj.optJSONObject("observation")?.optString("observationId", "").orEmpty()
+            val recognition = obj.optJSONObject("wordRecognition")
             val words = recognition?.optString("text", "")?.trim().orEmpty()
-            val recognizerStatus = recognition?.optString("status", "missing") ?: "missing"
-            val valid = words.isNotBlank() && recognizerStatus !in setOf("error", "failed", "unavailable")
-            latestRecordingId = root.optString("recordingId", currentRecordingId)
-            latestObservationId = observation?.optString("observationId", "").orEmpty()
+            val valid = recognition?.optString("status", "") == "candidate_transcription" && words.isNotBlank()
             latestSuggestedText = if (valid) words else ""
-            val sounds = observation?.optString("transcript", "")?.trim().orEmpty()
+            val sounds = obj.optJSONObject("observation")?.optString("transcript", "")
+                ?.takeIf { it.isNotBlank() } ?: obj.optString("transcript", "")
             buildString {
-                append("HEARLIUM ANDROID v5 • RESPONSE TRACE\n\n")
-                append("POSSIBLE SPOKEN WORDS (FASTER-WHISPER)\n")
-                append(if (valid) words else "English transcription unavailable; Parent PC response did not contain a usable wordRecognition.text.")
-                append("\nAI suggestion — caregiver confirmation required.\n\n")
+                append("POSSIBLE SPOKEN WORDS\n")
+                append(if (valid) words else "Word recognition unavailable — review the saved audio.")
+                append("\nUnverified AI suggestion; caregiver confirmation required.\n\n")
                 append("OBSERVED SPEECH SOUNDS (PHONEMES)\n")
-                append(if (sounds.isNotBlank()) sounds else "No phoneme observation returned.")
-                append("\nThese sounds are not English words.\n\n")
-                append("DIAGNOSTICS: wordRecognition=")
-                append(if (recognition == null) "missing" else "present ($recognizerStatus)")
-                append("; observation=")
-                append(if (observation == null) "missing" else "present")
-                append("; response keys=")
-                append(root.keys().asSequence().toList().joinToString(", ").take(180))
+                append(if (sounds.isNotBlank()) sounds else "No phoneme observation available.")
+                append("\n\nThese symbols show how Hearlium thinks the speech sounded, not ordinary English word spellings. ")
+                append("Compare them with the suggested words above and listen to the original recording. ")
+                append("Some sounds may be uncertain, and only a caregiver can confirm the intended words.")
                 if (latestRecordingId.isNotBlank()) append("\nRecording ID: $latestRecordingId")
+                append("\nOpen Analysis Details for technical findings and Caregiver Review to confirm or correct.")
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             latestSuggestedText = ""
-            "HEARLIUM ANDROID v5 • RESPONSE TRACE\nAnalysis JSON parse error: ${e.javaClass.simpleName}: ${e.message.orEmpty().take(160)}"
+            "Unable to display the interpretation. Open Analysis Details for troubleshooting."
         }
     }
 
@@ -4604,5 +4569,3 @@ content.addView(popupHeader(
     }
 
 }
-
-
