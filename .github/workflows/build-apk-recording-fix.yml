@@ -1,4 +1,4 @@
-me: Build APK - Recording Indicator Fix
+name: Build APK - Recording Indicator Fix
 
 on:
   push:
