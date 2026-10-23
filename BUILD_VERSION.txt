@@ -29,3 +29,12 @@ No application code, Windows installer version or Android version changes.
 Windows build-only UTF-8 regression test ledger-write compatibility hotfix, 2026-10-23.
 Specifies UTF-8 when rewriting the learning-ledger tamper fixture containing IPA symbols.
 No application code, Windows installer version or Android version changes.
+
+Branch 2 Phase 3 Android Capture Durability + Safe Saved Recording Retry, 2026-10-23.
+Android version 3.3.2 / code 8. Parent PC Inno version remains 0.4.5.
+Completed audio is saved atomically in Android app-private storage BEFORE network upload.
+Verified IDs/checksums, retry from Saved Recordings, versioned analysis JSON, no silent
+replacement with an older recording, stale caregiver review cleared on new capture.
+Android APK build source and compiled-artifact gates retained; Live Recording removal
+source carried forward without making it the focus of this hotfix.
+Windows server and installer app code unchanged. Main remains frozen.
