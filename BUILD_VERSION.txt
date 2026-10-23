@@ -2,3 +2,19 @@ Hearlium Parent PC Windows Installer Builder
 Updated from FirstSoundHelper_v6_AppWide_Popup_Refinement_FULL_READY.zip
 Includes Parent PC server, temporal/prosody, learned substitutions, candidate engine, caregiver review and pairing.
 Windows .exe/.iss compilation not performed in this Linux environment.
+
+Branch 2 Phase 3 startup progress/Phase 2 cold-start integrated hotfix, 2026-10-22.
+Windows installer 0.4.1. Main frozen. Android unchanged.
+
+Branch 2 Phase 3 API Diagnostics Hotfix, 2026-10-22. Inno version 0.4.2.
+Continuous API health monitoring, process exit timestamps, event logging, and request failures.
+No auto-restart, no learning changes. Main untouched.
+
+Branch 2 Phase 3 Evidence Integrity Hotfix, 2026-10-22. Inno 0.4.3. Protect recording identity, atomic approved clips, conditional VC++ runtime install.
+
+Branch 2 Phase 3 Student Recording Library + Android phoneme wording, 2026-10-23.
+Inno Setup version 0.4.4. Android build.gradle versionCode 4, versionName 3.1.
+Add student-name aliases by speaker ID, student search, sorting, date filters, and unassigned view.
+Android explains phoneme symbols as sounds, not non-English words.
+WARNING: Android's stable ID is currently per installation, not verified per student.
+No changes to original recordings, learning permissions, analysis engines, or Main branch.

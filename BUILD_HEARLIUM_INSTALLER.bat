@@ -18,6 +18,10 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM Regression tests run inside the clean build environment below, after
+REM its NumPy and pytest dependencies have been installed.  Do not require
+REM separate pytest/NumPy installations in the user's global Python.
+
 REM ------------------------------------------------------------
 REM 1b. Bundle Microsoft Visual C++ x64 runtime prerequisite.
 REM ------------------------------------------------------------
@@ -153,6 +157,21 @@ echo Installing pinned Faster-Whisper and native dependencies...
 python -m pip install --only-binary=:all: -r server\requirements-word-asr.txt
 if errorlevel 1 goto :depfail
 
+REM Run ALL regressions (unittest and pytest function tests) in the isolated
+REM environment. The original Phase 3 build only ran unittest discovery,
+REM leaving the pytest-only tests unchecked.
+echo Installing test runner into build environment...
+python -m pip install "pytest==8.4.2"
+if errorlevel 1 goto :depfail
+echo Running full Phase 2 + Phase 3 + startup reliability regression suite...
+python -m pytest -q server\tests
+if errorlevel 1 (
+  echo ERROR: Full regression suite failed. No installer will be created.
+  pause
+  exit /b 1
+)
+echo Regression suite passed.
+
 echo Checking dependency consistency...
 python -m pip check
 if errorlevel 1 goto :depfail
@@ -165,6 +184,18 @@ if errorlevel 1 goto :depfail
 REM Download and validate the actual offline model before freezing.
 python "installer\prepare_whisper_model.py"
 if errorlevel 1 goto :depfail
+
+REM Stage the phoneme CTC model INSIDE the installer, too. Only the build PC
+REM may download; installed Parent PCs analyze offline without Wi-Fi.
+echo Preparing independent phoneme model for offline installation...
+python "installer\prepare_phoneme_model.py"
+if errorlevel 1 (
+  echo ERROR: Phoneme model download or staging failed. Installer not built.
+  echo Free adequate disk space and verify internet on BUILD computer.
+  pause
+  exit /b 1
+)
+
 
 REM Validate the critical imports before building.
 echo.
@@ -301,7 +332,7 @@ REM 9. Build installer
 REM ------------------------------------------------------------
 echo.
 echo Building HearliumSetup.exe...
-"%ISCC%" installer\Hearlium.iss
+call "COMPILE_INSTALLER_ONLY.bat"
 if errorlevel 1 (
   echo.
   echo ERROR: Inno Setup compilation failed.

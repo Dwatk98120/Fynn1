@@ -1,0 +1,43 @@
+HEARLIUM PHASE 3 API DIAGNOSTICS - INNO SETUP SHORT-PATH BUILD FIX
+Date: 2026-10-22
+
+The initial Phase 3 API diagnostics hotfix passed 63 Python regression tests,
+but Inno Setup stopped during compression of long PyTorch ATen include filenames.
+The screenshot ends with "The system cannot find the path specified" and
+"ERROR: Inno Setup compilation failed". With the project extracted under
+C:\here\backup\phase 3\Hearlium_Branch2_Phase3_API_Diagnostics_..., a
+Windows MAX_PATH/long-path issue is a plausible cause, not yet proven.
+
+WHAT CHANGED IN THIS PACKAGE
+- Added COMPILE_INSTALLER_ONLY.bat. It invokes Inno Setup through a temporary
+  short drive letter (SUBST), preserving the already compiled Parent PC app.
+- BUILD_HEARLIUM_INSTALLER.bat now uses this same short-path compiler step.
+- No speech analysis, API diagnostics, Android, or learning implementation
+  was altered relative to the prior Windows encoding-fix hotfix.
+
+IMPORTANT: FAST RETRY, NO PYTHON REBUILD
+If the earlier builder already produced
+  dist\HearliumParentPC\HearliumParentPC.exe
+then you do NOT have to rebuild Python or redownload speech models.
+
+Option 1 (least transfer): On the CURRENT extracted project, create a short
+  path by moving the entire project folder to C:\H3, then run Inno Setup on
+  C:\H3\installer\Hearlium.iss (or from a Command Prompt run:
+  "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" "C:\H3\installer\Hearlium.iss").
+  Do not move only the .exe; the adjacent _internal directory is essential.
+
+Option 2 (new package): Extract THIS ZIP into a new SHORT folder, e.g. C:\H3.
+  Since the ZIP is source-only, if the compiled dist directory is absent,
+  copy the COMPLETE previous dist\HearliumParentPC folder into C:\H3\dist\
+  and the previously downloaded installer\prereqs\vc_redist.x64.exe into
+  C:\H3\installer\prereqs\. Then double-click COMPILE_INSTALLER_ONLY.bat.
+  If you do not want to copy those folders, run BUILD_HEARLIUM_INSTALLER.bat
+  to perform a normal full rebuild; its final Inno step now uses SUBST.
+
+The batch checks prerequisites before compiling and automatically removes its
+temporary drive mapping. No source code is committed to GitHub; keep Main
+frozen and work only on Branch 2.
+
+If the same error recurs after the short-path change, please provide the FULL
+first red Inno Setup error (including filename and reason). We must investigate
+other potential causes rather than assuming path length is proven.

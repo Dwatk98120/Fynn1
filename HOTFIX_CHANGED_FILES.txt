@@ -1,0 +1,18 @@
+PHASE 3 API DIAGNOSTICS HOTFIX — comparison with protected Phase 3 Startup QuickResponse ZIP
+
+MODIFIED:
+BUILD_VERSION.txt
+HearliumParentPC.spec
+installer/Hearlium.iss
+parent_pc_local/analysis_client.py
+parent_pc_local/direct_recording.py
+parent_pc_local/hearlium_launcher.py
+parent_pc_local/hearlium_parent_pc_gui.py
+parent_pc_local/start_parent_pc_server.py
+
+ADDED:
+PHASE3_API_DIAGNOSTICS_HOTFIX_README_20261022.txt
+parent_pc_local/api_diagnostics.py
+server/tests/test_phase3_api_diagnostics_hotfix.py
+
+No Android changes; Main remains frozen.
