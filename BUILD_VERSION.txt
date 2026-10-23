@@ -18,3 +18,14 @@ Add student-name aliases by speaker ID, student search, sorting, date filters, a
 Android explains phoneme symbols as sounds, not non-English words.
 WARNING: Android's stable ID is currently per installation, not verified per student.
 No changes to original recordings, learning permissions, analysis engines, or Main branch.
+
+Branch 2 Phase 3 Request-ID Reconciliation + Learning History Retry, 2026-10-23.
+Inno Setup 0.4.5; Android remains 3.3 / code 6. Main frozen.
+Only matched feedback request IDs may clear pending learning approvals.
+
+Windows build-only UTF-8 regression test compatibility hotfix, 2026-10-23.
+No application code, Windows installer version or Android version changes.
+
+Windows build-only UTF-8 regression test ledger-write compatibility hotfix, 2026-10-23.
+Specifies UTF-8 when rewriting the learning-ledger tamper fixture containing IPA symbols.
+No application code, Windows installer version or Android version changes.
