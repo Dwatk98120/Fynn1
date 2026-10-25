@@ -1,4 +1,4 @@
-name: Build APK - Recording Indicator Fix
+name: Hearlium Android APK - Caregiver Child Names v3.3.3
 
 on:
   push:
@@ -9,9 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out selected branch
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Set up Java 17
@@ -20,25 +19,42 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Verify PC analysis button
+      - name: Verify Android recording durability and source safeguards
+        shell: bash
+        run: python3 android_no_live_verify.py --source
+
+      - name: Download official Gradle 8.9
+        shell: bash
         run: |
-          grep -Fq 'SEND & ANALYZE ON PC' app/src/main/java/com/firstsoundhelper/MainActivity.kt
-          grep -Fq 'uploadForAnalysis' app/src/main/java/com/firstsoundhelper/MainActivity.kt
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 5 \
+            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
+            --output "$RUNNER_TEMP/gradle-8.9-bin.zip"
+          unzip -q "$RUNNER_TEMP/gradle-8.9-bin.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/gradle-8.9/bin" >> "$GITHUB_PATH"
 
-      - name: Set up Gradle 8.9
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+      - name: Regenerate Gradle 8.9 wrapper from official distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle wrapper --gradle-version 8.9 --distribution-type bin
+          chmod +x ./gradlew
+          echo 'Generated wrapper JAR SHA-256:'
+          sha256sum gradle/wrapper/gradle-wrapper.jar
+          echo '498495120a03b9a6ab5d155f5de3c8f0d986a449153702fb80fc80e134484f17  gradle/wrapper/gradle-wrapper.jar' | sha256sum -c -
 
-      - name: Build debug APK
-        run: gradle assembleDebug --stacktrace --no-daemon
+      - name: Build Android debug APK
+        shell: bash
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+
+      - name: Reject outdated APKs missing durable capture
+        shell: bash
+        run: python3 android_no_live_verify.py --apk app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Hearlium-Android-Debug-APK
+          name: Hearlium-Android-Child-Name-Upload-v3.3.3-code9
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
-
-
