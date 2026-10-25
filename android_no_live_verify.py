@@ -47,17 +47,21 @@ def verify_source() -> None:
     for marker in ("startRecording()", "stopRecording()", "uploadForAnalysis()",
                    "SEND & ANALYZE ON PC", "restoreLatestSavedCapture()",
                    "localRecordingStore.saveCapture(", "localRecordingStore.verifiedWav(",
-                   "clearPendingReview()", "localRecordingStore.saveAnalysis("):
+                   "clearPendingReview()", "localRecordingStore.saveAnalysis(",
+                   'addFormDataPart("student_name", nameForThisRecording)',
+                   'localRecordingStore.saveStudentName(capture, nameForThisRecording)',
+                   'studentNameLabelSupported'):
         if marker not in kotlin:
             raise ValueError(f"Regular recording/upload flow missing: {marker}")
     for marker in ("atomicCreate(", "recording_meta.json", "sha256",
-                   "verifiedWav(", "latestVerified()", "saveAnalysis("):
+                   "verifiedWav(", "latestVerified()", "saveAnalysis(",
+                   "studentNameForRecording(", "saveStudentName("):
         if marker not in store:
             raise ValueError(f"Protected local recording storage missing: {marker}")
-    if not re.search(r"(?m)^\s*versionCode\s+8\s*$", gradle):
-        raise ValueError("Expected Android capture durability versionCode 8")
-    if not re.search(r"(?m)^\s*versionName\s+['\"]3\.3\.2['\"]\s*$", gradle):
-        raise ValueError("Expected Android capture durability versionName 3.3.2")
+    if not re.search(r"(?m)^\s*versionCode\s+9\s*$", gradle):
+        raise ValueError("Expected Android caregiver child-name versionCode 9")
+    if not re.search(r"(?m)^\s*versionName\s+['\"]3\.3\.3['\"]\s*$", gradle):
+        raise ValueError("Expected Android caregiver child-name versionName 3.3.3")
     print("PASS: source protects completed audio and preserves normal recording/upload.")
 
 
@@ -73,7 +77,8 @@ def verify_apk(path: Path) -> None:
     if any(marker.encode("ascii") in dex for marker in LEGACY for dex in dex_data):
         print("NOTE: legacy Live Recording mode is present; this hotfix tests capture durability.")
     for marker in ("startRecording", "stopRecording", "recordButton", "stopButton",
-                   "LocalSpeechRecordingStore", "saveCapture", "verifiedWav"):
+                   "LocalSpeechRecordingStore", "saveCapture", "verifiedWav",
+                   "saveStudentName", "studentNameForRecording", "student_name"):
         if not any(marker.encode("ascii") in dex for dex in dex_data):
             raise ValueError(f"STALE APK lacks expected durable recording feature: {marker}")
     print(f"PASS: compiled APK contains durable recording storage and required controls: {path}")

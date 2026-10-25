@@ -6,8 +6,9 @@ datas = []
 binaries = []
 hiddenimports = []
 for pkg in ['torch', 'transformers', 'tokenizers', 'numpy', 'sounddevice', 'soundfile',
-            'requests', 'fastapi', 'uvicorn', 'g2p_en', 'nltk', 'inflect', 'distance',
-            'safetensors', 'huggingface_hub', 'multipart', 'faster_whisper', 'av', 'ctranslate2']:
+            'requests', 'fastapi', 'uvicorn', 'h11', 'g2p_en', 'nltk', 'inflect', 'distance',
+            'safetensors', 'huggingface_hub', 'multipart', 'faster_whisper', 'av', 'ctranslate2',
+            'silero_vad']:
     try:
         d, b, h = collect_all(pkg)
         datas.extend(d)
@@ -31,6 +32,8 @@ if not (phoneme_model_dir / 'config.json').is_file() or not any(
 ):
     raise RuntimeError('Offline phoneme model missing: run installer\\prepare_phoneme_model.py')
 datas.append((str(phoneme_model_dir), 'models/phoneme-wav2vec2'))
+# Keep licensing terms with the distributed offline Silero model.
+datas.append(('THIRD_PARTY_NOTICES_SILERO_VAD.md', '.'))
 
 # Include any non-Python model/data assets bundled with this project.
 datas.extend(collect_data_files('certifi'))
@@ -42,9 +45,19 @@ a = Analysis(
     hiddenimports=sorted(set(hiddenimports + ['main', 'direct_recording', 'pair_phone',
         'hearlium_parent_pc_gui', 'phase3_learning_gui', 'layer_health', 'temporal_prosody', 'candidate_word_engine',
         'learning_engine', 'learning_store', 'analysis_engine', 'phoneme_analysis',
-        'phoneme_substitution', 'recording_quality', 'reference_audio', 'reference_audio_gui',
+        'phoneme_substitution', 'recording_quality', 'silero_activity',
+        'server.silero_activity', 'reference_audio', 'reference_audio_gui',
         'learning_contracts', 'repair_pipeline', 'segment_interpretation', 'number_review',
-        'word_asr', 'analysis_jobs', 'analysis_client', 'caregiver_review_guidance', 'student_recording_library', 'api_diagnostics', 'bootstrap_server', 'android_recording_storage', 'server.android_recording_storage'])),
+        'word_asr', 'speech_activity_review', 'server.speech_activity_review',
+        'phoneme_timing_review', 'server.phoneme_timing_review',
+        'speech_activity_candidate_review', 'server.speech_activity_candidate_review',
+        'utterance_prosody_review', 'server.utterance_prosody_review',
+        'word_asr_activity_review', 'server.word_asr_activity_review',
+        'speech_window_quality_review', 'server.speech_window_quality_review',
+        'recognizer_disagreement_review', 'server.recognizer_disagreement_review',
+        'analysis_jobs', 'analysis_client', 'caregiver_review_guidance', 'student_recording_library',
+        'recording_title_store', 'api_diagnostics', 'bootstrap_server',
+        'android_recording_storage', 'server.android_recording_storage'])),
     hookspath=[], hooksconfig={}, runtime_hooks=[],
     excludes=[], noarchive=False,
 )
