@@ -128,6 +128,60 @@ internal class LocalSpeechRecordingStore(filesDir: File) {
         }
     }
 
+    /**
+     * Child names are caregiver-entered labels for THIS recording only.
+     * They never rewrite the original WAV/identity metadata or change speaker ID.
+     * Immutable events allow corrections without losing the previous label.
+     */
+    fun studentNameForRecording(recording: LocalSpeechRecording): String {
+        verifiedWav(recording)
+        val folder = recording.audioFile.parentFile ?: return ""
+        val events = folder.listFiles()
+            ?.filter { it.isFile && it.name.startsWith("student_label_") && it.name.endsWith(".json") }
+            ?.sortedByDescending { it.name } ?: return ""
+        for (event in events) {
+            try {
+                val label = JSONObject(event.readText(Charsets.UTF_8))
+                if (label.optString("recordingId") != recording.recordingId ||
+                    label.optString("audioSha256") != recording.sha256 ||
+                    label.optString("speakerId") != recording.speakerId ||
+                    label.optString("source") != "caregiver_on_android") continue
+                val name = label.optString("studentName").trim()
+                if (name.length <= 120 && name.none { it.code < 32 || it.code == 127 }) {
+                    return name
+                }
+            } catch (_: Exception) {
+                // An incomplete label event must never invalidate original audio.
+            }
+        }
+        return ""
+    }
+
+    fun saveStudentName(recording: LocalSpeechRecording, studentName: String) {
+        val name = studentName.trim()
+        if (name.length > 120 || name.any { it.code < 32 || it.code == 127 }) {
+            throw IOException("Child name must be 120 characters or less, without control characters")
+        }
+        if (studentNameForRecording(recording) == name) return
+        val folder = recording.audioFile.parentFile ?: throw IOException("Recording folder missing")
+        val event = JSONObject()
+            .put("recordingId", recording.recordingId)
+            .put("speakerId", recording.speakerId)
+            .put("audioSha256", recording.sha256)
+            .put("studentName", name)
+            .put("source", "caregiver_on_android")
+            .put("labeledAtMillis", System.currentTimeMillis())
+        // Zero-padded sequence guarantees correction order even if two labels
+        // happen to be entered within the same clock millisecond.
+        val revision = (folder.listFiles()
+            ?.count { it.name.startsWith("student_label_") && it.name.endsWith(".json") }
+            ?: 0) + 1
+        val stamp = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date())
+        val sequence = String.format(Locale.US, "%012d", revision)
+        atomicCreate(File(folder, "student_label_${sequence}_${stamp}_${UUID.randomUUID()}.json"),
+            event.toString(2).toByteArray(Charsets.UTF_8))
+    }
+
     /** Multiple analyses can be attached; the original recording never changes. */
     fun saveAnalysis(recording: LocalSpeechRecording, json: String) {
         verifiedWav(recording)
@@ -137,3 +191,4 @@ internal class LocalSpeechRecordingStore(filesDir: File) {
             json.toByteArray(Charsets.UTF_8))
     }
 }
+
