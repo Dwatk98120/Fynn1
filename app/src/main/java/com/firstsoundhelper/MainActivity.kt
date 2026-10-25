@@ -692,6 +692,27 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             setPadding(popupDp(20), popupDp(18), popupDp(20), popupDp(14))
         }
         content.addView(popupHeader("Analyze Speech", "Send recording to the Parent PC", "🎙️"))
+        val childName = EditText(this@MainActivity).apply {
+            hint = "Child's name for THIS recording (optional)"
+            setText(activeLocalRecording?.let { capture ->
+                try { localRecordingStore.studentNameForRecording(capture) }
+                catch (_: Exception) { "" }
+            } ?: "")
+            isSingleLine = true
+            setPadding(popupDp(12), popupDp(14), popupDp(12), popupDp(14))
+        }
+        content.addView(childName)
+        content.addView(TextView(this@MainActivity).apply {
+            text = "This caregiver label travels with this recording only. It does not approve speech learning or assign a verified speaker identity."
+            textSize = 12f
+            setPadding(popupDp(3), popupDp(5), popupDp(3), popupDp(8))
+        })
+        val profileName = loadStudentProfile().optString("name").trim()
+        if (profileName.isNotEmpty()) {
+            content.addView(popupActionButton("Use Student Profile Name", profileName, "👤") {
+                childName.setText(profileName)
+            })
+        }
         val input = EditText(this@MainActivity).apply {
             hint = "Optional context, e.g. counting 1 to 12"
             setText(pendingAnalyzeContext)
@@ -709,6 +730,12 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         content.addView(countingTest)
         val dialog = android.app.Dialog(this@MainActivity)
         content.addView(popupActionButton("SEND & ANALYZE ON PC", "Verify receipt, then return analysis", "➤", true) {
+            val enteredName = childName.text.toString().trim()
+            if (enteredName.length > 120 || enteredName.any { it.code < 32 || it.code == 127 }) {
+                childName.error = "Use 120 characters or fewer, with no line breaks"
+                return@popupActionButton
+            }
+            pendingStudentName = enteredName
             pendingAnalyzeContext = if (countingTest.isChecked) "KNOWN_TEST_COUNT_1_TO_12" else input.text.toString().trim()
             dialog.dismiss()
             uploadForAnalysis()
@@ -768,6 +795,16 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             return
         }
         val recordingId = capture.recordingId
+        val nameForThisRecording = pendingStudentName.trim()
+        try {
+            // Save the caregiver's choice beside this saved WAV before transmission.
+            // Each correction is appended as an immutable label event.
+            localRecordingStore.saveStudentName(capture, nameForThisRecording)
+        } catch (e: Exception) {
+            status.text = "Child label was not saved; upload blocked"
+            result.text = "Original audio is safe. Retry after checking device storage: ${e.message}"
+            return
+        }
         val digest = java.security.MessageDigest.getInstance("SHA-256")
             .digest(audioBytes).joinToString("") { "%02x".format(it) }
         status.text = "Sending to Parent PC…"
@@ -783,6 +820,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     .addFormDataPart("session_id", capture.sessionId)
                     .addFormDataPart("recording_id", recordingId)
                     .addFormDataPart("speaker_id", capture.speakerId)
+                    .addFormDataPart("student_name", nameForThisRecording)
                     .addFormDataPart("audio", "speech.wav", audioBytes.toRequestBody("audio/wav".toMediaType()))
                     .build()
                 // A separate receipt request makes upload success independently visible
@@ -799,6 +837,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                         ack.optString("sha256") != digest ||
                         ack.optLong("bytes") != audioBytes.size.toLong()) {
                         throw IOException("PC receipt verification failed. Do not assume the recording arrived.")
+                    }
+                    if (nameForThisRecording.isNotEmpty() &&
+                        (!ack.optBoolean("studentNameLabelSupported", false) ||
+                         ack.optString("studentName") != nameForThisRecording)) {
+                        throw IOException("Parent PC cannot confirm child-name labels. Install the matching Parent PC update before sending a named recording.")
                     }
                 }
                 runOnUiThread {
@@ -821,6 +864,11 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     if (analysis.optString("recordingId") != recordingId ||
                         !analysis.has("observation")) {
                         throw IOException("Analysis response did not match the sent recording ID.")
+                    }
+                    if (nameForThisRecording.isNotEmpty() &&
+                        (analysis.optString("studentName") != nameForThisRecording ||
+                         analysis.optJSONObject("recordingStorage")?.optBoolean("saved") != true)) {
+                        throw IOException("Parent PC did not confirm that the child's name was saved with this recording.")
                     }
                     val analysisSaveError = try {
                         localRecordingStore.saveAnalysis(capture, txt)
@@ -1750,7 +1798,11 @@ content.addView(popupHeader(
         } else {
             sessions.forEach { session ->
                 val title = TextView(this@MainActivity)
-                title.text = session.name
+                val savedName = localRecordingStore.openSession(session)?.let { capture ->
+                    try { localRecordingStore.studentNameForRecording(capture) }
+                    catch (_: Exception) { "" }
+                }.orEmpty()
+                title.text = if (savedName.isEmpty()) session.name else "$savedName — ${session.name}"
                 title.textSize = 17f
                 title.setPadding(0, 18, 0, 8)
                 list.addView(title)
@@ -2421,6 +2473,7 @@ content.addView(popupHeader(
 
     // Normal Record speech and Stop capture are retained.
     private var pendingAnalyzeContext: String = ""
+    private var pendingStudentName: String = ""
 
     private fun showPersonalWordBank() {
         if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -4281,3 +4334,4 @@ content.addView(popupHeader(
     }
 
 }
+
