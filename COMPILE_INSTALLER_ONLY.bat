@@ -23,6 +23,18 @@ if not exist "installer\prereqs\vc_redist.x64.exe" (
   exit /b 1
 )
 
+REM Never silently package an earlier Phase 3 EXE with this hotfix's Inno
+REM script. The full builder tests the frozen Layer 2 algorithm and records
+REM exact source/EXE hashes. A short-path retry may reuse only that build.
+echo Verifying frozen Layer 2 executable matches the tested source...
+py -3.12 "installer\verify_layer2_build.py" verify
+if errorlevel 1 (
+  echo ERROR: Old or unverified executable. No installer will be created.
+  echo Please run BUILD_HEARLIUM_INSTALLER.bat to rebuild Layer 2.
+  pause
+  exit /b 1
+)
+
 set "ISCC="
 if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
 if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"

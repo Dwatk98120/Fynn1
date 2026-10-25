@@ -38,3 +38,112 @@ replacement with an older recording, stale caregiver review cleared on new captu
 Android APK build source and compiled-artifact gates retained; Live Recording removal
 source carried forward without making it the focus of this hotfix.
 Windows server and installer app code unchanged. Main remains frozen.
+
+Branch 2 Phase 3 Layer 2 Independent Silero VAD Hotfix, 2026-10-24.
+Windows Inno Setup version 0.4.6. Installs and verifies the official offline
+Silero VAD 6.2.3 TorchScript model; displays separate candidate speech intervals,
+without asserting target-speaker identity or changing learning approvals.
+Adds a localized clipping warning for long recordings with short saturated
+passages. Android source and Main unchanged. Real model and full-regression
+validation are mandatory gates in the Windows installer build.
+
+Branch 2 Phase 3 Windows build dependency recovery, 2026-10-24.
+The full regression runner now uses the exact .installer_venv Python and
+verifies requests immediately before collecting tests. If requests cannot be
+imported, it repairs that isolated environment and rechecks, failing the
+installer build safely if still unavailable. Windows Inno version stays
+0.4.6, Silero Layer 2 unchanged, Android unchanged, Main frozen.
+
+Branch 2 Phase 3 full Windows dependency-identity follow-up, 2026-10-24.
+Windows Inno Setup version still 0.4.6; no Android or model changes.
+All application pip installs, test execution, offline model checks and
+PyInstaller now use the same explicit .installer_venv Python. Before pytest,
+the builder verifies and repairs requests 2.32.3 and NLTK 3.9.1 if missing,
+and runs pip check against that interpreter. Windows build verification
+is still required; the prior 237-pass test was before this source update.
+
+Branch 2 Phase 3 full runtime dependency preflight, 2026-10-25.
+Inno Setup version stays 0.4.6; Android and all 13 analysis layers unchanged.
+Windows installer now checks every pinned direct speech/audio/build package
+inside the isolated venv, repairs missing soundfile/sounddevice/Silero and
+other known packages, verifies installed versions, runs pip check, full
+regressions, then real Silero inference before packaging. Main stays frozen.
+
+Branch 2 Phase 3 Parent PC frozen-server startup hotfix, 2026-10-25.
+Inno version remains 0.4.6; no changes to Android, recording files, Silero,
+or the 13 speech-analysis layers. The local HTTP server explicitly disables
+unused WebSocket protocols, pins Uvicorn's HTTP protocol to h11 and bundles it.
+The existing frozen --self-test now executes actual Uvicorn protocol loading
+so the missing websockets.legacy startup regression stops the build.
+
+Branch 2 Phase 3 Background / Phoneme Integrity Hotfix, 2026-10-25.
+Inno version remains 0.4.6 and Android is unchanged. Digits in word-ASR
+hypotheses are normalized for review-only phoneme agreement (unsupported
+numbers explicitly remain unresolved); borderline stretched ASR word spans
+raise review warnings. Ranked word suggestions outside independent Silero
+candidate activity are retained as unverified suggestions instead of ordinary
+word candidates. No audio, CTC observation, approval or learning is changed.
+New review-only within-utterance prosody excludes long session pauses and
+disclaims speaker identification. Main remains frozen. See
+PHASE3_BACKGROUND_PHONEME_INTEGRITY_HOTFIX_20261025.md for validation.
+
+Branch 2 Phase 3 Word-ASR / Silero and Activity-Window Quality Hotfix,
+2026-10-25. Inno Setup version remains 0.4.6; Android is unchanged. Adds
+review-only word-ASR segment timing crosschecks against independent Silero
+activity intervals, separate window-based amplitude diagnostics to explain
+whole-session intentional-pause bias, and a caregiver-facing summary of
+independent recognition disagreements. No modification of original WAVs,
+protected acoustic observations, candidate transcripts, approvals, or learning.
+See PHASE3_SPEECH_CROSSCHECK_QUALITY_HOTFIX_20261025.md for test results.
+
+Branch 2 Phase 3 Retroactive Recording Titles and Search Hotfix, 2026-10-25.
+Inno version stays 0.4.6 and Android remains unchanged. Parent PC Recording
+History displays deterministic suggested titles for existing WAVs using saved
+metadata and verified analysis only. User-defined recording titles, searchable
+tags/notes, bulk Save Suggested Titles and revert-to-suggestion controls are
+stored in a separate audited, atomic local index. Existing SILERO/word/phoneme
+cross-checks, baseline 13 layers, audio/observation/learning evidence and Main
+remain untouched. See PHASE3_RECORDING_TITLE_TAG_SEARCH_HOTFIX_20261025.md.
+
+Branch 2 Phase 3 Recording History Search / Sort Controls Repair, 2026-10-25.
+Windows Inno Setup version advanced to 0.4.7 so the newly installed repair
+can be distinguished from earlier 0.4.6 builds. Adds visible Search and
+Apply Sort buttons, Enter-to-search, clickable column headings with reverse
+sorting, all 14 sort directions, a results/status message and build marker.
+Newest/oldest sorting uses saved recording creation times, not WAV file mtime.
+Previously saved, identity-verified Parent PC ASR word suggestions are included
+in Recording History searches without approving them or learning from them.
+All earlier integrated hotfixes are carried forward; Main and Android are
+unchanged. See PHASE3_RECORDING_HISTORY_SEARCH_SORT_REPAIR_20261025.md.
+
+Branch 2 Phase 3 Windows Regression Test Path Compatibility Repair, 2026-10-25.
+Fixes two installer-blocking assertions introduced by the Recording History
+Search / Sort hotfix. Test fixtures use pathlib.Path; the assertions previously
+expected literal POSIX-style '/fake/name.wav' strings, which fail on Windows
+where Path displays '\\fake\\name.wav'. Expected table identifiers now use
+native Path formatting as well. No application behavior, recording data,
+analysis, learning, Android code, or installer prerequisites changed.
+Inno version remains 0.4.7 because the installed application is identical.
+See PHASE3_WINDOWS_RECORDING_SORT_TEST_COMPATIBILITY_20261025.md.
+
+Branch 2 Phase 3 Android Caregiver Child Name on Upload, 2026-10-25.
+Android version 3.3.3/code9; matching Windows Parent PC installer 0.4.8.
+The phone asks the caregiver for an optional child name before Send & Analyze.
+It can use the already saved Student Profile name by explicit caregiver choice.
+The label is saved as immutable per-recording events outside the original WAV
+and identity metadata, sent to both receipt and analysis endpoints, echoed by
+the new Parent PC to prevent silent loss, and indexed/displayed as a searchable
+"(phone label)" in Parent PC Recording History. No automatic mapping of a
+shared phone speaker ID to a child, no changes to observation evidence or
+learning approval, no retroactive renaming of previously uploaded WAVs. The
+existing 13-layer analysis and Main remain unchanged. See
+PHASE3_ANDROID_CHILD_NAME_UPLOAD_HOTFIX_20261025.md.
+
+Same release, additional Parent PC entry and reference search improvements:
+Main Parent PC adds a Recording History button that opens the same History
+tab directly, preserving its previous location inside Direct Recording.
+The opt-in Reference Audio Library provides a Search References button, exact
+student speaker-ID/kind filtering, no stale results from older searches, and
+clear guidance for empty reference libraries versus saved recordings.
+Android APK workflow recovery directions are in WORKFLOWS_FIX_README.md.
+Inno remains 0.4.8, Android remains 3.3.3/code9; Main remains frozen.

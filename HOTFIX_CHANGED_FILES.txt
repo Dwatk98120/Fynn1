@@ -1,4 +1,51 @@
-LATEST: ANDROID CAPTURE DURABILITY + SAFE SAVED RETRY — 2026-10-23
+LATEST: ANDROID CAREGIVER CHILD NAME ON UPLOAD — 2026-10-25
+Baseline: Windows_Recording_Sort_Test_Repair_20261025.zip
+Modified: app/src/main/java/com/firstsoundhelper/MainActivity.kt,
+app/src/main/java/com/firstsoundhelper/LocalSpeechRecordingStore.kt,
+app/build.gradle, .github/workflows/build-apk-recording-fix.yml,
+.github/workflows/build-apk.yml, android_no_live_verify.py,
+server/main.py, server/android_recording_storage.py,
+parent_pc_local/student_recording_library.py,
+parent_pc_local/direct_recording.py, parent_pc_local/hearlium_parent_pc_gui.py,
+parent_pc_local/hearlium_launcher.py, parent_pc_local/reference_audio_gui.py,
+installer/Hearlium.iss,
+server/tests/test_phase3_android_capture_durability_hotfix.py,
+BUILD_VERSION.txt, HOTFIX_CHANGED_FILES.txt.
+Added: server/tests/test_phase3_android_child_name_upload.py,
+server/tests/test_phase3_parent_pc_history_entry_reference_search.py,
+PHASE3_ANDROID_CHILD_NAME_UPLOAD_HOTFIX_20261025.md,
+WORKFLOWS_FIX_README.md.
+Android 3.3.3/code9 + Parent PC Inno 0.4.8 are a matching pair.
+Explicit per-recording caregiver name, persistent label audit on phone,
+receipt and analysis acknowledgement, searchable Parent PC recording metadata.
+Main-window Recording History shortcut opens directly into saved-audio search,
+preserving the original Direct Recording History tab. Reference Audio now
+explicitly searches current standard/student reference WAV filters and warns
+when there are no references (not the same as ordinary saved recordings).
+No retroactive name inference, speaker-ID reassignment, or learning change.
+
+PREVIOUS: WINDOWS RECORDING HISTORY SEARCH/SORT TEST COMPATIBILITY — 2026-10-25
+Baseline: Recording_History_Search_Sort_Repair_20261025.zip
+Modified: server/tests/test_phase3_recording_history_search_sort_actions.py,
+BUILD_VERSION.txt, HOTFIX_CHANGED_FILES.txt.
+Added: PHASE3_WINDOWS_RECORDING_SORT_TEST_COMPATIBILITY_20261025.md.
+Replaces literal POSIX-style test expectations with native Path strings.
+Addresses the exact two assertion failures seen on the Windows installer
+builder (283 passed, 3 skipped, 2 failed). Search/sort app code unchanged.
+Installer version 0.4.7 and all prior integrated source remain unchanged.
+
+PREVIOUS: WINDOWS FROZEN PARENT PC SERVER STARTUP — 2026-10-25
+Baseline: Silero_VAD_Full_Runtime_Preflight_20261025.zip
+Modified: parent_pc_local/hearlium_launcher.py, HearliumParentPC.spec,
+BUILD_VERSION.txt, HOTFIX_CHANGED_FILES.txt.
+Added: server/tests/test_phase3_frozen_server_startup_contract.py,
+PHASE3_WINDOWS_FROZEN_SERVER_STARTUP_HOTFIX_20261025.md.
+Windows startup fixes optional websockets.legacy import crash by disabling
+unused WebSocket protocol and explicitly collecting h11 for HTTP.
+Frozen --self-test loads Uvicorn protocols before Inno Setup may package.
+Inno 0.4.6 unchanged; no Android, Silero, 13-layer, or Main changes.
+
+PRIOR RECORD: ANDROID CAPTURE DURABILITY + SAFE SAVED RETRY — 2026-10-23
 Modified: app/src/main/java/com/firstsoundhelper/MainActivity.kt,
 app/build.gradle, .github/workflows/build-apk-recording-fix.yml,
 .github/workflows/build-apk.yml, BUILD_VERSION.txt, HOTFIX_CHANGED_FILES.txt.
