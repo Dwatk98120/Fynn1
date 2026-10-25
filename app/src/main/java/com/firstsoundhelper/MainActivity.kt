@@ -1,12 +1,6 @@
 package com.firstsoundhelper
 import android.widget.EditText
-import android.os.Handler
-import android.os.Looper
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
 import android.media.AudioManager
-import java.util.concurrent.Executors
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -61,6 +55,8 @@ class MainActivity : AppCompatActivity() {
     private var recording = false
     private val pcm = ByteArrayOutputStream()
     private val sampleRate = 16000
+    private val localRecordingStore by lazy { LocalSpeechRecordingStore(filesDir) }
+    private var activeLocalRecording: LocalSpeechRecording? = null
     private fun parentPcApiBase(): String =
         getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
             .getString("parent_pc_url", "")?.trim()?.trimEnd('/') ?: ""
@@ -80,6 +76,8 @@ class MainActivity : AppCompatActivity() {
     private var currentRecordingId: String = ""
     private var latestObservationId: String = ""
     private var latestRecordingId: String = ""
+    private var latestAnalysisJson: String = ""
+    private var latestSuggestedText: String = ""
     private var wordBankDialog: android.app.Dialog? = null
     private var wordBankRecorder: MediaRecorder? = null
     private var wordBankRecordingFile: File? = null
@@ -316,11 +314,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(b); setContentView(R.layout.activity_main)
         
 
-        // Live Speech
-        val liveSpeechButton = android.widget.Button(this@MainActivity).apply {
-            text = "Live Speech"
-            setOnClickListener { startLiveSpeechMode() }
-        }
         val phraseLibraryButton = Button(this@MainActivity)
         phraseLibraryButton.text = "Phrase Library"
         phraseLibraryButton.setOnClickListener { showPhraseLibrary() }
@@ -333,81 +326,135 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
         findViewById<Button>(R.id.stopButton).setOnClickListener { stopRecording() }
         findViewById<Button>(R.id.analyzeButton).setOnClickListener { showAnalyzeContextDialog() }
         findViewById<Button>(R.id.savedRecordingsButton).setOnClickListener { showSavedRecordings() }
-        findViewById<Button>(R.id.liveRecordingButton).setOnClickListener { startLiveSpeechMode() }
+        findViewById<Button>(R.id.analysisDetailsButton).apply { isEnabled = false; setOnClickListener { showAnalysisDetails() } }
+        findViewById<Button>(R.id.caregiverReviewButton).apply { isEnabled = false; setOnClickListener { showCaregiverReview() } }
         findViewById<Button>(R.id.studentToolsButton).setOnClickListener { showStudentCommunicationTools() }
         findViewById<Button>(R.id.communicationDictionaryButton).setOnClickListener { showCommunicationInterpretationTools() }
         findViewById<Button>(R.id.pilotReadinessButton).setOnClickListener { showCaregiverSetupAndReadiness() }
     
-        setRecordingIndicator(false)
+        restoreLatestSavedCapture()
         startParentPcAutoReconnect()
 }
 
-    private var recordingPulse: android.animation.ObjectAnimator? = null
+    private fun clearPendingReview() {
+        latestObservationId = ""
+        latestRecordingId = ""
+        latestAnalysisJson = ""
+        latestSuggestedText = ""
+        findViewById<Button>(R.id.analysisDetailsButton).isEnabled = false
+        findViewById<Button>(R.id.caregiverReviewButton).isEnabled = false
+    }
 
-    private fun setRecordingIndicator(active: Boolean) {
-        val indicator = findViewById<android.widget.TextView>(R.id.activeRecordingIndicator)
-        recordingPulse?.cancel()
-        recordingPulse = null
-        indicator.clearAnimation()
-        indicator.visibility = android.view.View.VISIBLE
-        indicator.alpha = 1f
-        if (active) {
-            indicator.text = "● RECORDING · INDICATOR V2"
-            indicator.setTextColor(android.graphics.Color.rgb(211, 47, 47))
-            recordingPulse = android.animation.ObjectAnimator.ofFloat(
-                indicator, android.view.View.ALPHA, 1f, 0.18f
-            ).apply {
-                duration = 550L
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                repeatMode = android.animation.ValueAnimator.REVERSE
-                interpolator = android.view.animation.LinearInterpolator()
-                start()
+    private fun restoreLatestSavedCapture() {
+        Thread {
+            val saved = localRecordingStore.latestVerified() ?: return@Thread
+            runOnUiThread {
+                // Do not replace a recording that was started/selected while scanning disk.
+                if (recording || activeLocalRecording != null || currentRecordingId.isNotBlank()) {
+                    return@runOnUiThread
+                }
+                activeLocalRecording = saved
+                currentRecordingId = saved.recordingId
+                clearPendingReview()
+                status.text = "Last saved recording recovered. Tap Analyze speech to retry."
+                result.text = "Saved locally • Recording ID: ${saved.recordingId}"
             }
-        } else {
-            indicator.text = "● Not Recording"
-            indicator.setTextColor(android.graphics.Color.rgb(110, 110, 110))
-        }
+        }.start()
     }
 
     private fun startRecording() {
-        val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
-        recorder=AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,maxOf(min,sampleRate))
-        currentRecordingId = UUID.randomUUID().toString()
-        pcm.reset(); recording=true
-        findViewById<Button>(R.id.recordButton).isEnabled=false
-        findViewById<Button>(R.id.stopButton).isEnabled=true
-        status.text="Listening…"
-        try {
-            recorder!!.startRecording()
-            setRecordingIndicator(true)
-        } catch (e: Exception) {
-            recording = false
-            setRecordingIndicator(false)
-            recorder?.release()
-            recorder = null
-            findViewById<Button>(R.id.recordButton).isEnabled = true
-            findViewById<Button>(R.id.stopButton).isEnabled = false
-            status.text = "Unable to start recording: ${e.message}"
+        if (recordingThread?.isAlive == true) {
+            status.text = "Previous microphone capture is still closing. Try again shortly."
             return
         }
-        recordingThread=Thread {
-            val buf=ByteArray(maxOf(min,4096))
-            while(recording) { val n=recorder!!.read(buf,0,buf.size); if(n>0) synchronized(pcm){pcm.write(buf,0,n)} }
-        }.also{it.start()}
+        // A failed storage write must never be erased by starting another capture.
+        if (activeLocalRecording == null && currentRecordingId.isNotBlank() &&
+            synchronized(pcm) { pcm.size() } > 0) {
+            try {
+                activeLocalRecording = localRecordingStore.saveCapture(wavBytes(),
+                    currentRecordingId, currentSessionId, speakerId())
+            } catch (e: Exception) {
+                status.text = "Previous recording not saved. New capture blocked."
+                result.text = "Keep this app open and free device storage before retrying: ${e.message}"
+                return
+            }
+        }
+        val min=AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
+        var input: AudioRecord? = null
+        try {
+            val activeInput = AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT,maxOf(min,sampleRate))
+            input = activeInput
+            if (activeInput.state != AudioRecord.STATE_INITIALIZED) throw IOException("Microphone unavailable")
+            activeInput.startRecording()
+            if (activeInput.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
+                throw IOException("Microphone did not start")
+            }
+            recorder = activeInput
+            currentRecordingId = UUID.randomUUID().toString()
+            activeLocalRecording = null
+            clearPendingReview()
+            synchronized(pcm) { pcm.reset() }
+            recording = true
+            findViewById<Button>(R.id.recordButton).isEnabled=false
+            findViewById<Button>(R.id.stopButton).isEnabled=true
+            result.text = ""
+            status.text="Listening…"
+            recordingThread=Thread {
+                val buf=ByteArray(maxOf(min,4096))
+                while(recording) {
+                    val n = try { activeInput.read(buf, 0, buf.size) } catch (_: Exception) { break }
+                    if (n > 0) synchronized(pcm) { pcm.write(buf, 0, n) }
+                    if (n < 0) break
+                }
+            }.also { it.start() }
+        } catch (e: Exception) {
+            recording = false
+            try { input?.release() } catch (_: Exception) {}
+            recorder = null
+            findViewById<Button>(R.id.recordButton).isEnabled=true
+            findViewById<Button>(R.id.stopButton).isEnabled=false
+            status.text = "Recording did not start: ${e.message ?: "microphone error"}"
+        }
     }
 
     private fun stopRecording() {
+        if (!recording) return
         recording=false
-        setRecordingIndicator(false)
-        try{recorder?.stop()}catch(_:Exception){}
-        recorder?.release(); recorder=null
+        val input = recorder
+        val worker = recordingThread
+        try { input?.stop() } catch (_: Exception) {}
+        try { worker?.join(1500) } catch (_: InterruptedException) { Thread.currentThread().interrupt() }
+        try { input?.release() } catch (_: Exception) {}
+        try { worker?.join(1500) } catch (_: InterruptedException) { Thread.currentThread().interrupt() }
+        recorder = null
+        recordingThread = null
         findViewById<Button>(R.id.recordButton).isEnabled=true
         findViewById<Button>(R.id.stopButton).isEnabled=false
-        status.text="Recording ready. Tap Analyze speech."
+        if (worker?.isAlive == true) {
+            recordingThread = worker
+            status.text = "Recording did not stop cleanly. Audio was not marked saved."
+            return
+        }
+        if (synchronized(pcm) { pcm.size() } == 0) {
+            status.text = "No speech audio captured. Please record again."
+            return
+        }
+        try {
+            val saved = localRecordingStore.saveCapture(wavBytes(), currentRecordingId,
+                currentSessionId, speakerId())
+            activeLocalRecording = saved
+            status.text = "Recording saved locally ✓ Tap Analyze speech."
+            result.text = "Saved original recording • ID: ${saved.recordingId}\nReady to send when the Parent PC is available."
+        } catch (e: Exception) {
+            activeLocalRecording = null
+            status.text = "Recording save failed — do not close the app."
+            result.text = "Could not preserve captured audio: ${e.message ?: "storage error"}"
+        }
     }
 
     private fun wavBytes(): ByteArray {
-        val audio=pcm.toByteArray(); val out=ByteArrayOutputStream()
+        val audio=synchronized(pcm) { pcm.toByteArray() }; val out=ByteArrayOutputStream()
         fun le(v:Int){out.write(byteArrayOf((v and 255).toByte(),((v shr 8) and 255).toByte(),((v shr 16) and 255).toByte(),((v shr 24) and 255).toByte()))}
         out.write("RIFF".toByteArray()); le(36+audio.size); out.write("WAVEfmt ".toByteArray()); le(16)
         out.write(byteArrayOf(1,0,1,0)); le(sampleRate); le(sampleRate*2); out.write(byteArrayOf(2,0,16,0))
@@ -634,92 +681,220 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
     private fun showAnalyzeContextDialog() {
-        val box = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 24, 40, 8)
+        if (recording) {
+            status.text = "Stop the current recording before analyzing."
+            return
         }
-
-        val prompt = TextView(this@MainActivity).apply {
-            text = "Optional context"
-            textSize = 18f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        // Explicit, full-width action buttons prevent the missing-positive-button
+        // problem seen on some Samsung font-size and display-size settings.
+        val content = android.widget.LinearLayout(this@MainActivity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(popupDp(20), popupDp(18), popupDp(20), popupDp(14))
         }
-
-        val helper = TextView(this@MainActivity).apply {
-            text = "Add a short clue if it may help the analysis. You can leave this blank."
-            textSize = 14f
-            setPadding(0, 8, 0, 10)
+        content.addView(popupHeader("Analyze Speech", "Send recording to the Parent PC", "🎙️"))
+        val childName = EditText(this@MainActivity).apply {
+            hint = "Child's name for THIS recording (optional)"
+            setText(activeLocalRecording?.let { capture ->
+                try { localRecordingStore.studentNameForRecording(capture) }
+                catch (_: Exception) { "" }
+            } ?: "")
+            isSingleLine = true
+            setPadding(popupDp(12), popupDp(14), popupDp(12), popupDp(14))
         }
-
+        content.addView(childName)
+        content.addView(TextView(this@MainActivity).apply {
+            text = "This caregiver label travels with this recording only. It does not approve speech learning or assign a verified speaker identity."
+            textSize = 12f
+            setPadding(popupDp(3), popupDp(5), popupDp(3), popupDp(8))
+        })
+        val profileName = loadStudentProfile().optString("name").trim()
+        if (profileName.isNotEmpty()) {
+            content.addView(popupActionButton("Use Student Profile Name", profileName, "👤") {
+                childName.setText(profileName)
+            })
+        }
         val input = EditText(this@MainActivity).apply {
-            hint = "Example: I see a ___"
+            hint = "Optional context, e.g. counting 1 to 12"
             setText(pendingAnalyzeContext)
             isSingleLine = true
+            setPadding(popupDp(12), popupDp(14), popupDp(12), popupDp(14))
         }
-
-        box.addView(prompt)
-        box.addView(helper)
-        box.addView(input)
-
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-            .setTitle("Analyze Speech")
-            .setView(box)
-            .setPositiveButton("Analyze") { _, _ ->
-                pendingAnalyzeContext = input.text.toString().trim()
-                uploadForAnalysis()
+        content.addView(input)
+        val countingTest = android.widget.CheckBox(this@MainActivity).apply {
+            text = "Known Speech Test: counting 1 to 12"
+            isChecked = pendingAnalyzeContext == "KNOWN_TEST_COUNT_1_TO_12"
+            setOnCheckedChangeListener { _, checked ->
+                if (checked) input.setText("Counting 1 to 12 (known speech test)")
             }
-            .setNegativeButton("Cancel", null)
-            .create()
-        dialog.setOnShowListener { styleUnifiedDialog(dialog) }
+        }
+        content.addView(countingTest)
+        val dialog = android.app.Dialog(this@MainActivity)
+        content.addView(popupActionButton("SEND & ANALYZE ON PC", "Verify receipt, then return analysis", "➤", true) {
+            val enteredName = childName.text.toString().trim()
+            if (enteredName.length > 120 || enteredName.any { it.code < 32 || it.code == 127 }) {
+                childName.error = "Use 120 characters or fewer, with no line breaks"
+                return@popupActionButton
+            }
+            pendingStudentName = enteredName
+            pendingAnalyzeContext = if (countingTest.isChecked) "KNOWN_TEST_COUNT_1_TO_12" else input.text.toString().trim()
+            dialog.dismiss()
+            uploadForAnalysis()
+        })
+        content.addView(popupActionButton("Test PC Connection", "Check the saved PC address", "⚙️") {
+            val base = parentPcApiBase()
+            if (base.isBlank()) {
+                status.text = "No Parent PC address saved"
+                result.text = "Open Parent PC Connection and save the PC address."
+            } else testParentPcConnection(base)
+        })
+        content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
+        dialog.setContentView(android.widget.ScrollView(this@MainActivity).apply { addView(content) })
         dialog.show()
         styleUnifiedDialog(dialog)
     }
 
     private fun uploadForAnalysis() {
+        if (recording) {
+            status.text = "Stop and save the recording before sending."
+            return
+        }
         val base = parentPcApiBase()
         if (base.isBlank()) {
             status.text = "Parent PC not configured"
-            result.text = "Parent PC is required for analysis. Tap Parent PC Connection and enter or discover your Parent PC."
+            result.text = "Open Parent PC Connection and connect to your PC before sending."
             return
         }
         if (getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false)) {
             status.text = "Offline mode is on"
-            result.text = "Analysis upload is disabled. You can still use sentence building, word bank, phrases, choices, and playback."
+            result.text = "Turn off Offline Mode to send audio to the Parent PC."
             return
         }
-        if(pcm.size()==0){result.text="Record a short word or phrase first.";return}
-        status.text="Analyzing phonemes…"; result.text="Listening for initial and final consonant patterns and comparing possible words…"
+        var saved = activeLocalRecording
+        if (saved == null && synchronized(pcm) { pcm.size() } > 0) {
+            // Explicit retry if a previous local save failed. Never send RAM-only audio.
+            try {
+                saved = localRecordingStore.saveCapture(wavBytes(), currentRecordingId,
+                    currentSessionId, speakerId())
+                activeLocalRecording = saved
+            } catch (e: Exception) {
+                status.text = "Cannot send until recording is saved safely."
+                result.text = "Local save failed: ${e.message ?: "storage error"}"
+                return
+            }
+        }
+        val capture = saved
+        if (capture == null) {
+            result.text = "Record speech first or choose a saved recording. Nothing was sent."
+            return
+        }
+        val audioBytes = try {
+            localRecordingStore.verifiedWav(capture)
+        } catch (e: Exception) {
+            status.text = "Recording integrity check failed"
+            result.text = "Saved audio changed or cannot be read. Nothing was sent: ${e.message}"
+            return
+        }
+        val recordingId = capture.recordingId
+        val nameForThisRecording = pendingStudentName.trim()
+        try {
+            // Save the caregiver's choice beside this saved WAV before transmission.
+            // Each correction is appended as an immutable label event.
+            localRecordingStore.saveStudentName(capture, nameForThisRecording)
+        } catch (e: Exception) {
+            status.text = "Child label was not saved; upload blocked"
+            result.text = "Original audio is safe. Retry after checking device storage: ${e.message}"
+            return
+        }
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(audioBytes).joinToString("") { "%02x".format(it) }
+        status.text = "Sending to Parent PC…"
+        result.text = "Recording ID: $recordingId\nWaiting for PC receipt confirmation…"
         Thread {
             try {
-                val client=OkHttpClient.Builder().connectTimeout(20,TimeUnit.SECONDS).readTimeout(120,TimeUnit.SECONDS).build()
-                val body=MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("context",pendingAnalyzeContext)
-                    .addFormDataPart("session_id", currentSessionId)
-                    .addFormDataPart("recording_id", currentRecordingId.ifBlank { UUID.randomUUID().toString().also { currentRecordingId = it } })
-                    .addFormDataPart("speaker_id", speakerId())
-                    .addFormDataPart("audio","speech.wav",wavBytes().toRequestBody("audio/wav".toMediaType()))
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(20, TimeUnit.SECONDS)
+                    .readTimeout(120, TimeUnit.SECONDS)
                     .build()
-                val req=Request.Builder().url("$base/v1/analyze-audio").post(body).build()
-                client.newCall(req).execute().use { r ->
-                    val txt=r.body?.string()?:""
-                    runOnUiThread {
-                        if (r.isSuccessful) {
-                            status.text = "Analysis complete"
-                            result.text = formatAnalysisResult(txt)
-                        } else {
-                            status.text = "Parent PC analysis failed"
-                            result.text = if (txt.trimStart().startsWith("<")) {
-                                "The Parent PC server returned an unexpected web page instead of analysis data."
-                            } else {
-                                "Parent PC error ${r.code}: " + txt.take(500)
-                            }
-                        }
+                fun body() = MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("context", pendingAnalyzeContext)
+                    .addFormDataPart("session_id", capture.sessionId)
+                    .addFormDataPart("recording_id", recordingId)
+                    .addFormDataPart("speaker_id", capture.speakerId)
+                    .addFormDataPart("student_name", nameForThisRecording)
+                    .addFormDataPart("audio", "speech.wav", audioBytes.toRequestBody("audio/wav".toMediaType()))
+                    .build()
+                // A separate receipt request makes upload success independently visible
+                // before the slow AI analysis begins. The PC verifies size and checksum.
+                val receiptRequest = Request.Builder().url("$base/v1/recording-receipt")
+                    .post(body()).build()
+                client.newCall(receiptRequest).execute().use { response ->
+                    val responseText = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        throw IOException(if (response.code == 404 || response.code == 405) "PC server is outdated: receipt endpoint missing (HTTP ${response.code}). Install and launch matching Parent PC build." else "PC did not accept transfer (HTTP ${response.code}): ${responseText.take(240)}")
+                    }
+                    val ack = JSONObject(responseText)
+                    if (ack.optString("recordingId") != recordingId ||
+                        ack.optString("sha256") != digest ||
+                        ack.optLong("bytes") != audioBytes.size.toLong()) {
+                        throw IOException("PC receipt verification failed. Do not assume the recording arrived.")
+                    }
+                    if (nameForThisRecording.isNotEmpty() &&
+                        (!ack.optBoolean("studentNameLabelSupported", false) ||
+                         ack.optString("studentName") != nameForThisRecording)) {
+                        throw IOException("Parent PC cannot confirm child-name labels. Install the matching Parent PC update before sending a named recording.")
                     }
                 }
-            } catch(e:Exception) { runOnUiThread { status.text="Could not reach analysis server"; result.text=e.message ?: "Network error" } }
+                runOnUiThread {
+                    status.text = "PC verified audio transfer ✓"
+                    result.text = "PC verified ${audioBytes.size} bytes\nRecording ID: $recordingId\nReceipt is transport-only; sending for analysis…"
+                }
+                val analysisRequest = Request.Builder().url("$base/v1/analyze-audio")
+                    .post(body()).build()
+                runOnUiThread { status.text = "Waiting for PC analysis…" }
+                client.newCall(analysisRequest).execute().use { response ->
+                    val txt = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        runOnUiThread {
+                            status.text = "PC received audio; analysis failed"
+                            result.text = "Recording ID: $recordingId\nAnalysis HTTP ${response.code}: ${txt.take(500)}"
+                        }
+                        return@Thread
+                    }
+                    val analysis = JSONObject(txt)
+                    if (analysis.optString("recordingId") != recordingId ||
+                        !analysis.has("observation")) {
+                        throw IOException("Analysis response did not match the sent recording ID.")
+                    }
+                    if (nameForThisRecording.isNotEmpty() &&
+                        (analysis.optString("studentName") != nameForThisRecording ||
+                         analysis.optJSONObject("recordingStorage")?.optBoolean("saved") != true)) {
+                        throw IOException("Parent PC did not confirm that the child's name was saved with this recording.")
+                    }
+                    val analysisSaveError = try {
+                        localRecordingStore.saveAnalysis(capture, txt)
+                        null
+                    } catch (e: Exception) {
+                        e.message ?: "storage error"
+                    }
+                    runOnUiThread {
+                        status.text = if (analysisSaveError == null)
+                            "Analysis returned and saved locally ✓" else "Analysis returned; local result save failed"
+                        latestAnalysisJson = txt
+                        result.text = formatAnalysisResult(txt) +
+                            (if (analysisSaveError == null) "" else
+                                "\nWarning: analysis history was not saved locally: $analysisSaveError")
+                        findViewById<Button>(R.id.analysisDetailsButton).isEnabled = true
+                        findViewById<Button>(R.id.caregiverReviewButton).isEnabled = true
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    status.text = "Transfer or analysis not confirmed"
+                    result.text = "Recording ID: $recordingId\n${e.message ?: "Connection error"}\nCheck Parent PC Connection and retry."
+                }
+            }
         }.start()
     }
-
 
     private fun sendLearningFeedback(word: String, approvedForLearning: Boolean) {
         val observationId = latestObservationId
@@ -1337,7 +1512,7 @@ content.addView(popupHeader(
             val url = normalizeParentPcUrl(input.text.toString())
             getSharedPreferences("first_sound_helper_connection", MODE_PRIVATE)
                 .edit().putString("parent_pc_url", url).apply()
-            status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC saved: $url"
+            status.text = if (url.isBlank()) "Parent PC not configured" else "Parent PC address saved (not yet verified): $url"
             dialog.dismiss()
         })
         content.addView(popupActionButton("Cancel", null, "×") { dialog.dismiss() })
@@ -1380,9 +1555,120 @@ content.addView(popupHeader(
         }.start()
     }
 
-    override fun onDestroy(){ recording=false; try{recorder?.release()}catch(_:Exception){}; super.onDestroy() }
+    override fun onDestroy() {
+        if (recording) stopRecording()
+        try { recorder?.release() } catch (_: Exception) {}
+        super.onDestroy()
+    }
 
     private fun formatAnalysisResult(json: String): String {
+        return try {
+            val obj = JSONObject(json)
+            latestRecordingId = obj.optString("recordingId", "")
+            latestObservationId = obj.optJSONObject("observation")?.optString("observationId", "").orEmpty()
+            val recognition = obj.optJSONObject("wordRecognition")
+            val words = recognition?.optString("text", "")?.trim().orEmpty()
+            val valid = recognition?.optString("status", "") == "candidate_transcription" && words.isNotBlank()
+            latestSuggestedText = if (valid) words else ""
+            val sounds = obj.optJSONObject("observation")?.optString("transcript", "")
+                ?.takeIf { it.isNotBlank() } ?: obj.optString("transcript", "")
+            buildString {
+                append("POSSIBLE SPOKEN WORDS\n")
+                append(if (valid) words else "Word recognition unavailable — review the saved audio.")
+                append("\nUnverified AI suggestion; caregiver confirmation required.\n\n")
+                append("OBSERVED SPEECH SOUNDS (PHONEMES)\n")
+                append(if (sounds.isNotBlank()) sounds else "No phoneme observation available.")
+                append("\n\nThese symbols show how Hearlium thinks the speech sounded, not ordinary English word spellings. ")
+                append("Compare them with the suggested words above and listen to the original recording. ")
+                append("Some sounds may be uncertain, and only a caregiver can confirm the intended words.")
+                if (latestRecordingId.isNotBlank()) append("\nRecording ID: $latestRecordingId")
+                append("\nOpen Analysis Details for technical findings and Caregiver Review to confirm or correct.")
+            }
+        } catch (_: Exception) {
+            latestSuggestedText = ""
+            "Unable to display the interpretation. Open Analysis Details for troubleshooting."
+        }
+    }
+
+    private fun showAnalysisDetails() {
+        if (latestAnalysisJson.isBlank()) return
+        val technical = formatDetailedAnalysis(latestAnalysisJson)
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Analysis details")
+            .setMessage(technical)
+            .setPositiveButton("Close", null)
+            .show()
+    }
+
+    private fun showCaregiverReview() {
+        if (latestObservationId.isBlank()) {
+            Toast.makeText(this, "Analyze a recording first.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val field = EditText(this).apply {
+            setSingleLine(false)
+            setText(latestSuggestedText)
+            hint = "What was actually said?"
+            setPadding(32, 24, 32, 24)
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Review speech — edit if needed")
+            .setMessage("Check the words below. One tap saves your confirmation. Sentence feedback does not automatically train pronunciation models.")
+            .setView(field)
+            .setPositiveButton("✓ Confirm & Save") { _, _ ->
+                val corrected = field.text.toString().trim()
+                if (corrected.isBlank()) {
+                    Toast.makeText(this, "Enter what was said before saving.", Toast.LENGTH_LONG).show()
+                } else {
+                    submitCaregiverReview(corrected, true)
+                }
+            }
+            .setNeutralButton("Not Sure") { _, _ -> submitCaregiverReview("", false, "unsure") }
+            .setNegativeButton("Reject") { _, _ -> submitCaregiverReview("", false, "rejected") }
+            .show()
+    }
+
+    private fun submitCaregiverReview(text: String, approved: Boolean, decision: String = "confirmed") {
+        // Multiword utterances are stored as feedback only; the server must not
+        // train one pronunciation entry from an entire sentence.
+        val singleWord = text.trim().split(Regex("\\s+")).size == 1
+        val approveForLearning = approved && singleWord
+        val observationId = latestObservationId
+        val recordingId = latestRecordingId
+        val base = parentPcApiBase()
+        if (base.isBlank() || observationId.isBlank()) {
+            Toast.makeText(this, "Parent PC connection or observation missing.", Toast.LENGTH_LONG).show()
+            return
+        }
+        Thread {
+            try {
+                val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("observation_id", observationId)
+                    .addFormDataPart("recording_id", recordingId)
+                    .addFormDataPart("speaker_id", speakerId())
+                    .addFormDataPart("corrected_word", text)
+                    .addFormDataPart("review_decision", decision)
+                    .addFormDataPart("approved_for_learning", approveForLearning.toString())
+                    .build()
+                val client = OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build()
+                client.newCall(Request.Builder().url("$base/v1/learning/feedback").post(body).build()).execute().use { response ->
+                    val details = response.body?.string().orEmpty()
+                    runOnUiThread {
+                        if (response.isSuccessful) {
+                            Toast.makeText(this, if (approveForLearning) "Confirmed learning example saved on Parent PC." else "Review saved on Parent PC. No automatic learning applied.", Toast.LENGTH_LONG).show()
+                            if (text.isNotBlank()) result.text = "Caregiver confirmed: $text\n\n" + result.text
+                        } else {
+                            Toast.makeText(this, "Review not saved: HTTP ${response.code} ${details.take(140)}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread { Toast.makeText(this, "Review not saved: ${e.message}", Toast.LENGTH_LONG).show() }
+            }
+        }.start()
+    }
+
+    private fun formatDetailedAnalysis(json: String): String {
         return try {
             val obj = JSONObject(json)
             val transcript = obj.optString("transcript", "").ifBlank { "—" }
@@ -1394,24 +1680,53 @@ content.addView(popupHeader(
             val analysis = obj.optJSONObject("analysis")
             val candidates = obj.optJSONArray("candidates")
             val lines = mutableListOf<String>()
-            lines += "Heard: $transcript"
-            if (recordingId.isNotBlank()) lines += "Recording ID: $recordingId"
-            if (observationId.isNotBlank()) lines += "Observation ID: $observationId"
-            val overall = analysis?.optDouble("overallConfidence", -1.0) ?: -1.0
+            val wordRecognition = obj.optJSONObject("wordRecognition")
+            val wordStatus = wordRecognition?.optString("status", "unavailable") ?: "unavailable"
+            val wordText = wordRecognition?.optString("text", "")?.trim().orEmpty()
+            lines += "POSSIBLE SPOKEN WORDS"
+            if (wordStatus == "candidate_transcription" && wordText.isNotBlank()) {
+                lines += wordText
+                lines += "AI suggestion only — listen and confirm before learning."
+            } else {
+                lines += "No reliable word transcription available yet."
+                lines += "Word recognizer status: $wordStatus"
+                lines += "Listen to the saved recording; do not assume the sound symbols are words."
+            }
+            lines += ""
+            lines += "SOUND OBSERVATION (technical, unverified)"
+            if (transcript != "—") {
+                lines += transcript
+            } else {
+                lines += "No sound transcription available."
+            }
+            lines += "This sound sequence is not a word-for-word transcript."
+            val knownTest = obj.optJSONObject("knownSpeechTest")
+            if (knownTest != null) {
+                lines += ""
+                lines += "KNOWN SPEECH TEST — COUNTING 1 TO 12"
+                lines += "Expected: " + knownTest.optString("expectedSequence")
+                lines += "Recognition status: " + knownTest.optString("recognitionStatus", "unverified")
+                lines += "The expected sequence was not inserted into the model output."
+                lines += "Word accuracy cannot be calculated from phoneme output alone."
+            }
+
+            val overall = if (analysis?.isNull("overallConfidence") == false && analysis.has("overallConfidence")) analysis.optDouble("overallConfidence", -1.0) else -1.0
             val uncertainty = analysis?.optString("uncertaintyBand", "") ?: ""
             if (overall >= 0.0) {
-                lines += "AI candidate confidence: ${String.format(Locale.US, "%.2f", overall)}" +
+                lines += "Candidate ranking score (not recognition accuracy): ${String.format(Locale.US, "%.2f", overall)}" +
                     if (uncertainty.isNotBlank()) " ($uncertainty uncertainty)" else ""
             }
+            if (overall < 0.0) lines += "Candidate confidence: not measured for this recording."
+            lines += "Consonant findings require human confirmation before learning."
             if (analysis?.optBoolean("possibleInitialConsonantOmission", false) == true) {
-                lines += "Possible initial-consonant deletion detected."
+                lines += "Unverified candidate: possible initial-consonant deletion."
             }
             if (analysis?.optBoolean("possibleFinalConsonantOmission", false) == true) {
-                lines += "Possible final-consonant deletion detected."
+                lines += "Unverified candidate: possible final-consonant deletion."
             }
             if ((analysis?.optBoolean("possibleInitialConsonantOmission", false) != true) &&
                 (analysis?.optBoolean("possibleFinalConsonantOmission", false) != true)) {
-                lines += "No initial- or final-consonant deletion pattern was identified in the candidate set."
+                lines += "No sufficiently supported consonant-deletion candidate; this does not rule out a speech pattern."
             }
             if (candidates != null && candidates.length() > 0) {
                 lines += ""
@@ -1429,6 +1744,10 @@ content.addView(popupHeader(
             }
             lines += ""
             lines += "These are probabilistic speech observations, not a clinical diagnosis."
+            lines += ""
+            lines += "RECORD DETAILS"
+            if (recordingId.isNotBlank()) lines += "Recording ID: $recordingId"
+            if (observationId.isNotBlank()) lines += "Observation ID: $observationId"
             lines.joinToString("\n")
         } catch (_: Exception) {
             json
@@ -1473,18 +1792,24 @@ content.addView(popupHeader(
         if (sessions.isEmpty()) {
             list.addView(popupEmptyStateCard(
                 "No saved recordings yet",
-                "Record and analyze speech first. Saved sessions will appear here for review.",
+                "Tap Record Speech and Stop. Completed audio is saved here before it is sent to the Parent PC.",
                 "🎙️"
             ))
         } else {
             sessions.forEach { session ->
                 val title = TextView(this@MainActivity)
-                title.text = session.name
+                val savedName = localRecordingStore.openSession(session)?.let { capture ->
+                    try { localRecordingStore.studentNameForRecording(capture) }
+                    catch (_: Exception) { "" }
+                }.orEmpty()
+                title.text = if (savedName.isEmpty()) session.name else "$savedName — ${session.name}"
                 title.textSize = 17f
                 title.setPadding(0, 18, 0, 8)
                 list.addView(title)
 
-                val analysis = File(session, "analysis.json")
+                val analysis = session.listFiles()
+                    ?.filter { it.isFile && it.name.startsWith("analysis_") && it.name.endsWith(".json") }
+                    ?.maxByOrNull { it.name } ?: File(session, "analysis.json")
                 val audio = File(session, "recording.wav")
 
                 val row = LinearLayout(this@MainActivity)
@@ -1493,6 +1818,13 @@ content.addView(popupHeader(
                 val play = Button(this@MainActivity)
                 play.text = "Play"
                 play.setOnClickListener {
+                    if (File(session, "recording_meta.json").exists() &&
+                        localRecordingStore.openSession(session) == null) {
+                        Toast.makeText(this@MainActivity,
+                            "Audio integrity check failed. Original was not played.",
+                            Toast.LENGTH_LONG).show()
+                        return@setOnClickListener
+                    }
                     if (audio.exists()) {
                         val player = MediaPlayer()
                         player.setDataSource(audio.absolutePath)
@@ -1521,6 +1853,12 @@ content.addView(popupHeader(
                         .setMessage("This removes the saved audio and analysis from this device.")
                         .setNegativeButton("Cancel", null)
                         .setPositiveButton("Delete") { _, _ ->
+                            if (activeLocalRecording?.audioFile?.parentFile == session) {
+                                activeLocalRecording = null
+                                currentRecordingId = ""
+                                synchronized(pcm) { pcm.reset() }
+                                clearPendingReview()
+                            }
                             session.deleteRecursively()
                             dialog.dismiss()
                             showSavedRecordings()
@@ -1532,6 +1870,26 @@ content.addView(popupHeader(
                 row.addView(view, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
                 row.addView(delete, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
                 list.addView(row)
+                if (File(session, "recording_meta.json").exists()) {
+                    val retry = Button(this@MainActivity)
+                    retry.text = "Analyze this saved recording"
+                    retry.setOnClickListener {
+                        val selected = localRecordingStore.openSession(session)
+                        if (selected == null) {
+                            Toast.makeText(this@MainActivity,
+                                "Saved recording is missing or failed its checksum. Cannot send.",
+                                Toast.LENGTH_LONG).show()
+                        } else {
+                            activeLocalRecording = selected
+                            currentRecordingId = selected.recordingId
+                            clearPendingReview()
+                            status.text = "Saved recording selected. Review context before sending."
+                            dialog.dismiss()
+                            showAnalyzeContextDialog()
+                        }
+                    }
+                    list.addView(retry)
+                }
             }
 
             val deleteAll = Button(this@MainActivity)
@@ -1543,6 +1901,10 @@ content.addView(popupHeader(
                     .setNegativeButton("Cancel", null)
                     .setPositiveButton("Delete All") { _, _ ->
                         if (dir.exists()) dir.deleteRecursively()
+                        activeLocalRecording = null
+                        currentRecordingId = ""
+                        synchronized(pcm) { pcm.reset() }
+                        clearPendingReview()
                         dialog.dismiss()
                     }
                     .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
@@ -2109,377 +2471,9 @@ content.addView(popupHeader(
             }.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
-    // ---------------- Live Speech ----------------
-    private var liveSpeechRecognizer: SpeechRecognizer? = null
-    private var liveListening = false
+    // Normal Record speech and Stop capture are retained.
     private var pendingAnalyzeContext: String = ""
-    private val liveIndicatorHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private var liveIndicatorBright = true
-    private val liveIndicatorFlash = object : Runnable {
-        override fun run() {
-            val indicator = findViewById<android.widget.TextView?>(R.id.liveStatusIndicator)
-            if (liveListening && indicator != null) {
-                liveIndicatorBright = !liveIndicatorBright
-                indicator.alpha = if (liveIndicatorBright) 1.0f else 0.28f
-                liveIndicatorHandler.postDelayed(this, 500)
-            }
-        }
-    }
-
-    private fun setLiveIndicator(active: Boolean, voiceDetected: Boolean = false) {
-        val indicator = findViewById<android.widget.TextView?>(R.id.liveStatusIndicator) ?: return
-        liveIndicatorHandler.removeCallbacks(liveIndicatorFlash)
-        if (active) {
-            indicator.visibility = android.view.View.VISIBLE
-            indicator.alpha = 1.0f
-            indicator.text = if (voiceDetected) "● LIVE — Voice detected" else "● LIVE — Listening"
-            liveIndicatorBright = true
-            liveIndicatorHandler.postDelayed(liveIndicatorFlash, 500)
-        } else {
-            indicator.alpha = 1.0f
-            indicator.visibility = android.view.View.GONE
-        }
-    }
-
-    private val liveMissingSoundCounts = java.util.LinkedHashMap<String, Int>()
-    private val liveCandidateWordCounts = java.util.LinkedHashMap<String, Int>()
-    private var liveSessionStartMs = 0L
-    private var liveObservationCount = 0
-    private var liveLastHeard = ""
-    private var liveAudioRecord: AudioRecord? = null
-    private var liveAudioThread: Thread? = null
-    private var liveBuffer = java.io.ByteArrayOutputStream()
-    private var liveChunkStartMs = 0L
-    private val liveHandler = Handler(Looper.getMainLooper())
-    private val liveExecutor = Executors.newSingleThreadExecutor()
-    private val liveChunkMs = 2000L
-
-    private fun startLiveSpeechMode() {
-        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 4101)
-            return
-        }
-
-        liveListening = true
-        setLiveIndicator(active = true)
-        liveSessionStartMs = System.currentTimeMillis()
-        liveMissingSoundCounts.clear()
-        liveCandidateWordCounts.clear()
-        liveObservationCount = 0
-        liveLastHeard = ""
-        liveChunkStartMs = System.currentTimeMillis()
-        liveBuffer.reset()
-
-        val dialog = android.app.AlertDialog.Builder(this@MainActivity)
-            .setTitle("Live Speech")
-            .setMessage("Listening…\n\nHeard: —\n\nPossible missing first sound: —\n\nLive audio is analyzed in short chunks. Audio is not saved unless you choose Save Session.")
-            .setNegativeButton("Stop") { _, _ -> stopLiveSpeechMode(showSummary = true) }
-            .setOnDismissListener { if (liveListening) stopLiveSpeechMode() }
-            .create()
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.show()
-        styleUnifiedDialog(dialog)
-
-        val messageView = dialog.findViewById<android.widget.TextView>(android.R.id.message)
-        val recognizer = if (SpeechRecognizer.isRecognitionAvailable(this)) SpeechRecognizer.createSpeechRecognizer(this) else null
-        liveSpeechRecognizer = recognizer
-
-        if (recognizer == null) {
-            liveListening = false
-            setLiveIndicator(active = false)
-            dialog.setMessage("Live speech recognition is not available on this device.")
-            return
-        }
-
-        recognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: android.os.Bundle?) {
-                if (liveListening) dialog.setMessage("Listening…\n\nHeard: —\n\nPossible missing first sound: —\n\nSpeak naturally.")
-            }
-            override fun onBeginningOfSpeech() {
-                if (liveListening) setLiveIndicator(active = true, voiceDetected = true)
-            }
-            override fun onRmsChanged(rmsdB: Float) {
-                if (liveListening) {
-                    setLiveIndicator(active = true, voiceDetected = rmsdB > 3.5f)
-                }
-            }
-            override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() {
-                if (liveListening) {
-                    setLiveIndicator(active = true, voiceDetected = false)
-                    restartLiveRecognizer()
-                }
-            }
-            override fun onError(error: Int) {
-                if (liveListening) {
-                    // Avoid tight retry loops for permanent/request errors.
-                    if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ||
-                        error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
-                        stopLiveSpeechMode()
-                    } else {
-                        restartLiveRecognizer()
-                    }
-                }
-            }
-            override fun onResults(results: android.os.Bundle?) {
-                val heard = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                if (!heard.isNullOrBlank()) {
-                    liveLastHeard = heard
-                    dialog.setMessage("Listening…\n\nHeard: $heard\n\nPossible missing first sound: analyzing…")
-                    analyzeLiveTextContext(heard, dialog)
-                }
-                if (liveListening) restartLiveRecognizer()
-            }
-            override fun onPartialResults(partialResults: android.os.Bundle?) {
-                val heard = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                if (!heard.isNullOrBlank() && liveListening) {
-                    liveLastHeard = heard
-                    dialog.setMessage("Listening…\n\nHeard: $heard\n\nPossible missing first sound: analyzing…")
-                }
-            }
-            override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
-        })
-
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-        }
-        recognizer.startListening(intent)
-
-        startLiveAudioCapture(dialog)
-    }
-
-    private fun restartLiveRecognizer() {
-        if (!liveListening) return
-        liveHandler.postDelayed({
-            if (!liveListening) return@postDelayed
-            try {
-                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US)
-                    putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                    putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
-                }
-                liveSpeechRecognizer?.startListening(intent)
-            } catch (_: Exception) {
-                // A later cycle will retry while live mode remains active.
-            }
-        }, 250L)
-    }
-
-    private fun startLiveAudioCapture(dialog: android.app.AlertDialog) {
-        liveAudioThread = Thread {
-            val sampleRate = 16000
-            val minBuf = AudioRecord.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-            )
-            val bufferSize = maxOf(minBuf, sampleRate / 2)
-            val record = try {
-                AudioRecord(
-                    MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                    sampleRate,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize
-                )
-            } catch (_: Exception) {
-                null
-            }
-            if (record == null || record.state != AudioRecord.STATE_INITIALIZED) {
-                liveHandler.post {
-                    if (liveListening) dialog.setMessage("Listening…\n\nLive audio capture could not start on this device.\n\nSpeech recognition may still work.")
-                }
-                return@Thread
-            }
-            liveAudioRecord = record
-            try {
-                record.startRecording()
-                val pcm = ByteArray(bufferSize)
-                while (liveListening) {
-                    val n = record.read(pcm, 0, pcm.size)
-                    if (n > 0) {
-                        synchronized(liveBuffer) {
-                            liveBuffer.write(pcm, 0, n)
-                        }
-                        if (System.currentTimeMillis() - liveChunkStartMs >= liveChunkMs) {
-                            val chunk = synchronized(liveBuffer) {
-                                val b = liveBuffer.toByteArray()
-                                liveBuffer.reset()
-                                b
-                            }
-                            liveChunkStartMs = System.currentTimeMillis()
-                            if (chunk.size >= sampleRate * 2 / 2) {
-                                submitLiveAudioChunk(chunk, dialog)
-                            }
-                        }
-                    }
-                }
-            } finally {
-                try { record.stop() } catch (_: Exception) {}
-                record.release()
-                liveAudioRecord = null
-            }
-        }.apply { start() }
-    }
-
-    private fun submitLiveAudioChunk(pcm: ByteArray, dialog: android.app.AlertDialog) {
-        // Convert PCM16 mono 16 kHz to WAV and send it to the configured Parent PC.
-        val base = parentPcApiBase()
-        if (base.isBlank()) {
-            liveHandler.post {
-                if (liveListening) dialog.setMessage("Parent PC is not configured.\n\nOpen Parent PC Connection on the main screen and save the local PC address.")
-            }
-            return
-        }
-        liveExecutor.execute {
-            try {
-                val wav = pcmToWavBytes(pcm, 16000, 1, 16)
-                val liveRecordingId = UUID.randomUUID().toString()
-                val client = OkHttpClient.Builder()
-                    .connectTimeout(7, TimeUnit.SECONDS)
-                    .readTimeout(12, TimeUnit.SECONDS)
-                    .build()
-                val body = MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("context", liveLastHeard)
-                    .addFormDataPart("session_id", currentSessionId)
-                    .addFormDataPart("recording_id", liveRecordingId)
-                    .addFormDataPart("speaker_id", speakerId())
-                    .addFormDataPart("audio", "live.wav", wav.toRequestBody("audio/wav".toMediaType()))
-                    .build()
-                val req = Request.Builder().url("$base/v1/analyze-audio").post(body).build()
-                client.newCall(req).execute().use { response ->
-                    val responseBody = response.body?.string().orEmpty()
-                    if (!response.isSuccessful) return@use
-                    val obj = org.json.JSONObject(responseBody)
-                    val candidates = obj.optJSONArray("candidates")
-                    val best = if (candidates != null && candidates.length() > 0) candidates.getJSONObject(0) else null
-                    val missing = best?.optString("missingInitial", "") ?: ""
-                    val word = best?.optString("word", "") ?: ""
-                    if (missing.isNotBlank() && word.isNotBlank()) {
-                        synchronized(this@MainActivity) {
-                            liveMissingSoundCounts[missing] = (liveMissingSoundCounts[missing] ?: 0) + 1
-                            liveCandidateWordCounts[word.lowercase(java.util.Locale.US)] =
-                                (liveCandidateWordCounts[word.lowercase(java.util.Locale.US)] ?: 0) + 1
-                            liveObservationCount += 1
-                        }
-                        liveHandler.post {
-                            if (liveListening) {
-                                val current = dialog.findViewById<android.widget.TextView>(android.R.id.message)?.text?.toString() ?: "Listening…"
-                                val heardLine = current.substringAfter("Heard:", "—").substringBefore("\n").trim()
-                                dialog.setMessage("Listening…\n\nHeard: $heardLine\n\nPossible missing first sound: $missing\nPossible word: $word\n\nThis is a probabilistic suggestion, not a diagnosis.")
-                            }
-                        }
-                    }
-                }
-            } catch (_: Exception) {
-                // Live mode is best-effort. Keep listening and allow the next chunk to retry.
-            }
-        }
-    }
-
-    private fun analyzeLiveTextContext(heard: String, dialog: android.app.AlertDialog) {
-        // Phrase/word suggestions remain driven by the same saved/local features.
-        // The phoneme endpoint is responsible for audio evidence; this hook avoids treating
-        // partial speech-recognition text as proof of an omitted consonant.
-    }
-    private fun stopLiveSpeechMode(showSummary: Boolean = false) {
-        liveListening = false
-        setLiveIndicator(active = false)
-        try { liveSpeechRecognizer?.stopListening() } catch (_: Exception) {}
-        try { liveSpeechRecognizer?.destroy() } catch (_: Exception) {}
-        liveSpeechRecognizer = null
-        try { liveAudioRecord?.stop() } catch (_: Exception) {}
-        liveAudioRecord = null
-        liveHandler.removeCallbacksAndMessages(null)
-        synchronized(liveBuffer) { liveBuffer.reset() }
-
-        if (showSummary) {
-            showLiveSessionSummary()
-        }
-    }
-
-    private fun showLiveSessionSummary() {
-        val durationSec = ((System.currentTimeMillis() - liveSessionStartMs) / 1000L).coerceAtLeast(0L)
-        val sounds = synchronized(this) { liveMissingSoundCounts.toList().sortedByDescending { it.second } }
-        val words = synchronized(this) { liveCandidateWordCounts.toList().sortedByDescending { it.second } }
-
-        val message = StringBuilder()
-            .append("Session length: ").append(formatLiveDuration(durationSec))
-            .append("\nObservations: ").append(liveObservationCount).append("\n\n")
-            .append("Possible missing initial sounds\n")
-
-        if (sounds.isEmpty()) {
-            message.append("No phoneme observations were returned.\n")
-        } else {
-            sounds.take(8).forEach { (sound, count) ->
-                message.append("• ").append(sound).append(" — ").append(count).append("\n")
-            }
-        }
-
-        message.append("\nRepeated candidate words\n")
-        if (words.isEmpty()) {
-            message.append("No candidate words were returned.\n")
-        } else {
-            words.take(10).forEach { (word, count) ->
-                message.append("• ").append(word).append(" — ").append(count).append("\n")
-            }
-        }
-
-        message.append("\nHeard most recently: ")
-            .append(if (liveLastHeard.isBlank()) "—" else liveLastHeard)
-            .append("\n\nThe playback uses the live candidate word to create a possible corrected sentence. It is only a suggestion.\n\nThis is a descriptive, probabilistic summary, not a diagnosis or clinical assessment.")
-
-        val correctedSentence = buildCorrectedSentence(liveLastHeard, sounds, words)
-
-        val dialog = android.app.AlertDialog.Builder(this@MainActivity)
-            .setTitle("Live Session Summary")
-            .setMessage(message.toString())
-            .setPositiveButton("Done", null)
-            .setNeutralButton("Save Session Summary", null)
-            .setNegativeButton("Play Suggested Sentence", null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                val ok = saveLiveSessionSummary(durationSec, sounds, words, liveLastHeard)
-                android.widget.Toast.makeText(
-                    this,
-                    if (ok) "Session summary saved." else "Could not save session summary.",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-                dialog.dismiss()
-            }
-
-            dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
-                if (correctedSentence.isBlank()) {
-                    android.widget.Toast.makeText(
-                        this,
-                        "No corrected sentence is available yet.",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    val correctedWords = buildCorrectedSentenceWords(liveLastHeard, sounds, words)
-                    val spliced = playSplicedSentence(correctedWords)
-                    if (!spliced) {
-                        speakCorrectedSentence(correctedSentence)
-                        android.widget.Toast.makeText(
-                            this,
-                            "Student word recordings were incomplete, so the app used TTS.",
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
-        }
-        dialog.show()
-        styleUnifiedDialog(dialog)
-    }
-
-
+    private var pendingStudentName: String = ""
 
     private fun showPersonalWordBank() {
         if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -2938,87 +2932,6 @@ content.addView(popupHeader(
         }
     }
 
-
-
-    private fun saveLiveSessionSummary(
-        durationSec: Long,
-        sounds: List<Pair<String, Int>>,
-        words: List<Pair<String, Int>>,
-        latestHeard: String
-    ): Boolean {
-        return try {
-            val dir = java.io.File(filesDir, "live_session_summaries")
-            if (!dir.exists()) dir.mkdirs()
-
-            val stamp = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", java.util.Locale.US)
-                .format(java.util.Date())
-            val file = java.io.File(dir, "live_session_$stamp.json")
-
-            val json = org.json.JSONObject()
-                .put("savedAt", System.currentTimeMillis())
-                .put("sessionDurationSeconds", durationSec)
-                .put("observationCount", liveObservationCount)
-                .put("latestHeard", latestHeard)
-                .put("note", "Descriptive probabilistic session summary; not a diagnosis or clinical assessment.")
-
-            val soundArray = org.json.JSONArray()
-            sounds.forEach { (sound, count) ->
-                soundArray.put(org.json.JSONObject().put("sound", sound).put("count", count))
-            }
-            json.put("possibleMissingInitialSounds", soundArray)
-
-            val wordArray = org.json.JSONArray()
-            words.forEach { (word, count) ->
-                wordArray.put(org.json.JSONObject().put("word", word).put("count", count))
-            }
-            json.put("candidateWords", wordArray)
-
-            file.writeText(json.toString(2))
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    private fun formatLiveDuration(seconds: Long): String {
-        val minutes = seconds / 60
-        val secs = seconds % 60
-        return if (minutes > 0) "${minutes}m ${secs}s" else "${secs}s"
-    }
-
-    private fun pcmToWavBytes(pcm: ByteArray, sampleRate: Int, channels: Int, bitsPerSample: Int): ByteArray {
-        val dataLen = pcm.size
-        val byteRate = sampleRate * channels * bitsPerSample / 8
-        val blockAlign = channels * bitsPerSample / 8
-        val totalLen = 36 + dataLen
-        val out = java.io.ByteArrayOutputStream(44 + dataLen)
-        fun writeIntLE(v: Int) {
-            out.write(byteArrayOf(
-                (v and 0xff).toByte(),
-                ((v shr 8) and 0xff).toByte(),
-                ((v shr 16) and 0xff).toByte(),
-                ((v shr 24) and 0xff).toByte()
-            ))
-        }
-        fun writeShortLE(v: Int) {
-            out.write(byteArrayOf((v and 0xff).toByte(), ((v shr 8) and 0xff).toByte()))
-        }
-        out.write("RIFF".toByteArray())
-        writeIntLE(totalLen)
-        out.write("WAVE".toByteArray())
-        out.write("fmt ".toByteArray())
-        writeIntLE(16)
-        writeShortLE(1)
-        writeShortLE(channels)
-        writeIntLE(sampleRate)
-        writeIntLE(byteRate)
-        writeShortLE(blockAlign)
-        writeShortLE(bitsPerSample)
-        out.write("data".toByteArray())
-        writeIntLE(dataLen)
-        out.write(pcm)
-        return out.toByteArray()
-    }
 
 
     /**
