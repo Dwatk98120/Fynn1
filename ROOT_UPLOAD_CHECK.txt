@@ -1,30 +1,5 @@
-FIRST SOUND HELPER v6 - GITHUB MAIN ROOT CHECK
-
-After uploading/extracting into the repository root, the GitHub Code page on branch main
-should show these items directly at the top level:
-
-.github/
-app/
-gradle/
-parent_pc_local/
-server/
-shared/
-build.gradle
-gradle.properties
-gradlew
-gradlew.bat
-settings.gradle
-
-The workflow must be exactly:
-.github/workflows/build-apk.yml
-
-The Android module must be exactly:
-app/build.gradle
-
-settings.gradle must be at the repository root and include:
-include(":app")
-
-IMPORTANT:
-Do not upload this ZIP itself as one file to GitHub.
-Extract it first, then upload/push the CONTENTS to the repository root.
-
+HEARLIUM 0.4.19 BRANCH 2 SOURCE UPDATE
+Target: hearlium-parent-pc-integration. Leave Main untouched.
+Read GITHUB_UPDATE_INSTRUCTIONS.md before copying source.
+Verify SOURCE_MANIFEST_SHA256.json after copying.
+No binaries, model weights, recordings, credentials, installation or remote push.

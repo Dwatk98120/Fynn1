@@ -1,3 +1,25 @@
+HEARLIUM BRANCH 2 - CURRENT SOURCE HANDOFF 0.4.19
+
+Read BUILD_0.4.19_README.txt and TEST_RESULTS_0.4.19.md first.
+The cumulative source includes the 0.4.17 Tk repair, 0.4.18 phoneme/capture
+improvements and 0.4.19 protected legacy-alias reanalysis repair.
+Use BUILD_HEARLIUM_INSTALLER.bat with Python 3.12 x64, Tcl/Tk and Inno Setup 6.
+Do not install tkinter through pip. PocketSphinx is pinned to 5.0.4.
+The builder checks source/frozen GUI, Tk, native phoneme alignment, legacy-alias,
+Layer 2 and Android retry before packaging the matching stamped executable.
+The default fresh builder output is installer/output/HearliumSetup.exe, with
+application version 0.4.19. The separately prepared versioned local artifact is
+installer/output/HearliumSetup-0.4.19.exe. No binary/model weights are shipped here.
+A source-only folder cannot run COMPILE_INSTALLER_ONLY.bat until the corresponding
+verified frozen distribution and prerequisites have been built.
+
+Source regression: 463 passed, 3 skipped. Installed acceptance remains pending.
+No automatic installation. Original recordings, metadata, history and the previous
+reanalysis safeguards are preserved. Forced alignment uses explicit confirmed words
+and separate JSON; it does not independently verify speech/pronunciation or learning.
+
+Historical cumulative builder notes follow and may name superseded fixes.
+
 HEARLIUM BRANCH 2 - WORD-ASR / SILERO CROSSCHECK AND SPEECH-WINDOW QUALITY HOTFIX (25 OCT 2026)
 
 WHAT THIS NEWEST CUMULATIVE BUILD ADDS:
@@ -182,4 +204,3 @@ click the same heading again to reverse that order. The footer must say
 If the marker is absent, a previous Windows build is still running. Close
 old Hearlium processes and install the newly built 0.4.7 installer.
 See PHASE3_RECORDING_HISTORY_SEARCH_SORT_REPAIR_20261025.md for tests.
-

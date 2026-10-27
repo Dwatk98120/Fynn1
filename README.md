@@ -1,3 +1,28 @@
+# Hearlium 0.4.19 Branch 2 - Legacy Recording Alias Repair
+
+Start with [GITHUB_UPDATE_INSTRUCTIONS.md](GITHUB_UPDATE_INSTRUCTIONS.md),
+[BUILD_0.4.19_README.txt](BUILD_0.4.19_README.txt) and
+[TEST_RESULTS_0.4.19.md](TEST_RESULTS_0.4.19.md).
+This source-only handoff replaces the previous 0.4.17 source handoff. It includes
+0.4.17 Tk packaging, 0.4.18 phoneme timing/capture repairs and the 0.4.19 protected
+reanalysis repair for corroborated legacy aliases. Android remains 3.3.3/code9.
+Target branch: `hearlium-parent-pc-integration`. Leave Main untouched.
+
+PocketSphinx forced alignment estimates timing for an explicitly caregiver-confirmed
+reference. It does not independently verify spoken words, phoneme presence,
+pronunciation accuracy or speaker identity. An AI transcript remains unverified.
+Results are separate JSON under `analysis_results/phoneme_alignment_reports`;
+original WAVs, metadata, raw phoneme observations, word-recognition output and
+historical results are preserved. Alignment grants no learning approval.
+
+Source regression: **463 passed, 3 skipped**. Corresponding source and frozen GUI,
+Tk, native alignment, legacy-alias, server, Layer 2 and Android retry checks passed.
+Installed-device acceptance remains pending. This folder contains no installer,
+executable, model weights, virtual environment, recordings or private reports.
+No installation, Git commit, push, PR, merge or remote verification was performed.
+Historical notes below can describe superseded release or Main workflows; use the
+current handoff instructions above for this update.
+
 # First Sound Helper — Android + phoneme analysis
 
 This package adds the audio/phoneme layer to the Android app.
