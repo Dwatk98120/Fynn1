@@ -1,5 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_submodules, collect_data_files
+from PyInstaller.utils.hooks.tcl_tk import tcltk_info
+
+# The standard pre-find hook silently excludes tkinter when Tcl discovery fails.
+# Reject that build before collecting any application dependencies.
+if not tcltk_info.available or not tcltk_info.data_files:
+    raise RuntimeError('Working Tcl/Tk is required. Run installer/verify_tk_build.py with this interpreter.')
 
 # The launcher dispatches --server / --record / --pair in the same frozen EXE.
 datas = []
@@ -8,7 +14,7 @@ hiddenimports = []
 for pkg in ['torch', 'transformers', 'tokenizers', 'numpy', 'sounddevice', 'soundfile',
             'requests', 'fastapi', 'uvicorn', 'h11', 'g2p_en', 'nltk', 'inflect', 'distance',
             'safetensors', 'huggingface_hub', 'multipart', 'faster_whisper', 'av', 'ctranslate2',
-            'silero_vad']:
+            'silero_vad', 'pocketsphinx']:
     try:
         d, b, h = collect_all(pkg)
         datas.extend(d)
@@ -34,6 +40,8 @@ if not (phoneme_model_dir / 'config.json').is_file() or not any(
 datas.append((str(phoneme_model_dir), 'models/phoneme-wav2vec2'))
 # Keep licensing terms with the distributed offline Silero model.
 datas.append(('THIRD_PARTY_NOTICES_SILERO_VAD.md', '.'))
+datas.append(('THIRD_PARTY_NOTICES_POCKETSPHINX.md', '.'))
+datas.append(('THIRD_PARTY_NOTICES_CMUDICT.txt', '.'))
 
 # Include any non-Python model/data assets bundled with this project.
 datas.extend(collect_data_files('certifi'))
@@ -42,7 +50,11 @@ a = Analysis(
     pathex=['parent_pc_local', 'server', '.'],
     binaries=binaries,
     datas=datas,
-    hiddenimports=sorted(set(hiddenimports + ['main', 'direct_recording', 'pair_phone',
+    hiddenimports=sorted(set(hiddenimports + ['tkinter', '_tkinter', 'tkinter.ttk',
+        'tkinter.filedialog', 'tkinter.messagebox', 'tkinter.font', 'gui_smoke_check',
+        'main', 'direct_recording', 'pair_phone', 'ctc_segmentation',
+        'reference_phoneme_alignment', 'phoneme_alignment_client', 'capture_identity',
+        'phoneme_hotfix_checks', 'legacy_alias_checks',
         'hearlium_parent_pc_gui', 'phase3_learning_gui', 'layer_health', 'temporal_prosody', 'candidate_word_engine',
         'learning_engine', 'learning_store', 'analysis_engine', 'phoneme_analysis',
         'phoneme_substitution', 'recording_quality', 'silero_activity',

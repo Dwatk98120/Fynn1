@@ -1,0 +1,1401 @@
+{
+  "snapshot": "0.4.19",
+  "files": [
+    {
+      "path": ".env.example",
+      "sha256": "8b5697a7d7df9cf2267a5d62aba21ea2cf0ce4af0eaf8b1481f711762cd33a4a"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "sha256": "e13d72e2fec34036022013c20a76e5dfcbe031d95d0b2c9a05dfe1545a47e1f6"
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "sha256": "7db1e2300ce34daea758586c9e169808d2ab497f90c2fba58ddc516a38979f4b"
+    },
+    {
+      "path": ".github/workflows/build-apk-recording-fix.yml",
+      "sha256": "8eed06d622f79751a6434b92979c7e9c37a15c60af363244d030149a7ee71318"
+    },
+    {
+      "path": ".github/workflows/build-apk.yml",
+      "sha256": "916241581b42e65bdaa9cf8930f4e60fa6f12808928dfd932e59e3d2c7fd0bb8"
+    },
+    {
+      "path": ".github/workflows/verify-parent-pc-source.yml",
+      "sha256": "4ec27f0d5939e3d07db1c714f5fef679da421c732ea22300b53f504972246828"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "cd5a21317cecea72549b58f4daab5921c44cf78aa063947464b045014cc662cf"
+    },
+    {
+      "path": "ADAPTIVE_BOUNDARY_FIX_README.txt",
+      "sha256": "c4e17d79afca537d3f43ade089d990eb4e816d8b9c8e991f316ffa0d1d126097"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "f25865325ac742bb240a7cafa75fdd21178226abc73fe34974ca42f01ca43c9f"
+    },
+    {
+      "path": "AI_LEARNING_LAYERS.md",
+      "sha256": "35cf9dace6e497ca863a50790a9f46ff71e31df276cd98cf0c94c385f2920452"
+    },
+    {
+      "path": "ANALYSIS_500_FIX_README.txt",
+      "sha256": "59b3710ebbc10999036fcc267adcf7999bddf0eec17662266b42d6a36612c186"
+    },
+    {
+      "path": "ANDROID_STUDIO_READY.md",
+      "sha256": "d76898c1a94bd27aa413bdb1a09c721f471a85b7342190f1883565b8d894a9fe"
+    },
+    {
+      "path": "BACKLOG_REVIEW_20261027.md",
+      "sha256": "e1fd79c16a72d04a17795dadc1e37f317902909073e1100a5de3938747924e52"
+    },
+    {
+      "path": "BLUETOOTH_BUILD_FIX_NOTES.md",
+      "sha256": "46a743a6dd972f45c3376d36f07812adefcfbab97e0b84648733f828c46ad2dc"
+    },
+    {
+      "path": "BLUETOOTH_WINDOWS_SDK_FIX_NOTES.txt",
+      "sha256": "3ee038083d9bc5b876aa9c37e8a4cffffb55d057f2a1f985a1b2797ad3b0970d"
+    },
+    {
+      "path": "BRANCH2_ANDROID_CAREGIVER_REVIEW_RELEASE_NOTES.md",
+      "sha256": "026cc9d79915e9fa90c9c55e2edb90cc3870b42572f5f6df9df48e89fcea6599"
+    },
+    {
+      "path": "BRANCH2_ANDROID_SAVE_FIX_README.txt",
+      "sha256": "9f4ebb35efa99f904439d4d11ad7485bd2d97464114e77ea5da8e5677f0cef53"
+    },
+    {
+      "path": "BRANCH2_HOMOPHONE_RELEASE_NOTES_20261019.md",
+      "sha256": "9f749a44cf864aed086cc529cf0e470b3f321aee51da530a6b62c9d6f7f6c499"
+    },
+    {
+      "path": "BRANCH2_LAYOUT_AND_ANDROID_RESULTS_FIX_README.txt",
+      "sha256": "3b6eac3945cbbe5a7552ef0b71d80af2deab16cc897b363fbb179ec3cb1ccb7c"
+    },
+    {
+      "path": "BRANCH2_RECOGNITION_REPAIR_20261019.md",
+      "sha256": "fcb0a310402c38b34bd3a457f47c5a5e80dafdfb7ed741de3b1113b3ca84456f"
+    },
+    {
+      "path": "BRANCH2_SIMPLE_CAREGIVER_REVIEW_20261020.md",
+      "sha256": "f0e63cb88a0a62b04fefc2ebeb1b767c64f0088e6410dae0ec3c79aa03634a71"
+    },
+    {
+      "path": "BUILD_0.4.10_README.txt",
+      "sha256": "175f78c2912d95d1e2c9dec71ff4e2528b7e6933120a4cccf09f7e4cecc271c2"
+    },
+    {
+      "path": "BUILD_0.4.11_README.txt",
+      "sha256": "903c69e36b20c763cf3f4d869aaf1f07fbfd1ad9342780305ec31bb93da9372c"
+    },
+    {
+      "path": "BUILD_0.4.12_README.txt",
+      "sha256": "b17066367cc1dc7e3b6ca659b5daef0551b47dee571548923160682d2ef36ea1"
+    },
+    {
+      "path": "BUILD_0.4.13_README.txt",
+      "sha256": "2b91e673cf61173121797850bc1fb77c08842cbf6e06a2261ae5901508299c66"
+    },
+    {
+      "path": "BUILD_0.4.15_README.txt",
+      "sha256": "8b79d2a689893515c85979592b0c0b049e8af4a7c370e2686d813693d429f421"
+    },
+    {
+      "path": "BUILD_0.4.16_README.txt",
+      "sha256": "97dd33dbed69673ea75238c2a602506802ccb4c0d6fd99e8d187727ebb68cd7b"
+    },
+    {
+      "path": "BUILD_0.4.17_README.txt",
+      "sha256": "6fd2a5cc8eaa49d31c0a1b6b01386354ea0224ffebbad0b98b4b8a54d1dc13aa"
+    },
+    {
+      "path": "BUILD_0.4.18_README.txt",
+      "sha256": "efaf88ead32f742e039733b5172f57d8f057e9a4ed6e456c95786211e81f7fc9"
+    },
+    {
+      "path": "BUILD_0.4.19_README.txt",
+      "sha256": "e265a377c5f97806462561793900765b32521c6fcaf5df84c2e833f9d6d0019e"
+    },
+    {
+      "path": "BUILD_CONTENTS_AND_ANALYTICS_ADDITIONS.md",
+      "sha256": "3adff3d00d40800d5c6607a3941b124eb07363be09b4387cbc81820479d28bb5"
+    },
+    {
+      "path": "BUILD_HEARLIUM_INSTALLER.bat",
+      "sha256": "0026040dc9c0c68f26b151706af041fce25be9cb296a241637f0eae34cd2b8fa"
+    },
+    {
+      "path": "BUILD_VERSION.txt",
+      "sha256": "74b1289956eb71a97ce072a96a3cd6d953af1bd9ea9eba425e729e8f41fad2e1"
+    },
+    {
+      "path": "BUILD_VERSION.txt.20261027_093304_2f73e33e.bak",
+      "sha256": "1a079354afcb4c6f31d9c9f6496fab47cffbb7af622ae2cac303ab4a5d205ca7"
+    },
+    {
+      "path": "CHANGED_FILES_0.4.16.txt",
+      "sha256": "4d27fc2a1fcf193aca8a7776b57d42096d3c60d36c0fb17b85ad93089e7fd792"
+    },
+    {
+      "path": "CHANGED_FILES_0.4.17.txt",
+      "sha256": "38363578e7154e50ae4ab47ff14890d797a014e8e73db83cc91269863f7b8066"
+    },
+    {
+      "path": "CHANGED_FILES_0.4.19.txt",
+      "sha256": "77f46c452bab99833abe9e85f22000ad487c31438939baae106ed0d162c3329c"
+    },
+    {
+      "path": "CHECK_BUILD_ENVIRONMENT.bat",
+      "sha256": "081405b0f90baed980209a062ab2a8d6da0cd7d64246023c0017e6d8b023ac50"
+    },
+    {
+      "path": "CHILD_SPEECH_BUILD_NOTES.md",
+      "sha256": "0cbe3379e71ee7b89f5f452ea2cb7742804e81ecb7434b76bd31f05b5412305f"
+    },
+    {
+      "path": "CLEAN_PARENT_PC_BUILD.md",
+      "sha256": "c07402e420b428ebb3c153f3b25688540e97d1732e89a6d6fa5c6bdeb3ccfc12"
+    },
+    {
+      "path": "COMBINED_FIX_BUILD_NOTES.md",
+      "sha256": "498d03998942d2e6a3f3457c7fa6f471db00ebd2fca6a3f5bc9c8239d3a818c2"
+    },
+    {
+      "path": "COMBINED_TRANSCRIPTION_INSTALLER_REPAIR_20261018.md",
+      "sha256": "b00bd6fc6f346b50cb97c06d7e22d35155bed02d62b855e55972850ac0ed4aa7"
+    },
+    {
+      "path": "COMMUNICATION_INTERPRETATION_FEATURES.md",
+      "sha256": "81900624607292f7c97fb9fc2874a800cfa94dd173e82d9221d6be2c45ce156b"
+    },
+    {
+      "path": "COMPILE_INSTALLER_ONLY.bat",
+      "sha256": "c49a3bb87edf40ad41406a0e4ccf29bacbbc1376ed3be35cb992e7d469de9d94"
+    },
+    {
+      "path": "CONSONANT_PATTERNS.md",
+      "sha256": "7d5c1e0d72e2c809150eeb0e294d1b2cc625188038fcdb9444ea0fd94d2c4c67"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "bf9aa39fb506ae61316dbcd39a376dad3cacdd5f80169812332cb21232fd19b9"
+    },
+    {
+      "path": "CORRECTED_SENTENCE_PLAYBACK.md",
+      "sha256": "99042b0230ba89fafff40b1723ef6bf08420c8878a7ca898140cd17abd9ec97e"
+    },
+    {
+      "path": "ELEVEN_THIRTEEN_LAYER_AI_LEARNING.md",
+      "sha256": "6f07268dda06e0bd7f11f15c2a498c04575d865f7eec8bb1d68351377abb80a9"
+    },
+    {
+      "path": "ENGINE_INTEGRATION_20261018.md",
+      "sha256": "2e947df8edaf2d63dafe2d90ea70607bf6477a2b75e41ce367400298ff69e814"
+    },
+    {
+      "path": "ENHANCED_DECIPHER_BUILD.md",
+      "sha256": "413e23231f17fc09a4b078ec6931ef4819836bca32044ba0d12b00e0efe6d544"
+    },
+    {
+      "path": "EXPANDED_PHONEME_ANALYSIS.md",
+      "sha256": "ff8d9bbcb37dffb420ed32d155d68c1d92d103b02c1e7a45f815f0c60880578b"
+    },
+    {
+      "path": "FASTER_WHISPER_BUILD_AND_TEST.md",
+      "sha256": "83d5731e7f9937cd6dd3671a7c36b69ea3ecc1ecfd7d356e53a2feddfbbd86c2"
+    },
+    {
+      "path": "FILE_INTEGRITY_PHASE2_FOLLOWUP_README.md",
+      "sha256": "548fbc2d68e3be071140c1e1718b90c5dc7538476901f23f067bfb16fc10a39a"
+    },
+    {
+      "path": "FOUR_REPAIRS_RELEASE_NOTES.md",
+      "sha256": "1a109fb25099ae1a6a4dc90749f21e5062fe94a052f8c17a99c9f89fee10a731"
+    },
+    {
+      "path": "FROZEN_LAUNCHER_SELFTEST_REPAIR_20261018.md",
+      "sha256": "fbc638812cc59f036efcec29e8c59217678c45252f1464c0ead773914a475d49"
+    },
+    {
+      "path": "GITHUB_AND_DEPLOY.md",
+      "sha256": "8b5cb78d3b718052157cf9d192c30cd1964437a4c1d34b7441dcdd531d40f32e"
+    },
+    {
+      "path": "GITHUB_PACKAGE_MANIFEST.json",
+      "sha256": "a6614ae45e8582b4a58327a42ecaee5c1cb8660c778f2b37a54bb12ba4b8b07e"
+    },
+    {
+      "path": "GITHUB_PRIVACY_CHECKLIST.md",
+      "sha256": "8879959d97eda5e74878b403f545701877b6d75b39c2d8e5edd2fc8f5214f795"
+    },
+    {
+      "path": "GITHUB_RELEASE_CHECKLIST.md",
+      "sha256": "18f00fd25349a0284e617343e504c2ecd415759d0f67d588a30491f8d1a69a49"
+    },
+    {
+      "path": "GITHUB_REPOSITORY_SETUP.md",
+      "sha256": "3585d616f341147996b30162bd94a2de04acaf567dda2662e6b27d2dfe537f78"
+    },
+    {
+      "path": "GITHUB_UPDATE_INSTRUCTIONS.md",
+      "sha256": "5f8d18065cf3c37e82cd4f3c36dafaca4ddbbc2ac99f4fe1e052a66fe2424168"
+    },
+    {
+      "path": "GITHUB_UPLOAD_README.md",
+      "sha256": "5477e0e1f3a59223884e6e517ac682f40e9590a12887c8e2599c8cdbb15da0a7"
+    },
+    {
+      "path": "HEARLIUM_13_LAYER_REPAIR_NOTES.md",
+      "sha256": "aac94b595344538497d2f54bca6a5c0ba84ebaae2c18740c3761691a92f56327"
+    },
+    {
+      "path": "HEARLIUM_ALL_FIXES_README.txt",
+      "sha256": "cc1b150cae329fc5904bd0a6f40538a07bea3d2c2ea054562da999c4de48beea"
+    },
+    {
+      "path": "HOTFIX_0.4.11_CHANGED_FILES.txt",
+      "sha256": "d2c20de6561a288923ef73a32be1a0c37abc8d0ec424b485b823756b5af759dc"
+    },
+    {
+      "path": "HOTFIX_CHANGED_FILES.txt",
+      "sha256": "b7c2779d707bca542259ddfc4f259dc53549c735883883c14ea8a4b5e48f9e59"
+    },
+    {
+      "path": "HearliumParentPC.spec",
+      "sha256": "a4249b58079b7f221e1e655e08ad1cf195410cb1979975616b76041e2948bf02"
+    },
+    {
+      "path": "IMPROVED_CANDIDATE_WORD_ENGINE.md",
+      "sha256": "ee5dbf0d7e6c25799a0968c7f2e07b41fd5c2dedd99b81cd42604418731f5f32"
+    },
+    {
+      "path": "INSTALLER_DEPENDENCY_FIX_README_20261018.txt",
+      "sha256": "ae1643e18c204c073165d394bc634be34ea546cfc1448afc0bd50761e946e186"
+    },
+    {
+      "path": "KNOWN_SPEECH_TEST_FIX.md",
+      "sha256": "865bae8ab4095220e009a402d3d394a773120628691d6b4fa6326be116f1025e"
+    },
+    {
+      "path": "LEARNED_PHONEME_SUBSTITUTION_RANKING.md",
+      "sha256": "25c737c8f67afd38bf9f24ade72bee513614db7b7f9afd67e0b6be9dbfbba5e0"
+    },
+    {
+      "path": "LICENSE_NOTICE.md",
+      "sha256": "51377408f7c8b5cf67459d4ed4a93d184de401fe7d1c8f6ae002e623641cd0ac"
+    },
+    {
+      "path": "LIVE_SESSION_SUMMARY.md",
+      "sha256": "765be82e4d18f8a4baea9b02522bbacda7ac4c06d614f87a726eee39acda4bfb"
+    },
+    {
+      "path": "LIVE_SPEECH_PRIVACY.md",
+      "sha256": "2c8acac10e7bfa1fda992a9db107deb24b8a3985c6a33fe7d3e84e4a172de4a6"
+    },
+    {
+      "path": "NEXT_FIX_README.txt",
+      "sha256": "f0fc1c99efa0603a03027b7feffaac1515a1223311ca80bdf2887960d4e4f072"
+    },
+    {
+      "path": "NO_PYAV_BUILD_NOTES.md",
+      "sha256": "4daaa5908d71abda73986f1ab701642b59628a2c6fbd84546b01e1b8a0dbd07b"
+    },
+    {
+      "path": "NUMBER_REVIEW_BUILD_NOTES.md",
+      "sha256": "069da38c2e7146bf9842b184a7462308d2286f893a53244e1e0632d68214325d"
+    },
+    {
+      "path": "OBSERVATION_INTERPRETATION_ARCHITECTURE.md",
+      "sha256": "3b345677bf7d45ff6455dc267bda1e0a4b11a5fcd2736e0c7f99d4f1da561304"
+    },
+    {
+      "path": "PARENT_PC_LOCAL_ARCHITECTURE.md",
+      "sha256": "434d810f40fdd8067dc4ff07bef82c6879cb5fba0cb6d5d8ccbef773823f78a3"
+    },
+    {
+      "path": "PARENT_PC_ONLY_ARCHITECTURE.md",
+      "sha256": "ef9562dda3fde5c5ed8976345cf5d73a6e0371c69f24519ef03b09092cb003b2"
+    },
+    {
+      "path": "PERSONAL_WORD_BANK.md",
+      "sha256": "31b61a9a58861c9b31e74a1dabced9b3d3e2db1b0af8c935c43aa64d58b4d207"
+    },
+    {
+      "path": "PHASE1_CTC_DECODER_FIX_README.txt",
+      "sha256": "f026cc72e8624a2620ba161420f9cf4038d60340e3bd9f199ee166140b3742ce"
+    },
+    {
+      "path": "PHASE1_REPAIR_README.txt",
+      "sha256": "aeaac57eab05dce5886727bcc9f9c706f7267591a91fe16c845e959a6b3717c1"
+    },
+    {
+      "path": "PHASE2_BUILD1_README.txt",
+      "sha256": "f35d680d3928758f7e880766590f3b3d1afc60302d3faaf5e891b37733021242"
+    },
+    {
+      "path": "PHASE2_PARENT_PC_REANALYSIS_STORAGE_README.md",
+      "sha256": "b7cde0b4031f2a8b2c51bc436c934f9992d258428450c96f941139b613007c72"
+    },
+    {
+      "path": "PHASE3_ANALYSIS_FEEDBACK_CONSISTENCY_HOTFIX_20261023.md",
+      "sha256": "f33d4c710733e5689fc06308228d6d799ee5a9be2c476fd3bd59d46ec675f6b5"
+    },
+    {
+      "path": "PHASE3_ANDROID_CAPTURE_DURABILITY_HOTFIX_20261023.md",
+      "sha256": "78ea51c2d2905ab5cd51094bc82a8b0878184d2793cdb0fffa283cd912651efe"
+    },
+    {
+      "path": "PHASE3_ANDROID_CHILD_NAME_UPLOAD_HOTFIX_20261025.md",
+      "sha256": "4415b3bb6619c9ebedbe95999ff5855a9d09ca3838274511267ef3ffdbf4ae33"
+    },
+    {
+      "path": "PHASE3_API_DIAGNOSTICS_HOTFIX_README_20261022.txt",
+      "sha256": "e8ebed8ba39e942f7bd29b0618666ace3626451d2ad26603efb8343a954bfcf2"
+    },
+    {
+      "path": "PHASE3_BACKGROUND_PHONEME_INTEGRITY_HOTFIX_20261025.md",
+      "sha256": "d7d40e6bb770a8fd8fd7ee0ca2581835f5cae573508feb6d1d6b31497831a781"
+    },
+    {
+      "path": "PHASE3_BUILD1_WINDOWS_README.txt",
+      "sha256": "c120708e4556903d0d5e0d6a8cb17f1a5afe3090089b70a443ed16401051f88a"
+    },
+    {
+      "path": "PHASE3_CAREGIVER_DECISION_APPROVAL_INTEGRITY_HOTFIX_20261023.md",
+      "sha256": "34d3df87dd4ef579df065e287b76b4655f80c8fbe27a4353f48a2c164fb31e19"
+    },
+    {
+      "path": "PHASE3_CAREGIVER_REVIEW_HOTFIX_20261022.md",
+      "sha256": "f16c8543349858ce98ea28674ac9bc284f9ea3c01adfe3d82359dc53d2986995"
+    },
+    {
+      "path": "PHASE3_CONSONANT_ACCURACY_REGRESSION_20261026.md",
+      "sha256": "107f6152b1f53f4676a4079ce9ce5a7b0e55e3b564bdf562a8c580703b9c5cdb"
+    },
+    {
+      "path": "PHASE3_DUPLICATE_WAV_SAFE_STORAGE_HOTFIX_20261026.md",
+      "sha256": "ac6223aeafc41ccd4d19f971335f71848c542ebf9ad635a169ad5653539b2fdb"
+    },
+    {
+      "path": "PHASE3_EVIDENCE_INTEGRITY_HOTFIX_20261022.md",
+      "sha256": "75c075ae38ef0352e81fe0ecea830c9339769ba98d7475cf66eb88aaaa3dbfee"
+    },
+    {
+      "path": "PHASE3_FEEDBACK_ROLLBACK_RELIABILITY_HOTFIX_20261023.md",
+      "sha256": "83631a2246a572fd3ddde86190bf69c84d902b4ba0ed2585f2b9847e80ca0a9d"
+    },
+    {
+      "path": "PHASE3_FULL_RUNTIME_PRECHECK_HOTFIX_20261025.md",
+      "sha256": "1fd6402347e4171b36867ae539a891956bb77eb8dd148d273dd11f253a35a2b9"
+    },
+    {
+      "path": "PHASE3_INNO_SHORT_PATH_BUILD_FIX_20261022.txt",
+      "sha256": "a362668cf7bf55289584e4bb48a3296b81190db8c36e97bc534193ccf3544f04"
+    },
+    {
+      "path": "PHASE3_LAYER1_NOISE_DISTORTION_CAREGIVER_WARNING_HOTFIX_20261023.md",
+      "sha256": "f398be91cfbfffecb1503434825ff3b63863cd892d085e05d58e5997505a04ce"
+    },
+    {
+      "path": "PHASE3_LAYER23_BOUNDARY_PHONEME_RELIABILITY_HOTFIX_20261024.md",
+      "sha256": "3fc81050d3f8c0bf913b3c953d51c212c50a7f59769435041d8bd09cc7b85b3d"
+    },
+    {
+      "path": "PHASE3_LAYER2_ACTIVITY_TAIL_EVIDENCE_HOTFIX_20261023.md",
+      "sha256": "56c3e78822e48555b94eb641673f7ba63b204c5e100385e1bf588db4e9561c53"
+    },
+    {
+      "path": "PHASE3_LAYER2_BACKGROUND_VOCAL_ATTRIBUTION_HOTFIX_20261024.md",
+      "sha256": "1e545a0e6cd53104a7fbe62afdf9316f286d6ae3d0b4c4b2b6ff64d5b888e2f0"
+    },
+    {
+      "path": "PHASE3_LAYER2_BUILD_VERIFICATION_HOTFIX_20261024.md",
+      "sha256": "5e38311f0c0d51c9dc41a1a3848c70ff0227f14acf7cb232c9a92da4ca4da564"
+    },
+    {
+      "path": "PHASE3_LAYER2_LATE_ACTIVITY_UNCERTAINTY_HOTFIX_20261024.md",
+      "sha256": "aef3ffee0dc42407b63c8e75289ca95e15c9751a0f784307c5a6cc185aa5bad8"
+    },
+    {
+      "path": "PHASE3_LAYER2_SPEECH_AMBIENT_REVIEW_HOTFIX_20261024.md",
+      "sha256": "4fc48a394b974cc0d56e6c7280bc7c10ab8898791742c8ea3604ce22a83da414"
+    },
+    {
+      "path": "PHASE3_LAYERS_1_TO_3_EVIDENCE_QUALITY_HOTFIX_20261023.md",
+      "sha256": "d04a2674796578043c5ca75b59d73873d14e96ffb053ce973b15bcc03d964cce"
+    },
+    {
+      "path": "PHASE3_LEARNING_LEDGER_NO_RESURRECTION_RECONCILIATION_HOTFIX_20261023.md",
+      "sha256": "b8bad4029a7a6fd6425383d1281856872bec7e97ec99f068b1bf2c1fbebbe606"
+    },
+    {
+      "path": "PHASE3_LEARNING_RECONCILIATION_ANDROID_NO_LIVE_20261023.md",
+      "sha256": "5f0b70f567d19aca1da77f7b944009bc751960c1d66c7ba5275c441fec55fcbc"
+    },
+    {
+      "path": "PHASE3_PARENT_PC_SOURCE_AND_PHONEME_REVIEW_HOTFIX_20261024.md",
+      "sha256": "88e08954dc2ca442afc95878bb05c20633967c825b8bf005dc78a54bb59750d7"
+    },
+    {
+      "path": "PHASE3_PHONEME_DISAGREEMENT_HOTFIX_20261026.md",
+      "sha256": "808ed40da93010296f206eaf7a79dca22ecde1226cbbd264e7085279639d12bd"
+    },
+    {
+      "path": "PHASE3_RECORDING_AUDIT_SAFETY_FOLLOWUP_20261022.md",
+      "sha256": "ab6def74098cc70ffc56fa1affad9f25fdfbf7bf62dcbacd1af04df1dd17434b"
+    },
+    {
+      "path": "PHASE3_RECORDING_HISTORY_SEARCH_SORT_REPAIR_20261025.md",
+      "sha256": "7eaacdacc532c977d22df9e0d63d01a64fb0a773b8ddf473ec85c2daeb6c530e"
+    },
+    {
+      "path": "PHASE3_RECORDING_TITLE_TAG_SEARCH_HOTFIX_20261025.md",
+      "sha256": "a81ee8b7f743b44d67583ff614214f9d6c38cb42f1238beda3eebfc5b888aed9"
+    },
+    {
+      "path": "PHASE3_REQUEST_ID_RECONCILIATION_RETRY_HOTFIX_20261023.md",
+      "sha256": "bd70e6e85a2dbf760a69c9a6d4662afd421dfcf10fb22999b75cba1ab6a2f77c"
+    },
+    {
+      "path": "PHASE3_SILERO_VAD_LAYER2_HOTFIX_20261024.md",
+      "sha256": "70f0087b66b680de88d28f273e87ead10521fe8e82c1ab352cf792d23a62766c"
+    },
+    {
+      "path": "PHASE3_SPEECH_CROSSCHECK_QUALITY_HOTFIX_20261025.md",
+      "sha256": "95dba76d92c07ae75f5e1e8a831f30b67d92d8c57c4527a79e5229d7c205457b"
+    },
+    {
+      "path": "PHASE3_STARTUP_PROGRESS_HOTFIX_README_20261022.txt",
+      "sha256": "46d9fcc9e73ce133252c1af9b656d127211fb316a13c63bd4caa62cfdadb167e"
+    },
+    {
+      "path": "PHASE3_STUDENT_RECORDING_LIBRARY_ANDROID_WORDING_20261023.md",
+      "sha256": "7fbe4758c74f797b1ed3e347cef75f707b358555eb4c1b012b7ff6a90451477c"
+    },
+    {
+      "path": "PHASE3_WINDOWS_DEPENDENCY_IDENTITY_HOTFIX_20261024.md",
+      "sha256": "40ac4349a7de80a637eed063d908f2a6f438e0b5cd0be52dcd66894370787c88"
+    },
+    {
+      "path": "PHASE3_WINDOWS_FROZEN_SERVER_STARTUP_HOTFIX_20261025.md",
+      "sha256": "7f7f70becc3d46b64b1e55c136b1d7f2243f8358f14d538df5b58784b81a75f9"
+    },
+    {
+      "path": "PHASE3_WINDOWS_RECORDING_SORT_TEST_COMPATIBILITY_20261025.md",
+      "sha256": "88acf35058c88396f9a740b85b36bd6955e2f08a715f37112d1e68dd381c25e7"
+    },
+    {
+      "path": "PHASE3_WINDOWS_REQUESTS_BUILD_REPAIR_20261024.md",
+      "sha256": "cbf4d94d0158d6da04dd8ac1cf1050d32d861a93685ffc8a9e1f63943ce888e0"
+    },
+    {
+      "path": "PHASE3_WINDOWS_UTF8_LEDGER_WRITE_TEST_HOTFIX_20261023.md",
+      "sha256": "a3320af6111c690fe365801120e182ae3f166b146f5a618a87cc5bae6d8dd498"
+    },
+    {
+      "path": "PHASE3_WINDOWS_UTF8_TEST_COMPATIBILITY_HOTFIX_20261023.md",
+      "sha256": "46138f48661721f8ac9ec28319b7076b1ffb01b4e2f2c59b7fecc72367263220"
+    },
+    {
+      "path": "PHASE3_WORD_PHONEME_ALIGNMENT_SAFETY_20261026.md",
+      "sha256": "39e0016e40788c3c5741e1bf29f91ab466bc496a3a6e4f3f4faacc3075b08f5e"
+    },
+    {
+      "path": "PHASE3_WORD_TIMESTAMPS_BOUNDARY_REPAIR_20261026.md",
+      "sha256": "e9f267ceeeea2331877feb8b049c82388e15d375aefeac04b3dca81f1e1a011b"
+    },
+    {
+      "path": "PHRASE_MATCHING.md",
+      "sha256": "8804bba6884f822b2351efc7703c0bb66a347dc7a3996933ad8aeb8b482b1a35"
+    },
+    {
+      "path": "PILOT_READINESS.md",
+      "sha256": "cfc7a1bd4f67d634c372422a1e7c654e7704de3f3f88ba40bb96d2e4e976df28"
+    },
+    {
+      "path": "README.md",
+      "sha256": "8605dd012a5d30c3c6397c5bb601580d7268751df9c382f7593e78e6a47e0a23"
+    },
+    {
+      "path": "README_BUILD_THIS_INSTALLER.txt",
+      "sha256": "437a5cc50124d1eabb6bcb81b047d826dbdc3b891e723f2927e5565d9df5bf72"
+    },
+    {
+      "path": "README_LIVE_SPEECH.md",
+      "sha256": "beaa49cc312e6143c6491a8aa7bc65edc0396dc3127c081ca8a511eba69c1b62"
+    },
+    {
+      "path": "README_PAIRING_AND_DATA_FIX.txt",
+      "sha256": "23255f462805a3d5b4d2138bd9a2fc0464ecf1c7a87dac1b715bd116554cccc5"
+    },
+    {
+      "path": "RECORDED_WORD_SPLICING.md",
+      "sha256": "4e21bda70e79ced9804a16e638abe4621e8fd9ac33be36b6adc42f47711ab353"
+    },
+    {
+      "path": "RECOVERY_PHASE1_README.txt",
+      "sha256": "42bf2c019fb090ba7ea8a683167340a27a7bb05b4764d23a104c368878beea32"
+    },
+    {
+      "path": "REFERENCE_AUDIO_MATCHING_README.md",
+      "sha256": "14e74dacf26083a092e91d73235de6658f3bfe5d952ad84493b9f48e6f2b346c"
+    },
+    {
+      "path": "RELEASE_TEST_AND_ERROR_GUIDE.md",
+      "sha256": "2ebff35f8c4c27ee7c7c77bebe305d1ce96cd29fccc5f2696140d0f3ca02dba6"
+    },
+    {
+      "path": "REPOSITORY_STATUS.md",
+      "sha256": "3e2891045c14b653e0287b29e4b9b0cb1c9ec6cf8120bee5d183d741a0d69a8f"
+    },
+    {
+      "path": "ROOT_UPLOAD_CHECK.txt",
+      "sha256": "6e6725a172d6821b0a47017314c2037df8bce4520f223750b43b0c243a70fa29"
+    },
+    {
+      "path": "SAVED_DIALOGUE.md",
+      "sha256": "0cbcab8f57c4169ba567c2e63db44442c3493025724bbecba17c7810d1788bc7"
+    },
+    {
+      "path": "SAVED_LIVE_SESSION_SUMMARIES.md",
+      "sha256": "087acb1a046705bf04cf7f67f556e768eee92b38766925a1f46cfbe01ed102fc"
+    },
+    {
+      "path": "SAVED_RECORDINGS.md",
+      "sha256": "7ee0bf49e757df50a2517041cadeea1bb2788fdd9d0813aadfc6157276127060"
+    },
+    {
+      "path": "SECURITY.md",
+      "sha256": "7d92df69baf32d61f0dbcc4fefd75f485500cbf02ae4249e8a1df613b198d30f"
+    },
+    {
+      "path": "SEGMENT_CAREGIVER_REVIEW_BUILD_NOTES.md",
+      "sha256": "41c3d3980a16be0bd5c2a4e2836e07b251a5202ddc6721210a978ce39f960ce7"
+    },
+    {
+      "path": "SENSITIVE_DATA_REVIEW.md",
+      "sha256": "a80a95d2e50d33b43d98ad34c84d6c521ef07a4966258d5f8d88f85819496d52"
+    },
+    {
+      "path": "SERVER_CONNECTION.md",
+      "sha256": "8d1110132f21244eb75468a403c1b0ae79c5f66f2525b4a7f21818b4efaa5dd1"
+    },
+    {
+      "path": "SOURCE_MANIFEST_SHA256.json",
+      "sha256": "9cae88473d8acb3720af58896dd24003cdbbc2d2962d265f17471960132da00c"
+    },
+    {
+      "path": "SOURCE_RELEASE_0.4.19_VERIFICATION.json",
+      "sha256": "cf6e9a0b680242d1158033336f33c82cf7d11276734adcf20c3bbb087d91a90e"
+    },
+    {
+      "path": "STUDENT_REPORTS.md",
+      "sha256": "e52afbfc2acce347a62b73770c0a55148e8ac447208a279d7131e04b5acc083a"
+    },
+    {
+      "path": "STUDENT_SUPPORT_FEATURES.md",
+      "sha256": "5b477524f4a0d301c919c6dbda1644a61684a28f6855e08aacdfd0b4a8fc64ad"
+    },
+    {
+      "path": "SUGGESTED_SENTENCE_RECONSTRUCTION.md",
+      "sha256": "922b7dc5fc471d92f13267a31028550a050b2f2009ab4c379fafa15c80a40ed5"
+    },
+    {
+      "path": "SUGGESTED_WORDS.md",
+      "sha256": "18e102312e270ea8d286cabc275aa43c357454d68c847506a43bd8797cdafa54"
+    },
+    {
+      "path": "TEMPORAL_PROSODY_IMPROVEMENTS.md",
+      "sha256": "2e1f9cee3985c724d591f9497afa0d849cf495b934ff69865c0a84b15eeeb3ae"
+    },
+    {
+      "path": "TEST_RESULTS_0.4.16.md",
+      "sha256": "b8c6e717cff54cc3e1384880d3447cb7c245547c23b58406500ad12c2a10fe9c"
+    },
+    {
+      "path": "TEST_RESULTS_0.4.17.md",
+      "sha256": "38fb13d64d4f8558bc4da3cb8e19f1cfdf21e9e6c517a1f9cea9e9693466bbf3"
+    },
+    {
+      "path": "TEST_RESULTS_0.4.19.md",
+      "sha256": "f7e522b3681ab513f9b2edbbd9f099fca36c91e3b9ee6c489a519e4afeeff235"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES_CMUDICT.txt",
+      "sha256": "aa50a2129518320b08fdea6ec2ca31482884f3826ef2a702a1474a1c2053ad6f"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES_POCKETSPHINX.md",
+      "sha256": "59be867ba8c0f694cf8498b387854d7851ff319b286b095c26431d91d9639299"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES_SILERO_VAD.md",
+      "sha256": "ec69e875ed7ed2a53c7a4a3ec518313654011565e80a8fd9c69d6c9188042300"
+    },
+    {
+      "path": "TRANSCRIPTION_CONFIDENCE_REPAIR_20261018.md",
+      "sha256": "fd3d860fad2db36a3a6d9470cda7f322a44cd68d66a33d580ff35d8bed5ad859"
+    },
+    {
+      "path": "TRANSFER_UI_HOTFIX_NOTES.md",
+      "sha256": "cdb572d18e16705d624937c8e468e0935f240cfc7c7d341e9d1b1ebf68e90d21"
+    },
+    {
+      "path": "VERIFIED_TRANSFER_FIX_NOTES.md",
+      "sha256": "087a3dfbf0d2bbcab71ae3ada6437157e729666daeddf8b405d69905d203d34d"
+    },
+    {
+      "path": "WINDOWS_INSTALLER_README.txt",
+      "sha256": "58a23fabb6837deb83207ac49d1a2b209967d43878c1ba0dc008abc6ffb1cdf9"
+    },
+    {
+      "path": "WINDOWS_TK_REPAIR_0.4.17.md",
+      "sha256": "68ed9d880859e70b1812b439c6055735901bc3041acfd2b08d7a799f1620c1b1"
+    },
+    {
+      "path": "WORKFLOWS_FIX_README.md",
+      "sha256": "e492c8b3d7e7f44e185c393432e0cac1f3c3236aa0e28f242e1dc44e9c8140e9"
+    },
+    {
+      "path": "android_no_live_verify.py",
+      "sha256": "49c85cd59ff20e06e82ddf2ee54a11111e735d0b04233151a997075b4f309f32"
+    },
+    {
+      "path": "app/build.gradle",
+      "sha256": "4ba0980f93f795e9a22fd3e5be06bdcd6462a6c79852f591fd719569d3e2ffdd"
+    },
+    {
+      "path": "app/src/main/AndroidManifest.xml",
+      "sha256": "ff2819fa5d480ff726c1ca84442be19c71bb5ca682ac9f39968ce438831e5ec1"
+    },
+    {
+      "path": "app/src/main/java/com/firstsoundhelper/LocalSpeechRecordingStore.kt",
+      "sha256": "331576408385c86ecc9796ac49fba93a6e0a7ad00bc378d02e0880186dbc0cb7"
+    },
+    {
+      "path": "app/src/main/java/com/firstsoundhelper/MainActivity.kt",
+      "sha256": "2c54c69538bd6374f1c3d45f0215a13f9fb610c099fa9455f0d6836771a5d466"
+    },
+    {
+      "path": "app/src/main/res/layout/activity_main.xml",
+      "sha256": "c5e4f7d154b35a0ec91e93dd1fa91aebf480bfcb70739a4a5bed263214efcbd8"
+    },
+    {
+      "path": "app/src/main/res/values/styles.xml",
+      "sha256": "67dbe360768467291595299ca3eac4dbb7fe27e9b7f4f3a4dd272c63f4f7b543"
+    },
+    {
+      "path": "build.gradle",
+      "sha256": "84084aac8b80da3ae3a67a53c133f6c10f6d72e36cb27a65b9affd589bd9129a"
+    },
+    {
+      "path": "docs/archive-comparison/Hearlium_Archive_Comparison_20261027.md",
+      "sha256": "c025d07a90ba4fc8cb3fbcf385b89190042ae0c274e33bef0923ff7f7da7a5f6"
+    },
+    {
+      "path": "finalize_github_update.py",
+      "sha256": "998d4d56ddd6749e22b20ea80aa9769b8343fb06168824147151102d004542fa"
+    },
+    {
+      "path": "gradle/wrapper/gradle-wrapper.properties",
+      "sha256": "d01b41913834fb3cb14e71f69a08898e6a47e663b08f5c9b8c7e0772c38889d2"
+    },
+    {
+      "path": "gradle.properties",
+      "sha256": "fa078c27c9e4bde28a029d673875b028884505efa436b68cf60e1ac0be5b679b"
+    },
+    {
+      "path": "gradlew",
+      "sha256": "a5a5c199ba02189ae8c46a334223371a20599d9c298ef65e7540ede4a3f72d59"
+    },
+    {
+      "path": "gradlew.bat",
+      "sha256": "d539676c48b596afda64c963ec8f7ee56c7b3fe7e3b81d1dbe2d1a1e3dd9e9f8"
+    },
+    {
+      "path": "installer/Hearlium.iss",
+      "sha256": "d3af2bbc755d62ae052da9f041bca905bbc73ace9dda2cf77d63904f74586beb"
+    },
+    {
+      "path": "installer/ensure_build_dependencies.py",
+      "sha256": "314ae7def212a0f46488c7e3c95d15c282740be5ba78f3979d6766750da38a67"
+    },
+    {
+      "path": "installer/finish_0417_build.ps1",
+      "sha256": "6d87a7d9919978b25ce7163b7b608964944ada7401b0aaf536193fe9502549fb"
+    },
+    {
+      "path": "installer/finish_0418_build.py",
+      "sha256": "e14c1703b47369419aa3d5349875a9af153f5e972008ad3a4a3af77aaa6b45f7"
+    },
+    {
+      "path": "installer/finish_0419_build.py",
+      "sha256": "9a7aac7adc9e49c832cbd73727825ce218961a97e626d353824d4f91371111b5"
+    },
+    {
+      "path": "installer/finish_tk_repair.ps1",
+      "sha256": "997c1add06e3d845fa3fa7c30f9e6e4f6e0ad735d58e814079dfe6f79129a010"
+    },
+    {
+      "path": "installer/prepare_phoneme_model.py",
+      "sha256": "09f0d41032b51132eb0b07a0d43100206aae46fa685864309523ae359b0aca78"
+    },
+    {
+      "path": "installer/prepare_whisper_model.py",
+      "sha256": "931e0b1db79f169c399942bba2989e723f51fc7d210fa837c5d181c87ca962f3"
+    },
+    {
+      "path": "installer/resolved-dependencies.txt",
+      "sha256": "580c9c89d956ffd4c4f641a95bf109e0a50e0f0e464315cddb625691e49f0441"
+    },
+    {
+      "path": "installer/validate_0418_recording.py",
+      "sha256": "de5349253741c0af157bda65d6a051899609da583760a2bedabd37e84438991b"
+    },
+    {
+      "path": "installer/verify_0417_archive.py",
+      "sha256": "9463db198f7a9bce33d1fc94e0bd416d6563c06a3872aed9584e0edcd20738fc"
+    },
+    {
+      "path": "installer/verify_0418_archive.py",
+      "sha256": "a865a2152d183025e4de2890b13f4e89ac751e9ffa778a759dc5b30b8e37cf8e"
+    },
+    {
+      "path": "installer/verify_0419_archive.py",
+      "sha256": "86101041430793a9331169ad39e9f8ec0746e12858c0e64d0c431b4934079bb4"
+    },
+    {
+      "path": "installer/verify_audio_dependencies.py",
+      "sha256": "9ceeb9dc236a12290e1ee3d858b1df2b478e0ebbd6d44a770a7e7197f645d3f2"
+    },
+    {
+      "path": "installer/verify_frozen_gui.py",
+      "sha256": "278f523e76bc0dc711661fd177c2cd387f371126e3a8102f5be85eca043f2dec"
+    },
+    {
+      "path": "installer/verify_layer2_build.py",
+      "sha256": "8e92666cd6dc83ae031a3571991c594c6d195dc6c1bb9fab3bff700cfaa255e4"
+    },
+    {
+      "path": "installer/verify_legacy_alias_build.py",
+      "sha256": "2ea349c92beb356e2366b0611376336b565aeedba8543c046316aac9b3b98473"
+    },
+    {
+      "path": "installer/verify_phoneme_build.py",
+      "sha256": "a87779d199c76aea40b6f99b3afe24fb019e34d29496a5d6f4fa61d295d7ebd7"
+    },
+    {
+      "path": "installer/verify_silero_vad.py",
+      "sha256": "706eb3a661bd94090106034cfebdba5147c5b6111a17704f0fad274eed61ab58"
+    },
+    {
+      "path": "installer/verify_tk_build.py",
+      "sha256": "81f67f8ca205a9db99d5e11acdfce7ddcf6d41f70f707d2acb7408893f38c22a"
+    },
+    {
+      "path": "local.properties.example",
+      "sha256": "ca0e80e26576d6ff18097f7d165937f84d8c53a8fc88ea1eb692a0a6d275bfb0"
+    },
+    {
+      "path": "package_0416_source.py",
+      "sha256": "046221fb4317aec08b8b31f2980b25746d5634e6bb49711658f378601faee6d5"
+    },
+    {
+      "path": "parent_pc_local/BLUETOOTH_STAGE1.md",
+      "sha256": "364401baa2bd834080e4276f3673b7f17239f011e9712a8c8968d6b8fe093101"
+    },
+    {
+      "path": "parent_pc_local/BLUETOOTH_STAGE2.md",
+      "sha256": "aa25283031e5ab1bdc4a5cd352022d477683e94773bdeaa2a584d4fa964cf275"
+    },
+    {
+      "path": "parent_pc_local/BLUETOOTH_STAGE3.md",
+      "sha256": "78563643633e7db59ffaaa4764aa7d19793eb1d1a5d04dfd1d4ab841616c6167"
+    },
+    {
+      "path": "parent_pc_local/CAREGIVER_REVIEW_AND_HISTORY.md",
+      "sha256": "0f3bd0568974338592083f01def9a6fde959eed95e9a478f0807945ea1dd2edf"
+    },
+    {
+      "path": "parent_pc_local/DIRECT_RECORDING.md",
+      "sha256": "04b3fb3c9f465c984b91d6b09d791ac83f7b1dcbc3231ddcd99a90319c6fe861"
+    },
+    {
+      "path": "parent_pc_local/ONE_TAP_PAIRING.md",
+      "sha256": "f390192e5bde09d331d2ea53e3de12eb587d7772dec221817038a2759de952c5"
+    },
+    {
+      "path": "parent_pc_local/PYTHON_SETUP.md",
+      "sha256": "b4aee99c8e9a10bee00725eb09d6ddbf06902bed7b6ab8909c6b6f5d0b155737"
+    },
+    {
+      "path": "parent_pc_local/README.md",
+      "sha256": "5321659b7580812b756efe57d755e296b3a3f2c61fd544a18ba40ca7e724f08d"
+    },
+    {
+      "path": "parent_pc_local/analysis_client.py",
+      "sha256": "2acb6516e932e5dc08a98ec4fa0429ce140052b262433a9c41de7b3eb6759195"
+    },
+    {
+      "path": "parent_pc_local/analysis_consistency.py",
+      "sha256": "780c2530d921096ef393088c6204390d88f1bf2aedc02bcfe68697baff773005"
+    },
+    {
+      "path": "parent_pc_local/api_diagnostics.py",
+      "sha256": "45db123fb020ebf830fb196f08823193c9cde7cdfb5aed076b9dbd235c6ea810"
+    },
+    {
+      "path": "parent_pc_local/bluetooth_handshake.py",
+      "sha256": "03fbf3c95736a7423106fa7fb8668135901c62eefc0db8b415ea3e504c23c001"
+    },
+    {
+      "path": "parent_pc_local/bluetooth_service/HearliumBluetoothService.csproj",
+      "sha256": "059b17f27f118dff5f34d50a8333dadf16130c9c5f4e047341884d715cf963e9"
+    },
+    {
+      "path": "parent_pc_local/bluetooth_service/Program.cs",
+      "sha256": "be6ce95dd6ed73df1141e948e7d3368b989699cdbe61fecf2e3b1282ea7a7b04"
+    },
+    {
+      "path": "parent_pc_local/bootstrap_server.py",
+      "sha256": "a2dbbb8ba215c72b6fdabc061198588be2d5146f6450d3d0bc0d0af0160aa69b"
+    },
+    {
+      "path": "parent_pc_local/build_bluetooth_service.bat",
+      "sha256": "87451d9f4e0e52c1a408593ae7e2fc89003ffb9de38546ebd95db0a2019d51f7"
+    },
+    {
+      "path": "parent_pc_local/capture_identity.py",
+      "sha256": "e2f38105204596f90ddd441172c8d82a76949f234be6537f8f84b119b6486407"
+    },
+    {
+      "path": "parent_pc_local/caregiver_approval_integrity.py",
+      "sha256": "ce3daf4400370dc30310f7a8eb1383bb69bebd9a9c9ae074d4ac29e5d7d18e76"
+    },
+    {
+      "path": "parent_pc_local/caregiver_review_guidance.py",
+      "sha256": "5fc38a42af2752b8cdae9ba85aa30de2f7e297c31c93f67f5e0b39ea0235cbd2"
+    },
+    {
+      "path": "parent_pc_local/check_bluetooth.bat",
+      "sha256": "32cdc854a9f8bd5d874b14cdaff7f60dd7c7263cd0135f86c853fdb0cb78ea26"
+    },
+    {
+      "path": "parent_pc_local/check_bluetooth.ps1",
+      "sha256": "caff2f9311cdfbc1411fcb3459124b22fbe77a1683a07f04ab94f4f0f5c502a0"
+    },
+    {
+      "path": "parent_pc_local/direct_recording.py",
+      "sha256": "9228cd2503e95469d2e89d8953260a0c74d3284f720345b58b45583595e56363"
+    },
+    {
+      "path": "parent_pc_local/gui_smoke_check.py",
+      "sha256": "aa353219e5808bffe11a0c7652200241a76b29bd7e62ee1b46f47cbf1c8ed269"
+    },
+    {
+      "path": "parent_pc_local/hearlium_launcher.py",
+      "sha256": "35ed450b1e1566ce2f25cac2214027e9791bbb42ee960e880523814551f56ae5"
+    },
+    {
+      "path": "parent_pc_local/hearlium_parent_pc_gui.py",
+      "sha256": "8caff2a6bb004bdd24e4812a71d94fe66f4239e89930ed99fb3c6fe05cb6cc6d"
+    },
+    {
+      "path": "parent_pc_local/legacy_alias_checks.py",
+      "sha256": "83a43e56c6c6f439745a203f216643a12cf652063e3edead46dcb08a5eb9fe05"
+    },
+    {
+      "path": "parent_pc_local/pair_phone.bat",
+      "sha256": "7fe8d98fbe7dbd3745b290ec0b25e604b9de25f6c208d8444010bf753edefc6f"
+    },
+    {
+      "path": "parent_pc_local/pair_phone.py",
+      "sha256": "1eac8128bee6b2653fd74d924337354adbced40a1c8553f073caaac64f6cf33e"
+    },
+    {
+      "path": "parent_pc_local/phase3_learning_gui.py",
+      "sha256": "23611c3f6392f8d42c360054e91cfb48bc80aad60072359be7c2f45188fdf413"
+    },
+    {
+      "path": "parent_pc_local/phoneme_alignment_client.py",
+      "sha256": "adaf5f7bd95910debdfd4175cb02279bcd2e6922db278821f2590a1bbe965520"
+    },
+    {
+      "path": "parent_pc_local/phoneme_hotfix_checks.py",
+      "sha256": "55dffa056da1999e86d8741549ca78489d4fc0da3268c2550abf723f34db6268"
+    },
+    {
+      "path": "parent_pc_local/reanalysis_integrity.py",
+      "sha256": "e051e37dc88ab9140cc428a84e86c3c8b571ca07c132fcac0af858b4e2cb6e1e"
+    },
+    {
+      "path": "parent_pc_local/recording_title_store.py",
+      "sha256": "8e9685baccb084e2118515cba6c6e014708ee381e607fc16dffc60a318612f4c"
+    },
+    {
+      "path": "parent_pc_local/reference_audio_gui.py",
+      "sha256": "bdfcc643f411b91e56f74eb7979e623f000fec125b0f8f8e3701b87ec195730c"
+    },
+    {
+      "path": "parent_pc_local/review_evidence_store.py",
+      "sha256": "140dd555b25c2f85a66a766986433008d603a2a6185aec0c9415a1c68b546961"
+    },
+    {
+      "path": "parent_pc_local/setup_and_start.bat",
+      "sha256": "9a6aa2f169b2aa6c1c0c8d96f8af6e5218ffed8a467609d812cc4eb1eb70584e"
+    },
+    {
+      "path": "parent_pc_local/show_bluetooth_handshake.bat",
+      "sha256": "e57a31a5028d02c278a31762bb69048d27b6e9334a3554b5909bed0a49c60993"
+    },
+    {
+      "path": "parent_pc_local/show_bluetooth_handshake.ps1",
+      "sha256": "4b69513fb214501a60eab8a735c368a054ec11658c32c1e4b331b4874534c350"
+    },
+    {
+      "path": "parent_pc_local/speech_hotfix_checks.py",
+      "sha256": "4bd8a01ee4c184d74b6ffd68625cbee172bde6a9cf27754c87b3f20b23fc782c"
+    },
+    {
+      "path": "parent_pc_local/start_direct_recording.bat",
+      "sha256": "bf517266194b2e39343e41fcd1781f8940eecbddc1c36312b64becc7cf9e78eb"
+    },
+    {
+      "path": "parent_pc_local/start_existing_environment.bat",
+      "sha256": "294b5e8d609cd375d64d2f9785b831fdbd2b195a86a23f977711c4cf327f157a"
+    },
+    {
+      "path": "parent_pc_local/start_parent_pc_full_station.bat",
+      "sha256": "c523e6bb841b6719d6f31d6aa140551145a9accd2cca5622790350071492104b"
+    },
+    {
+      "path": "parent_pc_local/start_parent_pc_server.py",
+      "sha256": "4a5cb315d55c3f361d2a7d0441af376866c1ca0a06d299adb6850c92ca3cf808"
+    },
+    {
+      "path": "parent_pc_local/start_parent_pc_with_bluetooth.bat",
+      "sha256": "cfc7955a33edfb828e93cbd417fbd8008fe8ffb8f5a8e7966609855747141cfd"
+    },
+    {
+      "path": "parent_pc_local/student_recording_library.py",
+      "sha256": "dffe433f9576ba8ebb27ffb7dc26b1c83a12b6476c4224dcc2f697c13af1ea43"
+    },
+    {
+      "path": "parent_pc_local/upload_retry_check.py",
+      "sha256": "5879d23679cf7ce64cf91e2f8d0133c63174d4bc071671bfaed4ae4d125eba36"
+    },
+    {
+      "path": "phase3_consistency_ui_smoke.py",
+      "sha256": "665c2d6092f9057354cfe43c44cb518f4cd97ab3d31caac332f70c21bb459964"
+    },
+    {
+      "path": "phase3_consonant_regression.py",
+      "sha256": "423deab3e8e795e217b5fb78b176b5eeee44450c2daa59d6342e958300e5aae6"
+    },
+    {
+      "path": "prepare_github_update.py",
+      "sha256": "179d03cd694e3bf6b662b804c0fed7c807ba057deaa830a472df1b817dc9f919"
+    },
+    {
+      "path": "server/README.md",
+      "sha256": "1d1f55f24254ec0c683216ea44aefc085b3311f6ae44a23807645d1b4a5db4b3"
+    },
+    {
+      "path": "server/analysis_engine.py",
+      "sha256": "6bbe181aa9d7cbb512155579867a6cede49844d85da3f627a1a30a38ca69b3e5"
+    },
+    {
+      "path": "server/analysis_jobs.py",
+      "sha256": "ceb3e1657395924a2b0e8bdb5af013d735845a0343fc38600e33a867bc545b6b"
+    },
+    {
+      "path": "server/android_recording_storage.py",
+      "sha256": "bf40845416027df4b181cf4b5a25858d01014bc3efc8cf942232eece06ec6f07"
+    },
+    {
+      "path": "server/candidate_word_engine.py",
+      "sha256": "fdfaa60e15cc9685dfa7287cbefe3c6a315a34d44ea1174b4458dd724bb6cc72"
+    },
+    {
+      "path": "server/ctc_segmentation.py",
+      "sha256": "bb7ec8add6aa36da29508d394ee9f069e7b19d6755b996bc189a2da27f849573"
+    },
+    {
+      "path": "server/homophone_engine.py",
+      "sha256": "3bc364bf2f0b14742559c37d749b0407e7e375f1a20e85e084bc37e39fa18b73"
+    },
+    {
+      "path": "server/layer_health.py",
+      "sha256": "3f3055ba87afeff658abd62db4c89660859cf6ef008d90b8e020591878dcd990"
+    },
+    {
+      "path": "server/learning_contracts.py",
+      "sha256": "d23933cb0204f55783b386c33041f8aadfd440be2b9e95d26deeaafde0f8edfd"
+    },
+    {
+      "path": "server/learning_engine.py",
+      "sha256": "f0e87314438dcacb1a1660d57490f4116cf0ac16514130d0ba041c21da91c7d5"
+    },
+    {
+      "path": "server/learning_store.py",
+      "sha256": "d58986a58c1502c5a6a180ebf48b591a5e295685730133ad47f4e05f289d288d"
+    },
+    {
+      "path": "server/main.py",
+      "sha256": "5a52c35c8c6f5d59813fb8d7c7d477b95aab7825d399df17d6cafe02d03d9704"
+    },
+    {
+      "path": "server/number_review.py",
+      "sha256": "ce6300878c6f0b1b9618e22a70e11c59f7a68826d05e2dcad93d49b3690d4f25"
+    },
+    {
+      "path": "server/phoneme_analysis.py",
+      "sha256": "c245e58087c606eb5d22ea89c58aa875acdbfe8dbe1b609ce8ed10249ef33cdb"
+    },
+    {
+      "path": "server/phoneme_substitution.py",
+      "sha256": "b24d4709d26db223baedee60fd0dd4ea304d5a92a238e532b38b56b4681e4369"
+    },
+    {
+      "path": "server/phoneme_timing_review.py",
+      "sha256": "e693d54823607c9ae9df9512f6c35d3748c05a47455fa153696a75885d6c3376"
+    },
+    {
+      "path": "server/recognition_diagnostics.py",
+      "sha256": "62c9f88bc679e3ee8bfe4c7995d0333e6a3b0a48df5ab1c14fe28a4fd10dbc97"
+    },
+    {
+      "path": "server/recognizer_agreement.py",
+      "sha256": "6d4eb22b894bbb40c11acf11820c20e2be6fc261c1c2b4d0b2156540e978629a"
+    },
+    {
+      "path": "server/recognizer_disagreement_review.py",
+      "sha256": "3dc1c6d77b3d24056d3edb34cdca12d3c1f0d2ba4f94a1fd18fea2df530678ed"
+    },
+    {
+      "path": "server/recording_quality.py",
+      "sha256": "46ecc7b151bd84e11c00a6ea14c46aeaae1f3206f6b622ae63f8dd5b655c4021"
+    },
+    {
+      "path": "server/reference_audio.py",
+      "sha256": "1aa5cd6b42193f155c351623badda0c262e6780f98f1a5f9f3eccba81c8b6f49"
+    },
+    {
+      "path": "server/reference_phoneme_alignment.py",
+      "sha256": "ab237799bba609a1e1878d5c9c62b2f532cf2fc6342803e329bb3cef9f5e5aa4"
+    },
+    {
+      "path": "server/repair_pipeline.py",
+      "sha256": "8e2c042bbd53ae8ea3310aad9b2d5294bde30deeea8c1e6858fb4c6309274135"
+    },
+    {
+      "path": "server/requirements-word-asr.txt",
+      "sha256": "122813978241d15f77d3fe051e4c320d6daaa9b8e9363deb7014cfd03f2f5157"
+    },
+    {
+      "path": "server/requirements.txt",
+      "sha256": "15f2ee7e8e43f801178d112270c02ec44756555fefe564fd5a7dbca380415a65"
+    },
+    {
+      "path": "server/review_vocabulary.py",
+      "sha256": "a9e2a750016cf09a9640fd2018da59d4a09f7f5da1f34067fd1888defcb0c252"
+    },
+    {
+      "path": "server/segment_interpretation.py",
+      "sha256": "736d1d4571319084e897dcd91f4835edf977c1a357e3792763f4c2d0180b3294"
+    },
+    {
+      "path": "server/silero_activity.py",
+      "sha256": "d6e2b1bec631125778842aec712b3b13d3a98500ac87b3b4818c7353972f12cd"
+    },
+    {
+      "path": "server/speech_activity_candidate_review.py",
+      "sha256": "705eabbdde8613def19df7f79b98e6d0fef7933458e5ae2b5d064ee8dd4f8a19"
+    },
+    {
+      "path": "server/speech_activity_review.py",
+      "sha256": "70237bfe363a0bd2e272eafa11e94b5e0134294ada821dc0ec0370b28de255be"
+    },
+    {
+      "path": "server/speech_window_quality_review.py",
+      "sha256": "8e5ac25a9e8af52f091b1ee9c459dca0aee2aaade11613b9a8af79ca9aff11ff"
+    },
+    {
+      "path": "server/temporal_prosody.py",
+      "sha256": "cd5c91de6ece8ecb805ad4adad941ab100ebb8b22af5ff283cd037ddcd2f0d8e"
+    },
+    {
+      "path": "server/tests/test_branch2_recognition_repairs.py",
+      "sha256": "a8186139b72bfbc3e9d2fabb4af8b58676c3f32929470c1127bce222fc603e91"
+    },
+    {
+      "path": "server/tests/test_build_0412_reanalysis_route.py",
+      "sha256": "8a57f5551efde28b652482bb577872c3c8c19e4589642cafee1baf0a98f0ce30"
+    },
+    {
+      "path": "server/tests/test_build_0413_android_retry.py",
+      "sha256": "2955802d881c0e69a6aff9f6d9f5597b50f1a72a5c583ede72ea6cdd79e3a9e2"
+    },
+    {
+      "path": "server/tests/test_build_0415_integrity.py",
+      "sha256": "29700266088dd12daceef056862f6d775159a4e193e47f23dbbf11e72feac182"
+    },
+    {
+      "path": "server/tests/test_build_0416_speech_review.py",
+      "sha256": "da210ac5f96f88f0b862973a6c995bf5a871e3dae218712c5af3b022bead1ba0"
+    },
+    {
+      "path": "server/tests/test_capture_identity_hotfix.py",
+      "sha256": "20a195159e7e1b6613bff883ea4e6f04c3136b9aef3d792d7417a332216eb83b"
+    },
+    {
+      "path": "server/tests/test_ctc_segmentation_hotfix.py",
+      "sha256": "ce9157273131fe4843276faa6541bee09bad8e1de7798ede6250c4d9ad184192"
+    },
+    {
+      "path": "server/tests/test_ctc_tokenizer_decoding.py",
+      "sha256": "95e51efbdc8779b16f029fcc3e0df3834754f9718643ae39c3acf6db393fa52c"
+    },
+    {
+      "path": "server/tests/test_four_repairs.py",
+      "sha256": "81cdb860952a62234d765a6b525611b4158ebd4b419dffd1d056285460a80ea8"
+    },
+    {
+      "path": "server/tests/test_grouped_phoneme_alignment_hotfix.py",
+      "sha256": "2a3364862321d3e9fe994bd8fe391195f3524cc04f01fa7e6e7e03b1855e4af2"
+    },
+    {
+      "path": "server/tests/test_homophone_engine.py",
+      "sha256": "2906389f264852e4435ece3a9816eb4139262ee86ff9cbba700bcbbed50a1b13"
+    },
+    {
+      "path": "server/tests/test_layer_repair.py",
+      "sha256": "237a139fb655939f08760047492048237ab31c68dac885ed234f2db41d8e1278"
+    },
+    {
+      "path": "server/tests/test_legacy_alias_corroboration_hotfix.py",
+      "sha256": "8f89e8028af18873ae7db9d95a526261598d8e87ea127ad533feca27e436110c"
+    },
+    {
+      "path": "server/tests/test_legacy_alias_frozen_checks.py",
+      "sha256": "af859d62d5ae056dba9d5703e350bb24448872517699e02721b3b2795938a604"
+    },
+    {
+      "path": "server/tests/test_legacy_reanalysis_identity.py",
+      "sha256": "5aaa13a70db78553bcb463021200428ffd7facb3e87fdf7f2149e40442cccb50"
+    },
+    {
+      "path": "server/tests/test_phase1_source_regression.py",
+      "sha256": "22095f1aceb1494b9c38564adbeada91dcda1715cdd5582df865d24133d5e17b"
+    },
+    {
+      "path": "server/tests/test_phase2_boundary_guard.py",
+      "sha256": "210cf9f2d6c4d4bce02f4c2517f77387d8f453703c58f27c31fd15d2ed8b35ec"
+    },
+    {
+      "path": "server/tests/test_phase2_coldstart_jobs.py",
+      "sha256": "d9879373634a2d4216c3ba57482027926d6d4ed7779f0a3455f1d7b7ee80f1eb"
+    },
+    {
+      "path": "server/tests/test_phase2_reanalysis_job_guard.py",
+      "sha256": "521171a6fe1fdc0506ca333ddca5f0ea0e9d16408a64286293e6b066d268aea9"
+    },
+    {
+      "path": "server/tests/test_phase3_analysis_feedback_consistency.py",
+      "sha256": "e3cfd74d0e6f44c9b016a73038974e2386bfa2acf6c1e7db768a561c02440041"
+    },
+    {
+      "path": "server/tests/test_phase3_android_capture_durability_hotfix.py",
+      "sha256": "c2a05c6f7edf01a4da85444f3b99bbcfd36e3ead9c67a2808889a347f6ea3da0"
+    },
+    {
+      "path": "server/tests/test_phase3_android_child_name_upload.py",
+      "sha256": "5d7fa760c1005b35ec74455c120c596552137c43d814e79bb5758c5f905016ff"
+    },
+    {
+      "path": "server/tests/test_phase3_android_idempotent_storage.py",
+      "sha256": "d0f026d25c39f6ce69373e38882d2b9e285eb4a8a2ef20fa425b0fd0abb77f72"
+    },
+    {
+      "path": "server/tests/test_phase3_api_diagnostics_hotfix.py",
+      "sha256": "16fae6e2d0cdd1fbe434012f8fee016e4e3cb34c18aa019cc87f65b2d33dddfd"
+    },
+    {
+      "path": "server/tests/test_phase3_background_phoneme_integrity_hotfix.py",
+      "sha256": "d3b7f15002a721671c2b574cc7c7aff74e8fd095d1d6093b7fa892a96822d15c"
+    },
+    {
+      "path": "server/tests/test_phase3_caregiver_approval_integrity_hotfix.py",
+      "sha256": "e7118c7074fed0aa84f1fa109a2f22f090e0b6f3d0de556298ed57c99bf2e574"
+    },
+    {
+      "path": "server/tests/test_phase3_caregiver_review_hotfix.py",
+      "sha256": "eb26eaad8b536b7c7a110632265049cd8ed8388b73924f9baabd269c1d30cac2"
+    },
+    {
+      "path": "server/tests/test_phase3_evidence_integrity_hotfix.py",
+      "sha256": "637f23762dcd27e7daad21c3b401f00418a0be68a8e08ee183f70485710f8ec0"
+    },
+    {
+      "path": "server/tests/test_phase3_feedback_rollback_reliability_hotfix.py",
+      "sha256": "bf78316bb3549c9d82eae70f9902ffc0551d9b51ffe56922e94e73d8fe185353"
+    },
+    {
+      "path": "server/tests/test_phase3_frozen_server_startup_contract.py",
+      "sha256": "8519257922fdf9ee61b3cb6972c6453a8de5238830fd4b7cdf18846d101c0e6d"
+    },
+    {
+      "path": "server/tests/test_phase3_full_runtime_dependency_preflight.py",
+      "sha256": "6568f9cbfa656817e4ee2c096ef8b53881a303adbd75e47f8a09497079fb6678"
+    },
+    {
+      "path": "server/tests/test_phase3_layer1_noise_distortion_hotfix.py",
+      "sha256": "2cdd3f71465d0310db87f927743f97aa9ea77c6e981d619543eaef5bfe263556"
+    },
+    {
+      "path": "server/tests/test_phase3_layer23_boundary_phoneme_reliability_hotfix.py",
+      "sha256": "b26a97bf9d406465eec079a875b392e771a1bc58032587e2634d1925729613a8"
+    },
+    {
+      "path": "server/tests/test_phase3_layer2_activity_tail_evidence_hotfix.py",
+      "sha256": "bc9211b4fec5772ba0cffdfcb777fa3fa10e5e2820af022650112b86ebc6f9f1"
+    },
+    {
+      "path": "server/tests/test_phase3_layer2_background_vocal_attribution_hotfix.py",
+      "sha256": "cf608a5197eda669c78e923e9ffb0bc7ad5d41f9613ab8768c424b8285edcd0c"
+    },
+    {
+      "path": "server/tests/test_phase3_layer2_frozen_build_guard_hotfix.py",
+      "sha256": "06729204a987a3f59928d37b7e7793c13020cd9974e6b1bf2ead2266c2864b89"
+    },
+    {
+      "path": "server/tests/test_phase3_layer2_late_activity_uncertainty_hotfix.py",
+      "sha256": "cb8c64880943dcef1add1f1a488202f7c9b1c684f425e49653f826f030e80f46"
+    },
+    {
+      "path": "server/tests/test_phase3_layer2_speech_ambient_review_hotfix.py",
+      "sha256": "a4bc97418a29c7c806e5ecd250f1879a97b3d87631d4614bc8f0ff99cb3e1392"
+    },
+    {
+      "path": "server/tests/test_phase3_layers123_evidence_quality_hotfix.py",
+      "sha256": "9e52013321daeb5de920a5261b0db66b15e15720bcc0dab85a12ea24538dc646"
+    },
+    {
+      "path": "server/tests/test_phase3_learning_ledger.py",
+      "sha256": "0fa6f14639d2a176e871750f6ebe15ee18771ab0fbec507697f28a08999b45d6"
+    },
+    {
+      "path": "server/tests/test_phase3_learning_ledger_no_resurrection_hotfix.py",
+      "sha256": "1e51b2e34f260a1b20be4d8ca8cedfec6d61d1232326bf10f3a20474caf63501"
+    },
+    {
+      "path": "server/tests/test_phase3_parent_pc_history_entry_reference_search.py",
+      "sha256": "878ab41fe8fec79a06a8c1d22f031dc47d4d36bb7b0b66c097d19b4659c3683b"
+    },
+    {
+      "path": "server/tests/test_phase3_parent_pc_reanalysis_storage.py",
+      "sha256": "215b9b0fc12d523fb04e686231e9dc76bd85d8ab37a2242d7e7cb2cec3b2a02c"
+    },
+    {
+      "path": "server/tests/test_phase3_parent_pc_source_review_hotfix.py",
+      "sha256": "b0e3de007910983190de80ca9026553d291a9ae78126f6566f87c7dea87095f9"
+    },
+    {
+      "path": "server/tests/test_phase3_phoneme_disagreement_20261026.py",
+      "sha256": "1aef186c57a3110eb24fb3c43b3cd934b0ea8dd45d997df1846cea04d8a2ee8e"
+    },
+    {
+      "path": "server/tests/test_phase3_quickstart_gateway.py",
+      "sha256": "b6b4eb755965a53f31e60e61542d6e8315f8ec5a80ef09286daf2754c414d0a2"
+    },
+    {
+      "path": "server/tests/test_phase3_reanalysis_duplicate_write_barrier.py",
+      "sha256": "b3562f5eab947460b768b0e537d1541674d996359374227b3daf3e8cf1ffc897"
+    },
+    {
+      "path": "server/tests/test_phase3_recording_history_safety.py",
+      "sha256": "8ffdb3150617e3a13c7d60d993bc17cfdc21d2df42f73ed71ddc956d65874c2b"
+    },
+    {
+      "path": "server/tests/test_phase3_recording_history_search_sort_actions.py",
+      "sha256": "5f3b83c606abc93229f2d8eec158e2b464f131c46da99bba46264471ba731f8f"
+    },
+    {
+      "path": "server/tests/test_phase3_recording_title_tags_hotfix.py",
+      "sha256": "d09e17b40fdf4a2a3b307ad95bbb0e353ceea86c1630f77b4a69ddd743928270"
+    },
+    {
+      "path": "server/tests/test_phase3_silero_vad_layer2_hotfix.py",
+      "sha256": "8608c6d30eb958c9d20df5d3e7533390f73473ce21fb8994f2a4020c3d103bc5"
+    },
+    {
+      "path": "server/tests/test_phase3_student_library_android_wording.py",
+      "sha256": "db94218f93790d59667fcc3d73284b891ede06f12e81d65cd1a995ce063b8058"
+    },
+    {
+      "path": "server/tests/test_phase3_windows_requests_build_recovery.py",
+      "sha256": "a553539516dd877d5d5caf28b7a908d3d83a73228bb9430c597c7e33185d7b28"
+    },
+    {
+      "path": "server/tests/test_phase3_word_asr_silero_window_quality_hotfix.py",
+      "sha256": "7bac94f2d55fe9105e6b429efc063e4456c35dd2a30efc6993c50205ed8569fb"
+    },
+    {
+      "path": "server/tests/test_phase3_word_phoneme_alignment_safety.py",
+      "sha256": "97f782f950408b28be0c609b8f2ab9cb0d315d62b1a5c0c5c5ef1576b9f44988"
+    },
+    {
+      "path": "server/tests/test_phase3_word_timestamp_boundary_repair.py",
+      "sha256": "870a67cafa9594ae2dec5958e1bc35c0e423f4f1dde03cfd42516e8210605a7f"
+    },
+    {
+      "path": "server/tests/test_phoneme_alignment_client_hotfix.py",
+      "sha256": "5ca15a29871be79b044562fa0b7314cb670b5a296471c26492ca6f4b74b46e13"
+    },
+    {
+      "path": "server/tests/test_reference_phoneme_alignment_hotfix.py",
+      "sha256": "7025214f7d1f0ce3aaf63a31263284086690db51dec37c1a3ec278fd3a7210f7"
+    },
+    {
+      "path": "server/tests/test_segment_interpretation.py",
+      "sha256": "cf688cd76d6841f5c5141e65bf28c38c9521f61e20adebdb3438c326514b6cdf"
+    },
+    {
+      "path": "server/utterance_prosody_review.py",
+      "sha256": "c65e5a4c5232ebfc59812b09889440f7be6dda96b94b833c5c61694bc4669228"
+    },
+    {
+      "path": "server/word_asr.py",
+      "sha256": "50930eb53be59dfd5e116fbf75b0d31aa6d78daa74629a1f0ed49592985f097f"
+    },
+    {
+      "path": "server/word_asr_activity_review.py",
+      "sha256": "2b18667e3ed101e5fbe7f10eef96efce5679309911711b04282824ae18bbb05e"
+    },
+    {
+      "path": "server/word_phoneme_alignment_review.py",
+      "sha256": "48bfd37d173707f46fa2f2a99b2c8b8e79f59b549849341e60ca70db5e3656da"
+    },
+    {
+      "path": "settings.gradle",
+      "sha256": "02072ff34aad2a71c38391ec4e2ff9edd24b9d9887c87ebf3769465359d54786"
+    },
+    {
+      "path": "shared/analysis-response.json",
+      "sha256": "d98e6855fd60965a7ef606aa7caec11491ceb110930a5ba990d303f22045c36a"
+    },
+    {
+      "path": "test_phase3_consonant_regression.py",
+      "sha256": "87d204c29bbbdf46d5baf02f211d4c525f46d6487b858866986f3f40c467919b"
+    },
+    {
+      "path": "test_results_0.4.10.txt",
+      "sha256": "18120b5a0d27c154949f04c30023fbe7d1777f26542712924e6b7a540f243ddb"
+    }
+  ]
+}

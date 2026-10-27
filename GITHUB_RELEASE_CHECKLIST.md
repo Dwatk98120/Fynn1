@@ -1,3 +1,11 @@
+# Hearlium 0.4.19 handoff status
+
+Current target is `hearlium-parent-pc-integration`; leave Main untouched.
+Source: 463 passed, 3 skipped. Matching source/frozen packaging checks passed.
+Installed-device checks and remote GitHub/Android builds remain pending.
+The wrapper scripts/properties are present; the wrapper JAR is absent and current
+workflows regenerate it. Read GITHUB_UPDATE_INSTRUCTIONS.md before using this list.
+
 # GitHub Release Checklist
 
 ## Repository

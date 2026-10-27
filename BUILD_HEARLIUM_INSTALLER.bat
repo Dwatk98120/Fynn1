@@ -10,7 +10,11 @@ echo.
 REM ------------------------------------------------------------
 REM 1. Verify Python 3.12
 REM ------------------------------------------------------------
-py -3.12 --version >nul 2>&1
+REM Optional explicit full Python installation when the launcher is unavailable.
+if not defined HEARLIUM_BASE_PYTHON set "HEARLIUM_BASE_PYTHON=py"
+set "HEARLIUM_BASE_ARGS="
+if /I "%HEARLIUM_BASE_PYTHON%"=="py" set "HEARLIUM_BASE_ARGS=-3.12"
+"%HEARLIUM_BASE_PYTHON%" %HEARLIUM_BASE_ARGS% --version >nul 2>&1
 if errorlevel 1 (
   echo ERROR: Python 3.12 was not found.
   echo Install Python 3.12, then run this file again.
@@ -54,7 +58,7 @@ if exist ".installer_venv" (
 )
 
 echo Creating clean Python 3.12 environment...
-py -3.12 -m venv .installer_venv
+"%HEARLIUM_BASE_PYTHON%" %HEARLIUM_BASE_ARGS% -m venv .installer_venv
 if errorlevel 1 (
   echo ERROR: Could not create .installer_venv
   pause
@@ -70,6 +74,8 @@ if not exist "%HEARLIUM_TEST_PYTHON%" (
   goto :pipfail
 )
 echo Installer Python: "%HEARLIUM_TEST_PYTHON%"
+"%HEARLIUM_TEST_PYTHON%" -c "import tkinter, _tkinter; r=tkinter.Tk(); r.withdraw(); r.destroy()"
+if errorlevel 1 goto :depfail
 
 REM ------------------------------------------------------------
 REM 3. Initialize pip without forcing a risky global upgrade
@@ -112,6 +118,8 @@ call :install "SoundFile" "soundfile==0.13.1"
 if errorlevel 1 exit /b 1
 
 call :install "SoundDevice" "sounddevice==0.5.2"
+if errorlevel 1 exit /b 1
+call :install "PocketSphinx offline reference alignment" "pocketsphinx==5.0.4"
 if errorlevel 1 exit /b 1
 
 call :install "Requests" "requests==2.32.3"
@@ -208,17 +216,33 @@ REM disposable installer virtual environment; fail if any remains unavailable.
 echo Auditing all pinned speech/audio/build Python dependencies...
 "%HEARLIUM_TEST_PYTHON%" "installer\ensure_build_dependencies.py" --repair
 if errorlevel 1 goto :depfail
+REM The full GUI smoke check also imports recording/audio dependencies.
+REM Run it after dependency installation; the bare Tk prerequisite was checked
+REM immediately after creating the environment.
+"%HEARLIUM_TEST_PYTHON%" "installer\verify_tk_build.py"
+if errorlevel 1 goto :depfail
+"%HEARLIUM_TEST_PYTHON%" "installer\verify_phoneme_build.py"
+if errorlevel 1 goto :depfail
+"%HEARLIUM_TEST_PYTHON%" "installer\verify_legacy_alias_build.py"
+if errorlevel 1 goto :depfail
 echo Checking isolated Python dependency consistency before tests...
 "%HEARLIUM_TEST_PYTHON%" -m pip check
 if errorlevel 1 goto :depfail
 echo Running full Phase 2 + Phase 3 + startup reliability regression suite...
+REM Keep regression reports away from installed caregiver data.
+set "HEARLIUM_SAVED_LOCALAPPDATA=%LOCALAPPDATA%"
+set "LOCALAPPDATA=%CD%\reports\installer_test_appdata"
 "%HEARLIUM_TEST_PYTHON%" -m pytest -q server\tests
 if errorlevel 1 (
   echo ERROR: Full regression suite failed. No installer will be created.
   pause
   exit /b 1
 )
+set "LOCALAPPDATA=%HEARLIUM_SAVED_LOCALAPPDATA%"
 echo Regression suite passed.
+echo Checking isolated Android retry and identity-conflict storage behavior...
+"%HEARLIUM_TEST_PYTHON%" -c "import sys; sys.path.insert(0, 'parent_pc_local'); from upload_retry_check import run_check; print(run_check())"
+if errorlevel 1 exit /b 1
 
 echo Checking dependency consistency...
 "%HEARLIUM_TEST_PYTHON%" -m pip check
@@ -347,6 +371,12 @@ REM 7a. Verify frozen executable imports before packaging.
 REM ------------------------------------------------------------
 echo.
 echo Checking frozen application imports...
+"%HEARLIUM_TEST_PYTHON%" "installer\verify_frozen_gui.py"
+if errorlevel 1 goto :depfail
+"%HEARLIUM_TEST_PYTHON%" "installer\verify_phoneme_build.py" --frozen
+if errorlevel 1 goto :depfail
+"%HEARLIUM_TEST_PYTHON%" "installer\verify_legacy_alias_build.py" --frozen
+if errorlevel 1 goto :depfail
 "dist\HearliumParentPC\HearliumParentPC.exe" --self-test
 if errorlevel 1 (
   echo ERROR: Frozen application import check failed.
@@ -365,7 +395,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-py -3.12 "installer\verify_layer2_build.py" stamp
+"%HEARLIUM_TEST_PYTHON%" "installer\verify_layer2_build.py" stamp
 if errorlevel 1 (
   echo ERROR: Could not stamp verified executable and source.
   pause

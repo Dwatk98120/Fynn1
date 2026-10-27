@@ -147,3 +147,54 @@ student speaker-ID/kind filtering, no stale results from older searches, and
 clear guidance for empty reference libraries versus saved recordings.
 Android APK workflow recovery directions are in WORKFLOWS_FIX_README.md.
 Inno remains 0.4.8, Android remains 3.3.3/code9; Main remains frozen.
+
+Branch 2 File Integrity Reanalysis Guard, 2026-10-26. Inno version 0.4.9.
+Shows build ID in Parent PC UI; separate reanalysis job fingerprint and session;
+require explicit server acknowledgement of original WAV reuse. Existing WAVs unchanged.
+Main frozen; Android unchanged. Real Windows integration validation required.
+
+Branch 2 File Integrity Duplicate WAV Write Barrier, 2026-10-26.
+Windows Inno Setup 0.4.11. Blocks a second original WAV for an existing
+recording ID if reanalysis intent is missing; explicit reanalysis preserves
+original evidence and exports versioned results. Windows installed validation
+required. Main frozen; Android unchanged.
+
+Build 0.4.12 — Branch 2 Reanalysis Workflow Repair — 2026-10-27.
+Dedicated reanalysis jobs endpoint forces explicit reanalysis; preserves duplicate
+WAV write barrier and adds version display on the main Parent PC launcher.
+
+Build 0.4.13 — Branch 2 Android Retry Storage Repair — 2026-10-27.
+Existing Android recording ID and matching speaker, audio SHA-256 and source
+reuse verified WAV across sessions; versioned analysis results, no new WAV.
+Conflicts fail closed. Main frozen. Live Windows validation required.
+
+Build 0.4.14 - Saved Recording Reanalysis Repair.
+PC analysis of saved recordings uses protected reanalysis.
+Windows validation pending.
+
+Build 0.4.15 - Reanalysis WAV Integrity Check - 2026-10-27.
+Read-only WAV snapshots around protected reanalysis; separate JSON reports.
+Blocks returned analysis review on changed/missing/added WAVs or check errors.
+Full server suite: 337 passed, 3 skipped. Installed validation pending.
+
+Build 0.4.16 - Speech Review and Retry Validation - 2026-10-27.
+Full-peak/gap-aware prosody, English rhotic comparison, expanded sentence/1-50
+vocabulary and references, reduced function-word variants, timing/repetition
+review and omission-scope explanation. Raw evidence preserved. Added isolated
+Android retry storage verification command and launcher control. Full server
+suite: 347 passed, 3 skipped. Actual installed-device acceptance remains pending.
+
+Build 0.4.17 - Legacy Checksum Reanalysis Repair - 2026-10-27.
+Verified PC nested checksum compatibility; every same-ID original checked.
+Original WAVs, metadata and historical results preserved. Android unchanged.
+
+Build 0.4.18 - Phoneme Timing and Capture Repair - 2026-10-27.
+Per-token CTC timing/confidence, review-only boundary alternatives and grouped
+alignment, want vocabulary, offline confirmed-reference PocketSphinx timing,
+and new capture identity before first analysis. Tk gates retained. Android unchanged.
+Original audio/metadata/history preserved; see BUILD_0.4.18_README.txt.
+
+Build 0.4.19 - Legacy Recording Alias Repair - 2026-10-27.
+Corroborated source-absent legacy aliases with separate verified receipts; all
+same-ID conflicts still fail. Source suite: 463 passed, 3 skipped. Original data unchanged.
+GitHub source handoff: 0.4.19; see BUILD_0.4.19_README.txt.

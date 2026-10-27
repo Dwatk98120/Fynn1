@@ -1,0 +1,32 @@
+Baseline: preserved source-only 0.4.15 handoff in this workspace.
+Compared by file bytes; this is not a diff against the remote branch.
+Baseline package-only README/.gitignore differences are expected.
+No remote deletions are inferred.
+
+Changed: .gitignore
+Changed: BACKLOG_REVIEW_20261027.md
+Added: BUILD_0.4.16_README.txt
+Changed: BUILD_HEARLIUM_INSTALLER.bat
+Changed: BUILD_VERSION.txt
+Changed: README.md
+Changed: ROOT_UPLOAD_CHECK.txt
+Changed: installer/Hearlium.iss
+Changed: installer/verify_layer2_build.py
+Changed: parent_pc_local/direct_recording.py
+Changed: parent_pc_local/hearlium_launcher.py
+Changed: parent_pc_local/hearlium_parent_pc_gui.py
+Changed: parent_pc_local/reanalysis_integrity.py
+Changed: parent_pc_local/reference_audio_gui.py
+Added: parent_pc_local/speech_hotfix_checks.py
+Added: parent_pc_local/upload_retry_check.py
+Changed: server/candidate_word_engine.py
+Changed: server/main.py
+Changed: server/phoneme_substitution.py
+Added: server/recognition_diagnostics.py
+Changed: server/reference_audio.py
+Added: server/review_vocabulary.py
+Changed: server/temporal_prosody.py
+Changed: server/utterance_prosody_review.py
+Changed: server/word_asr.py
+Changed: server/tests/test_build_0412_reanalysis_route.py
+Added: server/tests/test_build_0416_speech_review.py

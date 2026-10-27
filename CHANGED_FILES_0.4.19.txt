@@ -1,0 +1,68 @@
+HEARLIUM 0.4.19 CUMULATIVE SOURCE CHANGES
+Comparison baseline: preserved 0.4.17 Tk-repair source-only handoff.
+Includes 0.4.18 phoneme/capture and 0.4.19 protected legacy-alias reanalysis repair.
+Keep unrelated local work, environments, credentials and runtime data unchanged.
+Superseded release verification metadata can be archived; do not mirror-delete.
+
+ADDED
+BUILD_0.4.18_README.txt
+BUILD_0.4.19_README.txt
+CHANGED_FILES_0.4.19.txt
+SOURCE_RELEASE_0.4.19_VERIFICATION.json
+TEST_RESULTS_0.4.19.md
+THIRD_PARTY_NOTICES_CMUDICT.txt
+THIRD_PARTY_NOTICES_POCKETSPHINX.md
+installer/finish_0418_build.py
+installer/finish_0419_build.py
+installer/validate_0418_recording.py
+installer/verify_0418_archive.py
+installer/verify_0419_archive.py
+installer/verify_legacy_alias_build.py
+installer/verify_phoneme_build.py
+parent_pc_local/capture_identity.py
+parent_pc_local/legacy_alias_checks.py
+parent_pc_local/phoneme_alignment_client.py
+parent_pc_local/phoneme_hotfix_checks.py
+server/ctc_segmentation.py
+server/reference_phoneme_alignment.py
+server/tests/test_capture_identity_hotfix.py
+server/tests/test_ctc_segmentation_hotfix.py
+server/tests/test_grouped_phoneme_alignment_hotfix.py
+server/tests/test_legacy_alias_corroboration_hotfix.py
+server/tests/test_legacy_alias_frozen_checks.py
+server/tests/test_phoneme_alignment_client_hotfix.py
+server/tests/test_reference_phoneme_alignment_hotfix.py
+
+CHANGED
+.gitignore
+BACKLOG_REVIEW_20261027.md
+BUILD_HEARLIUM_INSTALLER.bat
+BUILD_VERSION.txt
+GITHUB_RELEASE_CHECKLIST.md
+GITHUB_UPDATE_INSTRUCTIONS.md
+HearliumParentPC.spec
+README.md
+README_BUILD_THIS_INSTALLER.txt
+REPOSITORY_STATUS.md
+ROOT_UPLOAD_CHECK.txt
+WINDOWS_INSTALLER_README.txt
+gradle/wrapper/gradle-wrapper.properties
+gradlew
+gradlew.bat
+installer/Hearlium.iss
+installer/ensure_build_dependencies.py
+installer/resolved-dependencies.txt
+installer/verify_layer2_build.py
+parent_pc_local/direct_recording.py
+parent_pc_local/gui_smoke_check.py
+parent_pc_local/hearlium_launcher.py
+parent_pc_local/hearlium_parent_pc_gui.py
+server/android_recording_storage.py
+server/main.py
+server/requirements.txt
+server/review_vocabulary.py
+server/tests/test_build_0412_reanalysis_route.py
+server/word_phoneme_alignment_review.py
+
+SUPERSEDED MANAGED METADATA
+SOURCE_RELEASE_0.4.17_VERIFICATION.json

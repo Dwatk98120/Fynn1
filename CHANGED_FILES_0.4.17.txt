@@ -1,0 +1,38 @@
+HEARLIUM 0.4.17 TK REPAIR SOURCE CHANGES
+Comparison baseline: preserved 0.4.16 source-only handoff.
+No deletion list; preserve unrelated files and local work.
+The newer 0.4.18 hotfix is excluded.
+
+ADDED
+BUILD_0.4.17_README.txt
+installer/finish_0417_build.ps1
+installer/finish_tk_repair.ps1
+installer/verify_0417_archive.py
+installer/verify_frozen_gui.py
+installer/verify_tk_build.py
+parent_pc_local/gui_smoke_check.py
+server/tests/test_legacy_reanalysis_identity.py
+SOURCE_RELEASE_0.4.17_VERIFICATION.json
+TEST_RESULTS_0.4.17.md
+WINDOWS_TK_REPAIR_0.4.17.md
+
+CHANGED
+BUILD_HEARLIUM_INSTALLER.bat
+BUILD_VERSION.txt
+COMPILE_INSTALLER_ONLY.bat
+GITHUB_UPDATE_INSTRUCTIONS.md
+HearliumParentPC.spec
+installer/Hearlium.iss
+installer/resolved-dependencies.txt
+installer/verify_layer2_build.py
+parent_pc_local/direct_recording.py
+parent_pc_local/hearlium_launcher.py
+parent_pc_local/hearlium_parent_pc_gui.py
+parent_pc_local/reanalysis_integrity.py
+parent_pc_local/upload_retry_check.py
+README.md
+README_BUILD_THIS_INSTALLER.txt
+REPOSITORY_STATUS.md
+server/android_recording_storage.py
+server/tests/test_build_0412_reanalysis_route.py
+server/tests/test_phase3_layer2_frozen_build_guard_hotfix.py

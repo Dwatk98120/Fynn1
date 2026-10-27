@@ -27,7 +27,7 @@ REM Never silently package an earlier Phase 3 EXE with this hotfix's Inno
 REM script. The full builder tests the frozen Layer 2 algorithm and records
 REM exact source/EXE hashes. A short-path retry may reuse only that build.
 echo Verifying frozen Layer 2 executable matches the tested source...
-py -3.12 "installer\verify_layer2_build.py" verify
+".installer_venv\Scripts\python.exe" "installer\verify_layer2_build.py" verify
 if errorlevel 1 (
   echo ERROR: Old or unverified executable. No installer will be created.
   echo Please run BUILD_HEARLIUM_INSTALLER.bat to rebuild Layer 2.
