@@ -1,0 +1,15 @@
+Hearlium Branch 2 Build 0.4.10 — Reanalysis Provenance Repair
+
+Corrects the Build 0.4.9 source-regression failure by retaining the
+original recording source (android / parent_pc) in recordingStorage,
+with reanalysis reported separately as a boolean. The Parent PC
+reanalysis acknowledgment now checks reused=true, reanalysis=true,
+and the original source. Visible UI build identifier updated.
+
+Build on Windows using BUILD_HEARLIUM_INSTALLER.bat. Do not install
+unless the complete regression suite and installer build succeed.
+Verify the displayed Build 0.4.10 before reanalysis testing.
+
+Existing WAV files, metadata and approvals must never be deleted or
+overwritten. Main remains frozen. This package has not been Windows
+installer-compiled or live-tested on the Parent PC.

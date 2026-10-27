@@ -1,0 +1,17 @@
+HEARLIUM BRANCH 2 — BUILD 0.4.12 — REANALYSIS WORKFLOW REPAIR
+
+Diagnosis: Build 0.4.11 rejected a reanalysis at the duplicate-WAV write barrier.
+The original WAV was protected but the analysis failed. The client now uses a
+separate /v1/reanalysis-jobs endpoint which forces reanalysis=True on the server,
+rather than depending on a form field being propagated through the normal
+recording submission route. The server continues to verify recording ID,
+speaker ID, and audio SHA-256 before writing only a versioned result JSON.
+
+Main Parent PC launcher and Recording interface display Build 0.4.12.
+
+This is SOURCE ONLY; compile Windows installer with BUILD_HEARLIUM_INSTALLER.bat.
+Verify the installed build label before a controlled reanalysis. Preserve all
+original WAVs and metadata, and do not delete historical duplicate files.
+Check WAV count and SHA-256 before and after, then verify analysis completion.
+If an error occurs, preserve parent_pc_server.log and stop testing.
+Main frozen. Branch 2 only.

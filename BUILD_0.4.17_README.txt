@@ -1,0 +1,12 @@
+HEARLIUM BRANCH 2 - 0.4.17 - LEGACY CHECKSUM REANALYSIS REPAIR
+2026-10-27
+
+Fixes protected reanalysis of legacy PC capture metadata with no top-level
+ audioSha256 but a verified nested analysisResult.recordingStorage.sha256.
+Requires matching recording ID, speaker, saved PC provenance, exact WAV hash
+and complete PCM data. Every same-ID pair is checked before result export.
+Conflicting checksums and damaged/missing audio still fail closed.
+Original WAVs, metadata and historical results remain unchanged.
+Full source suite before version update: 359 passed, 3 skipped.
+Release validation is recorded beside the installer in BUILD_0.4.17_VALIDATION.json.
+Installed-device acceptance remains pending. Android and models unchanged.

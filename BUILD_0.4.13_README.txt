@@ -1,0 +1,20 @@
+HEARLIUM BRANCH 2 - BUILD 0.4.13 - ANDROID RETRY STORAGE REPAIR
+2026-10-27
+
+Fixes Android /v1/analyze-audio when an existing recording ID is sent again
+with the same speaker, audio SHA-256 and source but a new session ID.
+The verified original WAV is reused. New analysis is saved as a separate
+versioned android_retry_*.json file in analysis_results; no original WAV,
+original metadata, approvals or previous results are changed or deleted.
+
+Conflicting speaker IDs, audio bytes, known student names and provenance
+fail closed. The explicit Parent PC reanalysis route remains in place.
+
+TESTING: Run python -m pytest -q server/tests before compiling. Build the
+Windows installer with BUILD_HEARLIUM_INSTALLER.bat. On Windows verify
+version 0.4.13 and run controlled reanalysis and Android retry tests.
+Check WAV count and SHA-256 before and after. Do not delete old duplicates.
+
+LIMITATIONS: Source unit tests do not replace live Android/Windows integration
+validation. This build does not retroactively reconcile duplicate metadata.
+Main frozen. Branch 2 only.

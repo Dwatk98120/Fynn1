@@ -1,0 +1,37 @@
+HEARLIUM BRANCH 2 - 0.4.19 - LEGACY RECORDING ALIAS REPAIR
+2026-10-27
+
+Installed 0.4.18 exposed an older metadata compatibility case during protected
+reanalysis. The selected Android copy had a correct checksum, but a same-ID
+legacy copy had no source field or top-level checksum. Its nested receipt and
+WAV matched; the existing guard rejected that legacy copy and failed storage.
+The failed request preserved all 274 recording WAVs unchanged.
+
+Repair: corroborate only source-absent legacy aliases with a complete PCM WAV,
+matching nested receipt, exact recording/speaker identity and a separate fully
+verified same-ID receipt of matching declared source and exact audio bytes.
+Choose a fully verified canonical original for reuse. Record corroboration in
+the new derived result while preserving the legacy copy's unknown provenance.
+
+Conflicting hashes, declared source, speaker identity, missing/truncated audio
+and uncorroborated legacy files still fail. Every same-ID copy is checked.
+No original audio, original metadata, aliases or historical result is renamed,
+removed, rewritten or migrated. The 0.4.17/0.4.18 repairs remain included.
+
+Validation records and source/frozen check output are saved under reports and
+beside the installer. Installed-device acceptance is a separate pending check.
+Source suite: 463 passed, 3 skipped. The actual failing case passed a read-only
+compatibility audit: reports/legacy_alias_0419_audit_summary.json. All 996
+existing WAV/JSON files checked remained unchanged. The recordings folder
+still contains 274 WAVs; the recursive total includes 38 reference/clip WAVs.
+The current source-only GitHub handoff is 0.4.19. Review its source manifest
+and verification proof before copying or committing source files.
+Android remains 3.3.3/code9. No automatic installation.
+
+Installer: installer/output/HearliumSetup-0.4.19.exe
+
+Optional PocketSphinx alignment requires an explicit caregiver-confirmed reference.
+It estimates supplied-word/sound timing and is not independent pronunciation or
+word verification. Separate alignment JSON preserves original WAV/metadata, raw
+phoneme observations, word-recognition output and prior results. No learning
+approval is granted by alignment.

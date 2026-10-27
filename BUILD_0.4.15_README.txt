@@ -1,0 +1,24 @@
+HEARLIUM BRANCH 2 - 0.4.15 - REANALYSIS WAV INTEGRITY CHECK
+2026-10-27
+
+Protected reanalysis now hashes all top-level WAVs in the selected recording
+folder before and after the request. A separate uniquely named JSON report
+lists original and final SHA-256 values, added/missing/changed WAVs, and
+whether the analysis request succeeded. Existing WAVs are only read.
+
+If the check detects a difference or cannot complete, the returned analysis
+is not committed to the caregiver review screen. The report does not restore
+files or undo server work. Concurrent recording activity in the same folder
+can cause a difference; run controlled checks without other captures.
+
+Open Recording > Analytics & Batch > Integrity Reports to see reports.
+Successful reanalysis also displays a WAV integrity confirmation.
+
+Scope: WAV bytes and filenames only. This does not validate metadata,
+learning, model accuracy or detect a file changed and restored between checks.
+Failure before a baseline or after-snapshot can be read may prevent a report;
+the analysis screen still shows an error and does not accept the result.
+
+Validation: full server suite 337 passed, 3 skipped before freezing.
+Android remains 3.3.3/code9. Main is unchanged.
+Installed end-to-end validation with disposable recordings remains required.

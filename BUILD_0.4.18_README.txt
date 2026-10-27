@@ -1,0 +1,53 @@
+HEARLIUM BRANCH 2 - 0.4.18 - PHONEME TIMING AND CAPTURE REPAIR
+2026-10-27
+
+Includes the 0.4.17 legacy-checksum and Tk packaging repairs.
+
+Changes
+- Add "want" to the independent candidate vocabulary.
+- Preserve CTC token IDs, emission start/end frames and nonblank confidence.
+  Direct segment ranking derives IPA confidence from actual source tokens.
+  Older adjacent-merge suggestions retain their shared confidence and remain
+  unverified proposals; they cannot approve pronunciation or learning.
+  Use the model output stride for timing; explicitly label fallback estimates.
+- Preserve the baseline phoneme sequence/grouping. Add separate split/join
+  proposals across short uncertain gaps and disputed predicted delimiters,
+  bounded to three fragments. No alternative is automatically selected.
+- Add conservative many-to-many timing-overlap groups for phoneme pieces and
+  ASR word hypotheses. Existing strict unresolved counts/guards remain intact.
+- Add offline PocketSphinx 5.0.4 reference-conditioned word/phone timing.
+  In Recording > Evidence, choose Align Confirmed Words after playback and
+  enter/confirm exactly what was spoken. Timings use CMU/ARPABET phone labels.
+  Reports are separate JSON files under analysis_results/phoneme_alignment_reports.
+  This does not approve learning, alter observations, prove pronunciation,
+  or identify the speaker. Only PCM16 mono 16kHz WAVs are supported initially.
+  Unsupported reference words and incomplete audio fail explicitly.
+- New captures save their recording ID, SHA-256 and byte count before Analyze.
+  First analysis uses protected original reuse instead of another API WAV copy.
+  Historical duplicates remain untouched. No migration rewrites old metadata.
+- Tk hidden-window/Evidence-tab and frozen native/model checks gate packaging.
+
+Engine choice
+PocketSphinx is used through its native Python binding inside the existing
+Windows application. No JVM, Java engine or remote speech service is required.
+Reference alignment remains separate from independent CTC recognition.
+
+Validation
+Full source suite: 431 passed, 3 skipped. Dependency consistency and source
+Tk/Evidence-tab hidden-window checks passed with the exact build interpreter.
+Read-only replay: reports/validate_0418_0e281e72.json.
+"want" ranked first at all three occurrences; raw phoneme transcript unchanged.
+20 separate boundary alternatives, four soft timing groups; reference alignment
+13 words / 45 phones. All 274 existing recording WAVs and original metadata
+unchanged. The final sentence still has uncertain independent sound fragments.
+No manually annotated boundary-accuracy benchmark has been completed.
+Regression and frozen installer validation are recorded in reports and beside
+the installer. Installation/device acceptance remains pending.
+
+Verified installer: installer/output/HearliumSetup-0.4.18.exe
+Frozen GUI/Evidence tab, server, Layer 2, Android retry, new phoneme checks
+and native second-pass reference alignment passed. Packaged files matched
+their before/after compilation hashes. See BUILD_0.4.18_VALIDATION.json beside
+the installer. The installer has not been run.
+Do not confuse source/frozen checks with installed-device acceptance.
+Android remains 3.3.3/code9. Existing models, approvals and results are preserved.

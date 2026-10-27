@@ -1,0 +1,48 @@
+HEARLIUM BRANCH 2 - 0.4.16 - SPEECH REVIEW AND RETRY VALIDATION
+2026-10-27
+
+Changes
+- Full energy-peak times drive local prosody; the 12-point stress preview is
+  display-only. Gaps inside merged activity spans are excluded from rate time.
+  Old truncated evidence produces an unavailable local rate instead of a number.
+- English-model r/IPA-rhotic notation comparison preserves raw symbols and
+  avoids treating that notation difference alone as a substitution.
+- Candidate vocabulary includes the tested sentence words and number phrases
+  1-50. Reference Audio Library/API support the same number range. Small explicit
+  reduced pronunciations for can/the/to retain their dictionary alternatives.
+- Counting context provides a bounded vocabulary ranking hint; it is not a
+  reference transcript and does not enforce a counting sequence.
+- Saved ASR results retain rejected-timestamp reasons. New diagnostics report
+  timing coverage, broad/short intervals, segment-join repetitions and adjacent
+  repeated phoneme candidates. Review UI explains unresolved timing and omission
+  scope. No model words or phoneme observations are inserted/deleted/rewritten.
+- Next backlog item: repeatable synthetic Android upload retry/storage checks,
+  verifying original reuse, separate results and rejection of identity/audio/
+  name/source conflicts. Main launcher: Check Upload Storage. CLI:
+  HearliumParentPC.exe --verify-android-retry
+  Report: analysis_results/upload_retry_check_0.4.16.json in Parent PC user data.
+  Runs in a separate process and temporary synthetic storage, not student files.
+
+Validation before freezing
+- Full server suite: 347 passed, 3 skipped (optional private reference audio).
+- Android source recording/upload safeguards: PASS.
+- Four private saved recordings replayed through new review/ranking/prosody
+  code: original WAVs/metadata/transcripts verified unchanged. This replay is
+  not fresh model inference, not installed-device acceptance and not measured
+  improvement in general recognition accuracy.
+- Prosody replay uses 49/18/20/17 detected peaks instead of twelve each.
+- Compound numbers and sentence candidates improve, but ranking errors remain.
+  Same-sound see/sea still require spelling context. Do not treat ranks as truth.
+
+Pending installed checks
+- Install and verify build 0.4.16; rerun protected saved-recording reanalysis
+  and compare original WAV hashes/counts and new analysis/integrity reports.
+- Actual Android upload/retry, network interruption and conflict rejection on
+  the paired devices. Synthetic storage verification does not complete this.
+- Inspect timing/repetition warnings against playback, preserving genuine repeats.
+- Verify reference clips for compound numbers and UI controls on Windows.
+- Controlled approval/revocation, speaker-isolation, pattern, strategy and
+  holdout evaluation tests for layers 9-13 remain pending.
+
+Main untouched. Android remains 3.3.3/code9. Models unchanged. No automatic
+training or transcript correction. Preserve existing caregiver data and backups.

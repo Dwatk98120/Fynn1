@@ -1,3 +1,9 @@
+HEARLIUM PARENT PC - CURRENT WINDOWS SOURCE HANDOFF 0.4.19
+Read README_BUILD_THIS_INSTALLER.txt, BUILD_0.4.19_README.txt and
+TEST_RESULTS_0.4.19.md for current requirements, checks and pending acceptance.
+No automatic installation. The following older builder overview is historical;
+its optional user-install step is not part of preparing this handoff.
+
 HEARLIUM PARENT PC — UPDATED WINDOWS INSTALLER BUILDER
 ======================================================
 This source package uses the latest Temporal / Prosody Parent PC backend.
