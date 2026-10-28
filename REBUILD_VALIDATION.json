@@ -1,0 +1,19 @@
+{
+  "version": "0.4.21",
+  "androidVersionName": "3.3.4",
+  "androidVersionCode": 10,
+  "rebuiltUtc": "2026-10-28T14:37:47.623802+00:00",
+  "originReleaseZipSha256": "83155b81d96f80c23e5009e0f0544a4dde1891620ad025d520bca75ff631e835",
+  "rebuildScope": "packaging layout and upload guidance only; production source unchanged",
+  "originalSourceFileCount": 367,
+  "originalSourceHashesVerified": true,
+  "androidSourceGuard": "passed during rebuild",
+  "archiveLayout": "repository files at ZIP root",
+  "originalValidatedSourceTests": {
+    "passed": 517,
+    "skipped": 3
+  },
+  "originalValidatedKotlinJvmTests": 12,
+  "remoteApkBuild": "not run",
+  "installedDeviceAcceptance": "pending"
+}

@@ -1,0 +1,24 @@
+HEARLIUM 0.4.21 GITHUB SOURCE - REBUILT DOWNLOAD
+Android 3.3.4 / versionCode 10
+
+This ZIP has repository files at its ROOT: app/, server/, .github/, etc.
+Extract it first. Copy ALL extracted files/folders into the repository root
+on hearlium-parent-pc-integration. Keep Main frozen. Preserve existing .git,
+newer local work, credentials, recordings and approval/audit history.
+Do not upload the ZIP as a single repository file or add an enclosing folder.
+
+Upload app/build.gradle AND android_no_live_verify.py from this same package.
+The Gradle file contains versionCode 10 and versionName '3.3.4'. The source
+guard passes for these exact files. Review both files on GitHub after upload.
+
+Commit the updated files before starting a NEW workflow run on that branch.
+Do not use the old failed run as proof that a newer commit was checked.
+Workflow: Hearlium Android APK - Protected Local Audio v3.3.4.
+Artifact: Hearlium-Android-Protected-Local-Audio-v3.3.4-code10.
+
+See GITHUB_0.4.21_UPLOAD.md for full instructions, including signing-key safety.
+Do not uninstall the existing Android app or clear its data to force an update.
+
+This rebuild changes package layout and adds upload guidance/validation only.
+All original 0.4.21 source files retain their released SHA-256 values.
+No installer, model weights, recordings, credentials or signing keys are included.
