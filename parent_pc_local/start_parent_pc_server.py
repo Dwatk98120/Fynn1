@@ -33,4 +33,7 @@ if __name__ == "__main__":
     print("The phone and Parent PC must be on the same local network.")
     print("=" * 68)
     print("")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    # Use the same lightweight gateway, persistent server logging and heartbeat
+    # as the frozen Windows Parent PC executable.
+    from hearlium_launcher import run_server
+    run_server()

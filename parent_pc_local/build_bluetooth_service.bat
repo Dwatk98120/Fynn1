@@ -14,5 +14,5 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Build complete. The service is under bluetooth_service\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\
+echo Build complete. The service is under bluetooth_service\bin\Release\net8.0-windows10.0.22000.0\win-x64\publish\
 pause
