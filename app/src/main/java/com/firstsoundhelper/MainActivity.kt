@@ -53,6 +53,8 @@ class MainActivity : AppCompatActivity() {
     private var recorder: AudioRecord? = null
     private var recordingThread: Thread? = null
     private var recording = false
+    @Volatile private var uploadInProgress = false
+    @Volatile private var localDeletionInProgress = false
     private val pcm = ByteArrayOutputStream()
     private val sampleRate = 16000
     private val localRecordingStore by lazy { LocalSpeechRecordingStore(filesDir) }
@@ -363,6 +365,10 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
     private fun startRecording() {
+        if (localDeletionInProgress || uploadInProgress) {
+            status.text = "Wait for upload or protected audio removal to finish."
+            return
+        }
         if (recordingThread?.isAlive == true) {
             status.text = "Previous microphone capture is still closing. Try again shortly."
             return
@@ -754,6 +760,10 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
     }
 
     private fun uploadForAnalysis() {
+        if (localDeletionInProgress || uploadInProgress) {
+            status.text = "Wait for the current upload or protected audio removal."
+            return
+        }
         if (recording) {
             status.text = "Stop and save the recording before sending."
             return
@@ -809,6 +819,7 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
             .digest(audioBytes).joinToString("") { "%02x".format(it) }
         status.text = "Sending to Parent PC…"
         result.text = "Recording ID: $recordingId\nWaiting for PC receipt confirmation…"
+        uploadInProgress = true
         Thread {
             try {
                 val client = OkHttpClient.Builder()
@@ -892,6 +903,8 @@ status=findViewById(R.id.status); result=findViewById(R.id.result); findViewById
                     status.text = "Transfer or analysis not confirmed"
                     result.text = "Recording ID: $recordingId\n${e.message ?: "Connection error"}\nCheck Parent PC Connection and retry."
                 }
+            } finally {
+                uploadInProgress = false
             }
         }.start()
     }
@@ -1764,9 +1777,125 @@ content.addView(popupHeader(
         File(sessionDir, "analysis.json").writeText(resultJson)
     }
 
+    private data class PcRemovalCheck(val json: String, val nonce: String, val receivedAtMillis: Long)
+
+    private fun verifyPcCopyForRemoval(base: String, capture: LocalSpeechRecording): PcRemovalCheck {
+        if (base != parentPcApiBase() || getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false)) {
+            throw IOException("PC connection changed or Offline Mode is on; removal blocked")
+        }
+        localRecordingStore.verifiedWav(capture)
+        val nonce = UUID.randomUUID().toString().replace("-", "")
+        val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addFormDataPart("recording_id", capture.recordingId)
+            .addFormDataPart("speaker_id", capture.speakerId)
+            .addFormDataPart("sha256", capture.sha256)
+            .addFormDataPart("audio_bytes", capture.bytes.toString())
+            .addFormDataPart("request_nonce", nonce).build()
+        val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS).build()
+        client.newCall(Request.Builder().url("$base/v1/recording-preservation-check").post(body).build())
+            .execute().use { response ->
+                if (!response.isSuccessful) throw IOException("PC stored-copy check failed (HTTP ${response.code}); removal blocked")
+                val receipt = response.body?.string() ?: throw IOException("PC proof missing")
+                if (base != parentPcApiBase() || getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false)) {
+                    throw IOException("PC selection changed or Offline Mode is on; removal blocked")
+                }
+                val received = android.os.SystemClock.elapsedRealtime()
+                localRecordingStore.validatePcCopy(capture, receipt, nonce, received)
+                val auditReceipt = JSONObject(receipt).put("clientPcUrl", base).toString()
+                return PcRemovalCheck(auditReceipt, nonce, received)
+            }
+    }
+
+    private fun requestLocalAudioRemoval(sessions: List<File>, onComplete: () -> Unit) {
+        if (recording || recordingThread?.isAlive == true || uploadInProgress || localDeletionInProgress) {
+            Toast.makeText(this, "Stop recording and wait for uploads/removal to finish.", Toast.LENGTH_LONG).show()
+            return
+        }
+        val base = parentPcApiBase()
+        if (base.isBlank() || getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false)) {
+            Toast.makeText(this, "Connect to the Parent PC to verify saved copies. Local audio retained.", Toast.LENGTH_LONG).show()
+            return
+        }
+        val selected = sessions.filter { File(it, "recording.wav").exists() }
+        if (selected.isEmpty()) {
+            Toast.makeText(this, "No local recording audio to remove. History is retained.", Toast.LENGTH_LONG).show()
+            return
+        }
+        val captures = selected.map { localRecordingStore.openSession(it) }
+        if (captures.any { it == null }) {
+            Toast.makeText(this, "A selected recording has missing or conflicting integrity metadata. Removal blocked.", Toast.LENGTH_LONG).show()
+            return
+        }
+        val verifiedCaptures = captures.filterNotNull()
+        localDeletionInProgress = true
+        status.text = "Verifying stored Parent PC copies?"
+        Thread {
+            try {
+                verifiedCaptures.forEach { verifyPcCopyForRemoval(base, it) }
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) {
+                        localDeletionInProgress = false
+                        return@runOnUiThread
+                    }
+                    var removalStarted = false
+                    val confirmation = android.app.AlertDialog.Builder(this)
+                        .setTitle("Remove ${verifiedCaptures.size} local audio file(s)?")
+                        .setMessage("The Parent PC verified matching saved originals. Remove only the audio from this phone? Recording metadata, labels, analysis and audit history stay here. PC originals are retained. Every copy will be checked again before removal.")
+                        .setNegativeButton("Keep local audio", null)
+                        .setPositiveButton("Remove local audio") { _, _ ->
+                            removalStarted = true
+                            Thread {
+                                var removed = 0
+                                try {
+                                    for (capture in verifiedCaptures) {
+                                        val proof = verifyPcCopyForRemoval(base, capture)
+                                        localRecordingStore.removeVerifiedLocalAudio(capture, proof.json, proof.nonce,
+                                            proof.receivedAtMillis, caregiverConfirmed = true,
+                                            pcStillSelected = { base == parentPcApiBase() &&
+                                                !getPreferences(MODE_PRIVATE).getBoolean("offline_mode", false) })
+                                        removed++
+                                        runOnUiThread {
+                                            if (activeLocalRecording?.audioFile == capture.audioFile) {
+                                                activeLocalRecording = null
+                                                currentRecordingId = ""
+                                                synchronized(pcm) { pcm.reset() }
+                                                clearPendingReview()
+                                            }
+                                        }
+                                    }
+                                    runOnUiThread {
+                                        status.text = "Removed $removed local audio file(s); PC copies and history retained."
+                                        onComplete()
+                                    }
+                                } catch (e: Exception) {
+                                    runOnUiThread {
+                                        status.text = "Removal stopped after $removed file(s). No further audio removed."
+                                        Toast.makeText(this, e.message ?: "Verification/removal failed", Toast.LENGTH_LONG).show()
+                                        onComplete()
+                                    }
+                                } finally {
+                                    localDeletionInProgress = false
+                                }
+                            }.start()
+                        }.create()
+                    confirmation.setOnDismissListener { if (!removalStarted) localDeletionInProgress = false }
+                    confirmation.setOnShowListener { styleUnifiedDialog(confirmation) }
+                    confirmation.show()
+                }
+            } catch (e: Exception) {
+                localDeletionInProgress = false
+                runOnUiThread {
+                    status.text = "PC copy not verified. Local audio retained."
+                    Toast.makeText(this, e.message ?: "Verification failed", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
     private fun deleteAllSavedDialogue() {
-        val dir = File(filesDir, "dialogue_history")
-        if (dir.exists()) dir.deleteRecursively()
+        val sessions = File(filesDir, "dialogue_history").listFiles()?.filter { it.isDirectory } ?: emptyList()
+        requestLocalAudioRemoval(sessions) { showSavedRecordings() }
     }
 
     private fun showSavedRecordings() {
@@ -1811,6 +1940,11 @@ content.addView(popupHeader(
                     ?.filter { it.isFile && it.name.startsWith("analysis_") && it.name.endsWith(".json") }
                     ?.maxByOrNull { it.name } ?: File(session, "analysis.json")
                 val audio = File(session, "recording.wav")
+                if (!audio.exists()) {
+                    list.addView(TextView(this@MainActivity).apply {
+                        text = "No local audio — saved analysis and history remain."
+                    })
+                }
 
                 val row = LinearLayout(this@MainActivity)
                 row.orientation = LinearLayout.HORIZONTAL
@@ -1818,6 +1952,10 @@ content.addView(popupHeader(
                 val play = Button(this@MainActivity)
                 play.text = "Play"
                 play.setOnClickListener {
+                    if (!audio.exists()) {
+                        Toast.makeText(this, "No local audio is available. Saved history is retained.", Toast.LENGTH_LONG).show()
+                        return@setOnClickListener
+                    }
                     if (File(session, "recording_meta.json").exists() &&
                         localRecordingStore.openSession(session) == null) {
                         Toast.makeText(this@MainActivity,
@@ -1846,28 +1984,14 @@ content.addView(popupHeader(
                 }
 
                 val delete = Button(this@MainActivity)
-                delete.text = "Delete"
+                delete.text = "Remove local audio"
+                delete.isEnabled = audio.exists()
                 delete.setOnClickListener {
-                    android.app.AlertDialog.Builder(this@MainActivity)
-                        .setTitle("Delete recording?")
-                        .setMessage("This removes the saved audio and analysis from this device.")
-                        .setNegativeButton("Cancel", null)
-                        .setPositiveButton("Delete") { _, _ ->
-                            if (activeLocalRecording?.audioFile?.parentFile == session) {
-                                activeLocalRecording = null
-                                currentRecordingId = ""
-                                synchronized(pcm) { pcm.reset() }
-                                clearPendingReview()
-                            }
-                            session.deleteRecursively()
-                            dialog.dismiss()
-                            showSavedRecordings()
-                        }
-                        .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                    requestLocalAudioRemoval(listOf(session)) {
+                        dialog.dismiss()
+                        showSavedRecordings()
+                    }
                 }
-
-                row.addView(play, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-                row.addView(view, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
                 row.addView(delete, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
                 list.addView(row)
                 if (File(session, "recording_meta.json").exists()) {
@@ -1893,21 +2017,12 @@ content.addView(popupHeader(
             }
 
             val deleteAll = Button(this@MainActivity)
-            deleteAll.text = "Delete All Saved Recordings"
+            deleteAll.text = "Remove verified local audio"
             deleteAll.setOnClickListener {
-                android.app.AlertDialog.Builder(this@MainActivity)
-                    .setTitle("Delete all recordings?")
-                    .setMessage("This cannot be undone.")
-                    .setNegativeButton("Cancel", null)
-                    .setPositiveButton("Delete All") { _, _ ->
-                        if (dir.exists()) dir.deleteRecursively()
-                        activeLocalRecording = null
-                        currentRecordingId = ""
-                        synchronized(pcm) { pcm.reset() }
-                        clearPendingReview()
-                        dialog.dismiss()
-                    }
-                    .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
+                requestLocalAudioRemoval(sessions) {
+                    dialog.dismiss()
+                    showSavedRecordings()
+                }
             }
             list.addView(deleteAll)
         }
@@ -2552,8 +2667,9 @@ content.addView(popupHeader(
                 val delete = android.widget.Button(this@MainActivity).apply {
                     text = "Delete"
                     setOnClickListener {
-                        file.delete()
-                        refreshList()
+                        Toast.makeText(this@MainActivity,
+                            "Word-bank originals need a verified PC-copy workflow before removal. Audio retained.",
+                            Toast.LENGTH_LONG).show()
                     }
                 }
                 row.addView(label)
@@ -2621,7 +2737,7 @@ content.addView(popupHeader(
                 }
             } catch (_: Exception) {
                 wordBankRecorder = null
-                file.delete()
+                if (file.exists() && file.length() == 0L) file.delete()
                 android.widget.Toast.makeText(this@MainActivity, "Could not start recording.", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
@@ -2697,9 +2813,9 @@ content.addView(popupHeader(
                         row.addView(android.widget.Button(this@MainActivity).apply {
                             text = "Delete"
                             setOnClickListener {
-                                f.delete()
-                                loadStudentWordBank()
-                                button.performClick()
+                                Toast.makeText(this@MainActivity,
+                                    "Word-bank originals need a verified PC-copy workflow before removal. Audio retained.",
+                                    Toast.LENGTH_LONG).show()
                             }
                         })
                         list.addView(row)
@@ -2712,7 +2828,7 @@ content.addView(popupHeader(
                 }
             }
         } catch (_: Exception) {
-            file.delete()
+            if (file.exists() && file.length() == 0L) file.delete()
             android.widget.Toast.makeText(this@MainActivity, "Could not start recording.", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
@@ -3552,26 +3668,15 @@ content.addView(popupHeader(
                 prefs.edit().putBoolean("offline_mode", !offline).apply()
                 Toast.makeText(this@MainActivity, "Offline Mode is now ${if (!offline) "ON" else "OFF"}.", Toast.LENGTH_SHORT).show()
             }
-            .setNeutralButton("Delete Local Student Data") { _, _ ->
-                android.app.AlertDialog.Builder(this@MainActivity)
-                    .setTitle("Delete local student data?")
-                    .setMessage("This removes saved recordings, word-bank audio, phrases, favorites, custom vocabulary, notes, and live-session summaries from this device.")
-                    .setNegativeButton("Cancel", null)
-                    .setPositiveButton("Delete") { _, _ -> deleteAllLocalStudentData() }
-                    .create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
-            }
+            .setNeutralButton("Remove local recording audio") { _, _ -> deleteAllLocalStudentData() }
             .setNegativeButton("Close", null)
         builder.create().also { alert -> alert.setOnShowListener { styleUnifiedDialog(alert) }; alert.show() }
     }
 
     private fun deleteAllLocalStudentData() {
-        listOf(
-            "dialogue_history", "student_word_bank", "live_session_summaries",
-            "saved_phrases.json", "custom_vocabulary.json"
-        ).forEach { File(filesDir, it).let { f -> if (f.exists()) f.deleteRecursively() } }
-        supportPrefs().edit().clear().apply()
-        studentWordBank.clear()
-        Toast.makeText(this@MainActivity, "Local student data deleted.", Toast.LENGTH_LONG).show()
+        // Broad recursive deletion would bypass stored-copy checks and erase audit history.
+        // This control now offers the same protected recording-audio workflow.
+        deleteAllSavedDialogue()
     }
 
     private fun speakCommunicationText(text: String) {
@@ -3980,10 +4085,9 @@ content.addView(popupHeader(
             })
         }
         list.addView(Button(this@MainActivity).apply {
-            text = "Delete History"
+            text = "History safety"
             setOnClickListener {
-                File(filesDir, "communication_interpretation_history.json").delete()
-                dialog.dismiss()
+                Toast.makeText(this@MainActivity, "Interpretation and approval history is retained. Manage learning decisions on the Parent PC.", Toast.LENGTH_LONG).show()
             }
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
@@ -4218,11 +4322,9 @@ content.addView(popupHeader(
         })
         list.addView(results)
         list.addView(Button(this@MainActivity).apply {
-            text = "Clear Personal Learning"
+            text = "Manage learning on Parent PC"
             setOnClickListener {
-                learningFile().delete()
-                results.removeAllViews()
-                Toast.makeText(this@MainActivity, "Personal learning cleared.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Learning and approval history is retained. Use caregiver review on the Parent PC to revoke learning.", Toast.LENGTH_LONG).show()
             }
         })
         dialog.setContentView(ScrollView(this@MainActivity).apply { addView(list) })
@@ -4334,4 +4436,3 @@ content.addView(popupHeader(
     }
 
 }
-

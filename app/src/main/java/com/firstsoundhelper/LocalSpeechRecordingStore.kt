@@ -23,7 +23,8 @@ internal data class LocalSpeechRecording(
     val sha256: String
 )
 
-internal class LocalSpeechRecordingStore(filesDir: File) {
+internal class LocalSpeechRecordingStore(filesDir: File,
+    private val elapsedMillis: () -> Long = { android.os.SystemClock.elapsedRealtime() }) {
     private val history = File(filesDir, "dialogue_history")
     private val safeId = Regex("^[A-Za-z0-9_-]{1,100}$")
 
@@ -82,8 +83,11 @@ internal class LocalSpeechRecordingStore(filesDir: File) {
     fun openSession(folder: File): LocalSpeechRecording? {
         try {
             if (folder.parentFile?.canonicalFile != history.canonicalFile) return null
+            if (folder.canonicalFile.parentFile != history.canonicalFile) return null
             val audioFile = File(folder, "recording.wav")
+            if (audioFile.canonicalFile.parentFile != folder.canonicalFile) return null
             val metadataFile = File(folder, "recording_meta.json")
+            if (metadataFile.canonicalFile.parentFile != folder.canonicalFile) return null
             if (!audioFile.isFile || !metadataFile.isFile) return null
             val metadata = JSONObject(metadataFile.readText(Charsets.UTF_8))
             val id = metadata.optString("recordingId")
@@ -117,6 +121,7 @@ internal class LocalSpeechRecordingStore(filesDir: File) {
             ?: throw IOException("Recording folder missing"))
         if (reopened == null || reopened.recordingId != recording.recordingId ||
             reopened.sha256 != recording.sha256 ||
+            reopened.bytes != recording.bytes ||
             reopened.speakerId != recording.speakerId ||
             reopened.sessionId != recording.sessionId) {
             throw IOException("Saved recording failed integrity verification")
@@ -182,6 +187,55 @@ internal class LocalSpeechRecordingStore(filesDir: File) {
             event.toString(2).toByteArray(Charsets.UTF_8))
     }
 
+    @Synchronized
+    fun validatePcCopy(recording: LocalSpeechRecording, pcReceipt: String, nonce: String, receivedAtMillis: Long) {
+        val receipt = JSONObject(pcReceipt)
+        LocalAudioDeletionPolicy.requireVerifiedCopy(
+            LocalAudioDeletionPolicy.Identity(recording.recordingId, recording.speakerId, recording.sha256, recording.bytes),
+            LocalAudioDeletionPolicy.PcCopy(receipt.optString("protocol"), receipt.optBoolean("durableCopyVerified", false),
+                LocalAudioDeletionPolicy.Identity(receipt.optString("recordingId"), receipt.optString("speakerId"),
+                    receipt.optString("sha256"), receipt.optLong("bytes", -1)),
+                receipt.optString("source"), receipt.optString("requestNonce"), receipt.optInt("copiesVerified", 0)),
+            nonce, elapsedMillis() - receivedAtMillis)
+        verifiedWav(recording)
+    }
+
+    /** Remove only the verified WAV; retain all original metadata and history. */
+    @Synchronized
+    fun removeVerifiedLocalAudio(recording: LocalSpeechRecording, pcReceipt: String,
+                                 nonce: String, receivedAtMillis: Long, caregiverConfirmed: Boolean,
+                                 pcStillSelected: () -> Boolean) {
+        val receipt = JSONObject(pcReceipt)
+        val identity = LocalAudioDeletionPolicy.Identity(recording.recordingId, recording.speakerId,
+            recording.sha256, recording.bytes)
+        val copy = LocalAudioDeletionPolicy.PcCopy(receipt.optString("protocol"),
+            receipt.optBoolean("durableCopyVerified", false),
+            LocalAudioDeletionPolicy.Identity(receipt.optString("recordingId"), receipt.optString("speakerId"),
+                receipt.optString("sha256"), receipt.optLong("bytes", -1)),
+            receipt.optString("source"), receipt.optString("requestNonce"), receipt.optInt("copiesVerified", 0))
+        LocalAudioDeletionPolicy.requireAllowed(identity, copy, nonce, caregiverConfirmed,
+            elapsedMillis() - receivedAtMillis)
+        verifiedWav(recording)
+        val folder = recording.audioFile.parentFile ?: throw IOException("Recording folder missing")
+        val trusted = openSession(folder) ?: throw IOException("Recording integrity check failed")
+        if (trusted.audioFile.canonicalFile != recording.audioFile.canonicalFile) {
+            throw IOException("Unexpected local audio path")
+        }
+        // Preserve metadata, labels, all analysis history and the PC proof.
+        val audit = JSONObject().put("recordingId", recording.recordingId)
+            .put("speakerId", recording.speakerId).put("sha256", recording.sha256)
+            .put("bytes", recording.bytes).put("caregiverConfirmed", true)
+            .put("pcReceipt", receipt).put("requestedAtMillis", System.currentTimeMillis())
+        val id = UUID.randomUUID().toString()
+        atomicCreate(File(folder, "local_audio_removal_request_$id.json"), audit.toString(2).toByteArray(Charsets.UTF_8))
+        LocalAudioDeletionPolicy.requireAllowed(identity, copy, nonce, caregiverConfirmed,
+            elapsedMillis() - receivedAtMillis)
+        if (!pcStillSelected()) throw IOException("PC selection changed or Offline Mode is on; audio retained")
+        if (!recording.audioFile.delete()) throw IOException("Local audio could not be removed; history retained")
+        atomicCreate(File(folder, "local_audio_removal_completed_$id.json"),
+            audit.put("completedAtMillis", System.currentTimeMillis()).toString(2).toByteArray(Charsets.UTF_8))
+    }
+
     /** Multiple analyses can be attached; the original recording never changes. */
     fun saveAnalysis(recording: LocalSpeechRecording, json: String) {
         verifiedWav(recording)
@@ -191,4 +245,3 @@ internal class LocalSpeechRecordingStore(filesDir: File) {
             json.toByteArray(Charsets.UTF_8))
     }
 }
-
