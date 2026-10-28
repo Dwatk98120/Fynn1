@@ -9,3 +9,5 @@
 - Existing test recordings are adult samples, not pediatric clinical validation.
 - Investigate root causes, write regression tests, run tests, and report limitations before claiming a fix.
 - 0.4.19 is a source snapshot; installed-device acceptance testing remains pending.
+
+- For Android-only updates, provide the small browser-upload ZIP using `package_android_small.py` (see `ANDROID_SMALL_UPLOAD.md`); keep it at or below 100 files. Preserve the full source separately. Clearly identify any required Parent PC update; the small package does not deliver PC changes. Report actual test/build/device status.

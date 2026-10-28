@@ -70,6 +70,11 @@ def verify_source() -> None:
             raise ValueError(f"Protected recording-store removal guard missing: {marker}")
     if 'LocalAudioRemovalDialog.create' not in kotlin or 'R.id.androidBuildInfo' not in kotlin:
         raise ValueError('Visible confirmation or main-screen build info missing')
+    dialog = (ROOT / 'app/src/main/java/com/firstsoundhelper/LocalAudioRemovalDialog.kt').read_text(encoding='utf-8')
+    for marker in ('.setView(root).create()', 'val dialogWindow: Window? = dialog.window',
+                   'dialogWindow.setBackgroundDrawable(', 'dialogWindow.setLayout('):
+        if marker not in dialog:
+            raise ValueError('Dialog public SDK correction missing: ' + marker)
     print("PASS: source protects completed audio and preserves normal recording/upload.")
 
 
