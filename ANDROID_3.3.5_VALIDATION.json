@@ -1,7 +1,7 @@
 {
   "androidVersion": "3.3.5/code11",
   "parentPcVersion": "0.4.21",
-  "checkedUtc": "2026-10-28T15:43:45.708011+00:00",
+  "checkedUtc": "2026-10-28T16:04:24.830389+00:00",
   "jvmTestsPassed": 18,
   "jvmSuites": {
     "com.firstsoundhelper.AndroidBuildInfoTest": 2,
@@ -10,7 +10,7 @@
     "com.firstsoundhelper.LocalSpeechRecordingRemovalTest": 7
   },
   "uiScope": "Robolectric API 28; narrow portrait, font scale 2.0, large-text landscape",
-  "pythonAndroidContractTestsPassed": 11,
+  "pythonAndroidContractTestsPassed": 12,
   "androidSourceGuard": "passed",
   "actualGradleConfiguration": "passed",
   "actualBuildConfigGeneration": "passed",

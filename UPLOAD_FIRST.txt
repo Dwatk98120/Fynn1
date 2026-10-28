@@ -1,20 +1,30 @@
-ANDROID 3.3.5 / CODE11 - VISIBLE AUDIO REMOVAL CONFIRMATION
-Parent PC stays 0.4.21. Read ANDROID_HOTFIX_3.3.5.md.
+ANDROID-ONLY UPLOAD - 3.3.5 / code11
 
-Extract the ZIP. All repository files are at its ROOT (app/, .github/, etc.).
-Copy ALL contents to hearlium-parent-pc-integration, including app/build.gradle
-and android_no_live_verify.py together. Keep Main frozen. Preserve .git,
-newer local work, credentials and all recording/approval/audit data.
-Do not upload the ZIP itself or create an extra enclosing repository folder.
+1. Extract this ZIP to a new folder on your PC.
+2. On GitHub open your repository and select branch:
+   hearlium-parent-pc-integration
+   Do not upload or commit to Main.
+3. Choose Add file > Upload files at the repository ROOT.
+4. Open the extracted folder. Drag ALL its CONTENTS into GitHub,
+   including the .github folder. Do not drag the outer folder or the ZIP.
+   Windows may hide .github; enable View > Show > Hidden items if needed.
+5. Commit changes to hearlium-parent-pc-integration.
+   Existing Parent PC files can stay. No deletion is needed.
+6. Actions: open Hearlium Android APK - Visible Confirmation v3.3.5.
+   The branch push starts a NEW run. Do not rerun an old commit.
+7. After success, download artifact:
+   Hearlium-Android-Visible-Confirmation-v3.3.5-code11
 
-Confirm app/build.gradle on GitHub says versionCode 11/versionName '3.3.5'.
-Commit all updated files, then start a NEW workflow on that commit/branch:
-Hearlium Android APK - Visible Confirmation v3.3.5.
-Artifact: Hearlium-Android-Visible-Confirmation-v3.3.5-code11.
-Both workflows run unit tests, compile the APK and reject missing hotfix features.
+At repository root you should see app/, .github/, gradle/,
+build.gradle and settings.gradle. The workflow must be located at
+.github/workflows/build-apk-recording-fix.yml.
 
-The source is tested locally; no remote workflow or phone installation is claimed.
-Existing signing keys must match for an update. Do not uninstall or clear app
-data to force installation. First test removal with disposable recordings.
-Verify both Remove local audio and Keep local audio remain visible at large
-font sizes, and check the main screen displays Android 3.3.5 (11) with build info.
+This package contains only Android build inputs, tests, workflows and
+supporting notes. The Parent PC application is omitted from this upload
+package; it remains required on your PC for analysis and safe deletion.
+The earlier complete source ZIP remains available separately.
+
+The dialog compiler correction is included. Previous local validation:
+18 JVM tests and 12 Python source checks passed. Full APK compilation
+and physical phone acceptance remain pending. Keep the existing app data;
+do not uninstall or clear storage to work around a signing-key mismatch.

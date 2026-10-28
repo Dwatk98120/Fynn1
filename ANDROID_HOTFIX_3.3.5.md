@@ -33,7 +33,7 @@ Validation:
   complete button bounds/labels, no action overlap, safe keeping and single-tap
   confirmation. The simulator screen setup was corrected from zero dimensions
   before these layout results were accepted. Simulated SDK: Android API 28.
-- 11 Python source/wiring checks and the Android source guard passed.
+- 12 Python source/wiring checks and the Android source guard passed.
 - The actual Android Gradle configuration and `generateDebugBuildConfig` tasks
   passed using JDK 17, Gradle 8.9 and AGP 8.7.3. Generated values were version
   3.3.5/code11, Gradle 8.9 and AGP 8.7.3. The local commit was unavailable.
@@ -54,3 +54,11 @@ GitHub push, Main changes or modification of original recording/approval/audit
 data was performed. Tests only damage/remove their own synthetic temporary files.
 
 UI-test framework reference: [Robolectric configuration](https://robolectric.org/configuring/).
+
+Correction after GitHub compilation failure: replaced the hidden five-argument
+AlertDialog.Builder.setView overload with public setView(View). Root content
+already supplies its own padding. The android-all JVM test dependency exposes
+hidden framework APIs, unlike the Android SDK compilation stubs, so the earlier
+JVM success did not validate public-SDK compatibility. A regression guard now
+requires the public overload. The other reported Kotlin errors cascaded from
+that invalid builder call. Full APK compilation remains pending on GitHub.
