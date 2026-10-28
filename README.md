@@ -1,3 +1,13 @@
+# Android 3.3.5/code11 ? visible confirmation and main-screen build info
+
+Read ANDROID_HOTFIX_3.3.5.md and UPLOAD_FIRST.txt. Parent PC remains 0.4.21.
+The local-audio confirmation has separate full-width Remove and Keep buttons,
+with scrollable explanatory text and the existing verification/approval guards.
+The main screen shows the actual Android build, Gradle/AGP, UTC time and commit.
+Current results: 18 JVM/Robolectric tests and 11 source contracts pass. Gradle
+configuration and BuildConfig generation pass. APK build/device checks pending.
+Earlier release notes below are historical.
+
 # Hearlium 0.4.21 - Offline Pronunciation and Safe Android Cleanup
 
 Current release: Parent PC **0.4.21**, Android **3.3.4/code10**.

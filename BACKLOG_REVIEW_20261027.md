@@ -3,6 +3,25 @@
 This review separates demonstrated behavior from old unchecked templates.
 Parent PC and Android have separate version numbers.
 
+## Next Android hotfix — requested 2026-10-28
+
+- [x] Implement build information and Gradle information directly on the Android
+  app's main screen, without opening a settings or diagnostics menu.
+  - Display the installed app's version name and version code, build type
+    (debug/release), build date/time with timezone, and commit identifier when
+    available. Clearly label unavailable fields rather than guessing values.
+  - Display the Gradle version actually used to produce the APK and the Android
+    Gradle Plugin version. Capture these at build time; do not display only
+    expected versions from documentation or a hard-coded release label.
+  - Keep the information compact, readable and clearly identified as Android
+    build information so it cannot be confused with the Parent PC version.
+  - Verify the installed APK's main-screen values against the successful build
+    log and artifact metadata; check readability on a physical phone.
+
+Implemented in Android 3.3.5/code11 source and covered by formatter/wiring tests.
+Physical-device verification remains pending. The older 0.4.21 source ZIP is unchanged. The older status notes below are
+historical and do not supersede the current release validation documents.
+
 ## Confirmed
 
 - Parent PC 0.4.14 is running, per the user's report. Installer source and UI regression checks identify 0.4.14 as Saved Recording Reanalysis Repair.
@@ -56,3 +75,5 @@ annotated phoneme-boundary accuracy evaluation. See BUILD_0.4.18_README.txt.
 ## Scope limits
 
 No new feature backlog was established by this review. Older notes mentioning Silero as future work are superseded by later integration notes. Older stronger-phoneme, candidate-engine and learned-substitution notes describe implemented work. Running 0.4.14 establishes user-reported startup, not completion of the validation items above.
+
+- [ ] Audit other system-button dialogs for the same large-font/OEM clipping seen in the 3.3.4 removal confirmation. The dedicated 3.3.5 removal dialog has simulated layout coverage; other dialogs are unchanged.

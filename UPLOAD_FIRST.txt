@@ -1,24 +1,20 @@
-HEARLIUM 0.4.21 GITHUB SOURCE - REBUILT DOWNLOAD
-Android 3.3.4 / versionCode 10
+ANDROID 3.3.5 / CODE11 - VISIBLE AUDIO REMOVAL CONFIRMATION
+Parent PC stays 0.4.21. Read ANDROID_HOTFIX_3.3.5.md.
 
-This ZIP has repository files at its ROOT: app/, server/, .github/, etc.
-Extract it first. Copy ALL extracted files/folders into the repository root
-on hearlium-parent-pc-integration. Keep Main frozen. Preserve existing .git,
-newer local work, credentials, recordings and approval/audit history.
-Do not upload the ZIP as a single repository file or add an enclosing folder.
+Extract the ZIP. All repository files are at its ROOT (app/, .github/, etc.).
+Copy ALL contents to hearlium-parent-pc-integration, including app/build.gradle
+and android_no_live_verify.py together. Keep Main frozen. Preserve .git,
+newer local work, credentials and all recording/approval/audit data.
+Do not upload the ZIP itself or create an extra enclosing repository folder.
 
-Upload app/build.gradle AND android_no_live_verify.py from this same package.
-The Gradle file contains versionCode 10 and versionName '3.3.4'. The source
-guard passes for these exact files. Review both files on GitHub after upload.
+Confirm app/build.gradle on GitHub says versionCode 11/versionName '3.3.5'.
+Commit all updated files, then start a NEW workflow on that commit/branch:
+Hearlium Android APK - Visible Confirmation v3.3.5.
+Artifact: Hearlium-Android-Visible-Confirmation-v3.3.5-code11.
+Both workflows run unit tests, compile the APK and reject missing hotfix features.
 
-Commit the updated files before starting a NEW workflow run on that branch.
-Do not use the old failed run as proof that a newer commit was checked.
-Workflow: Hearlium Android APK - Protected Local Audio v3.3.4.
-Artifact: Hearlium-Android-Protected-Local-Audio-v3.3.4-code10.
-
-See GITHUB_0.4.21_UPLOAD.md for full instructions, including signing-key safety.
-Do not uninstall the existing Android app or clear its data to force an update.
-
-This rebuild changes package layout and adds upload guidance/validation only.
-All original 0.4.21 source files retain their released SHA-256 values.
-No installer, model weights, recordings, credentials or signing keys are included.
+The source is tested locally; no remote workflow or phone installation is claimed.
+Existing signing keys must match for an update. Do not uninstall or clear app
+data to force installation. First test removal with disposable recordings.
+Verify both Remove local audio and Keep local audio remain visible at large
+font sizes, and check the main screen displays Android 3.3.5 (11) with build info.
