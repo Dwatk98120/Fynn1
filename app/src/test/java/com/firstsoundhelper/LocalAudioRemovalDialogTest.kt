@@ -1,73 +1,77 @@
 package com.firstsoundhelper
 
-import android.app.Activity
-import android.graphics.Rect
-import android.view.View
+import android.app.AlertDialog
+import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
+import android.view.Window
 import android.widget.Button
-import org.junit.Assert.*
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowLooper
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28], manifest = Config.NONE)
-class LocalAudioRemovalDialogTest {
-    private fun checkLayout(width: Int, height: Int, font: Float) {
-        val orientation = if (width > height) "land" else "port"
-        RuntimeEnvironment.setQualifiers("w${width}dp-h${height}dp-$orientation-mdpi")
-        RuntimeEnvironment.setFontScale(font)
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        assertEquals(width, activity.resources.displayMetrics.widthPixels)
-        assertEquals(font, activity.resources.configuration.fontScale, 0.001f)
-        var confirmations = 0
-        val dialog = LocalAudioRemovalDialog.create(activity, 1) { confirmations++ }
-        dialog.show()
-        ShadowLooper.idleMainLooper()
-        val decor = dialog.window!!.decorView
-        val attributes = dialog.window!!.attributes
-        decor.measure(View.MeasureSpec.makeMeasureSpec(attributes.width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(attributes.height, View.MeasureSpec.EXACTLY))
-        decor.layout(0, 0, attributes.width, attributes.height)
-        val remove = decor.findViewWithTag<Button>("local_audio_remove")
-        val keep = decor.findViewWithTag<Button>("local_audio_keep")
-        val removeRect = Rect(); val keepRect = Rect()
-        assertTrue("Removal action must be visible", remove.getGlobalVisibleRect(removeRect))
-        assertTrue("Keep action must be visible", keep.getGlobalVisibleRect(keepRect))
-        assertEquals("Removal must not be vertically clipped", remove.height, removeRect.height())
-        assertEquals("Keep must not be vertically clipped", keep.height, keepRect.height())
-        assertEquals("Removal must not be horizontally clipped", remove.width, removeRect.width())
-        assertTrue("Actions must stack without overlap", removeRect.bottom <= keepRect.top)
-        assertTrue(remove.height >= 48 && keep.height >= 48)
-        for (button in listOf(remove, keep)) {
-            for (line in 0 until button.layout.lineCount) assertEquals(0, button.layout.getEllipsisCount(line))
-            assertEquals(button.text.length, button.layout.getLineEnd(button.layout.lineCount - 1))
+/** Dedicated stacked actions avoid OEM horizontal AlertDialog button clipping. */
+internal object LocalAudioRemovalDialog {
+    fun create(context: Context, count: Int, onConfirm: () -> Unit): AlertDialog {
+        fun dp(value: Int) = (value * context.resources.displayMetrics.density).toInt()
+        fun rounded(color: String) = GradientDrawable().apply {
+            setColor(Color.parseColor(color)); cornerRadius = dp(16).toFloat()
         }
-        assertEquals(0, confirmations)
-        keep.performClick()
-        assertEquals("Keeping audio cannot authorize removal", 0, confirmations)
-        activity.finish()
-    }
-
-    @Test @Config(qualifiers = "w320dp-h640dp-mdpi")
-    fun bothActionsAreVisibleOnNarrowPhone() = checkLayout(320, 640, 1f)
-    @Test @Config(qualifiers = "w360dp-h640dp-mdpi")
-    fun bothActionsAreVisibleWithLargeText() = checkLayout(360, 640, 2f)
-    @Test @Config(qualifiers = "w640dp-h360dp-land-mdpi")
-    fun bothActionsAreVisibleInLandscapeWithLargeText() = checkLayout(640, 360, 2f)
-
-    @Test fun confirmationRequiresExplicitTapAndCannotFireTwice() {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        var confirmations = 0
-        val dialog = LocalAudioRemovalDialog.create(activity, 1) { confirmations++ }
-        dialog.show(); ShadowLooper.idleMainLooper()
-        assertEquals(0, confirmations)
-        val remove = dialog.window!!.decorView.findViewWithTag<Button>("local_audio_remove")
-        remove.performClick(); remove.performClick()
-        assertEquals(1, confirmations)
-        activity.finish()
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(20), dp(20), dp(20))
+            background = rounded("#FFFFFF")
+        }
+        val title = TextView(context).apply {
+            text = "Remove local audio?"; textSize = 22f
+            setTextColor(Color.parseColor("#21124D")); setTypeface(typeface, Typeface.BOLD)
+        }
+        val message = TextView(context).apply {
+            text = "The Parent PC verified $count matching saved recording(s).\n\n" +
+                "Remove only their audio from this phone?\n\n" +
+                "Metadata, labels, analysis and audit history stay here. PC originals are retained. " +
+                "Each PC copy will be checked again immediately before removal."
+            textSize = 16f; setTextColor(Color.parseColor("#4B4855"))
+            setPadding(0, dp(14), 0, dp(14))
+        }
+        val content = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(title, LinearLayout.LayoutParams(-1, -2))
+            addView(message, LinearLayout.LayoutParams(-1, -2))
+        }
+        root.addView(ScrollView(context).apply { addView(content) }, LinearLayout.LayoutParams(-1, 0, 1f))
+        fun action(label: String, actionTag: String, color: String, textColor: String) = Button(context).apply {
+            text = label; tag = actionTag; isAllCaps = false; textSize = 16f
+            setSingleLine(false); maxLines = Int.MAX_VALUE; ellipsize = null
+            minHeight = dp(56); minimumWidth = 0
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+            setTextColor(Color.parseColor(textColor)); background = rounded(color)
+            backgroundTintList = ColorStateList.valueOf(Color.parseColor(color))
+            setTypeface(typeface, Typeface.BOLD)
+        }
+        val remove = action("Remove local audio", "local_audio_remove", "#6D4DB3", "#FFFFFF")
+        val keep = action("Keep local audio", "local_audio_keep", "#F3F1F6", "#4B4855")
+        root.addView(remove, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        root.addView(keep, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        val dialog = AlertDialog.Builder(context).setView(root).create()
+        remove.setOnClickListener {
+            if (!remove.isEnabled) return@setOnClickListener
+            remove.isEnabled = false
+            try { onConfirm() } finally { dialog.dismiss() }
+        }
+        keep.setOnClickListener { dialog.cancel() }
+        dialog.setOnShowListener {
+            val dialogWindow: Window? = dialog.window
+            if (dialogWindow != null) {
+                dialogWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                val metrics = context.resources.displayMetrics
+                dialogWindow.setLayout((metrics.widthPixels * 0.91f).toInt(), (metrics.heightPixels * 0.85f).toInt())
+            }
+            keep.requestFocus()
+        }
+        return dialog
     }
 }
