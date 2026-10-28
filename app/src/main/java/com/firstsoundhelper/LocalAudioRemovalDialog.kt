@@ -7,7 +7,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
-import android.view.ViewGroup
+import android.view.Window
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -56,7 +56,7 @@ internal object LocalAudioRemovalDialog {
         val keep = action("Keep local audio", "local_audio_keep", "#F3F1F6", "#4B4855")
         root.addView(remove, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         root.addView(keep, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        val dialog = AlertDialog.Builder(context).setView(root, 0, 0, 0, 0).create()
+        val dialog = AlertDialog.Builder(context).setView(root).create()
         remove.setOnClickListener {
             if (!remove.isEnabled) return@setOnClickListener
             remove.isEnabled = false
@@ -64,10 +64,11 @@ internal object LocalAudioRemovalDialog {
         }
         keep.setOnClickListener { dialog.cancel() }
         dialog.setOnShowListener {
-            dialog.window?.apply {
-                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            val dialogWindow: Window? = dialog.window
+            if (dialogWindow != null) {
+                dialogWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 val metrics = context.resources.displayMetrics
-                setLayout((metrics.widthPixels * 0.91f).toInt(), (metrics.heightPixels * 0.85f).toInt())
+                dialogWindow.setLayout((metrics.widthPixels * 0.91f).toInt(), (metrics.heightPixels * 0.85f).toInt())
             }
             keep.requestFocus()
         }
