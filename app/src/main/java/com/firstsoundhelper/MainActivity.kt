@@ -314,6 +314,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(b: Bundle?) {
         super.onCreate(b); setContentView(R.layout.activity_main)
+        findViewById<TextView>(R.id.androidBuildInfo).text = AndroidBuildInfo.format(
+            BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, BuildConfig.BUILD_TYPE,
+            BuildConfig.BUILD_GRADLE_VERSION, BuildConfig.BUILD_AGP_VERSION,
+            BuildConfig.BUILD_TIMESTAMP_UTC, BuildConfig.BUILD_COMMIT)
+
         
 
         val phraseLibraryButton = Button(this@MainActivity)
@@ -1839,12 +1844,10 @@ content.addView(popupHeader(
                         return@runOnUiThread
                     }
                     var removalStarted = false
-                    val confirmation = android.app.AlertDialog.Builder(this)
-                        .setTitle("Remove ${verifiedCaptures.size} local audio file(s)?")
-                        .setMessage("The Parent PC verified matching saved originals. Remove only the audio from this phone? Recording metadata, labels, analysis and audit history stay here. PC originals are retained. Every copy will be checked again before removal.")
-                        .setNegativeButton("Keep local audio", null)
-                        .setPositiveButton("Remove local audio") { _, _ ->
+                    status.text = "PC copies verified. Choose whether to remove local audio."
+                    val confirmation = LocalAudioRemovalDialog.create(this, verifiedCaptures.size) {
                             removalStarted = true
+                            status.text = "Rechecking PC copies before removal..."
                             Thread {
                                 var removed = 0
                                 try {
@@ -1878,9 +1881,13 @@ content.addView(popupHeader(
                                     localDeletionInProgress = false
                                 }
                             }.start()
-                        }.create()
-                    confirmation.setOnDismissListener { if (!removalStarted) localDeletionInProgress = false }
-                    confirmation.setOnShowListener { styleUnifiedDialog(confirmation) }
+                        }
+                    confirmation.setOnDismissListener {
+                        if (!removalStarted) {
+                            localDeletionInProgress = false
+                            status.text = "Local audio retained."
+                        }
+                    }
                     confirmation.show()
                 }
             } catch (e: Exception) {

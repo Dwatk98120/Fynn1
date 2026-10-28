@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F7F5EF">
 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="First Sound Helper" android:textSize="32sp" android:textStyle="bold" android:layout_marginBottom="7dp"/>
+<TextView android:id="@+id/androidBuildInfo" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="#53505D" android:layout_marginBottom="10dp" android:textIsSelectable="true"/>
 <TextView android:id="@+id/status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ready" android:textColor="#315C4C" android:layout_marginBottom="10dp"/>
 <Button android:id="@+id/parentPcConnectionButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Parent PC Connection" android:layout_marginBottom="8dp"/>
 <Button android:id="@+id/recordButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎙️ Record speech"/>
