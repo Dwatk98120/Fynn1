@@ -1,0 +1,123 @@
+{
+  "version": "0.4.21",
+  "sourceOnly": true,
+  "checkedUtc": "2026-10-28T13:51:14.053437+00:00",
+  "verifiedProgramFiles": {
+    "HearliumParentPC.spec": "53eae8f02de4e8472e7f4672571b1c9349c68bec9bd24aaba7529c6c41ba1af9",
+    "installer/prepare_nltk_data.py": "cbaba7d334154fc5621294f55b6239b49010f099838d69666f9bbf49660679b2",
+    "installer/verify_0421_archive.py": "14058a6a6f2bb0913b539b0da24a5283ec2f9da4c9b1ff98b6780e3d17c84c5a",
+    "installer/verify_frozen_gui.py": "278f523e76bc0dc711661fd177c2cd387f371126e3a8102f5be85eca043f2dec",
+    "installer/verify_layer2_build.py": "c4173fd18997f4fea95807de04f328453b7bc9ae2aca6ec91d8083d75886b9c4",
+    "installer/verify_legacy_alias_build.py": "901ffd405190f90b6e80a5a19f879600bf37d118acef9d3a7fff40e730c9fd8c",
+    "installer/verify_phoneme_build.py": "a87779d199c76aea40b6f99b3afe24fb019e34d29496a5d6f4fa61d295d7ebd7",
+    "installer/verify_tk_build.py": "81f67f8ca205a9db99d5e11acdfce7ddcf6d41f70f707d2acb7408893f38c22a",
+    "parent_pc_local/capture_identity.py": "e2f38105204596f90ddd441172c8d82a76949f234be6537f8f84b119b6486407",
+    "parent_pc_local/direct_recording.py": "ba7caefb606cc044288e144316884a773aacebde35a062925e76f39e5b8d8bb8",
+    "parent_pc_local/gui_smoke_check.py": "aa353219e5808bffe11a0c7652200241a76b29bd7e62ee1b46f47cbf1c8ed269",
+    "parent_pc_local/hearlium_launcher.py": "60cef75b5faf99f64ba9d4713be1c3e2cb42dd07a6f03bd24c2e1c7213d1ab55",
+    "parent_pc_local/hearlium_parent_pc_gui.py": "9c25a8f3c9b03c210560d0c9469dff5f900d1d27233e2283e712f1ba0eb4443a",
+    "parent_pc_local/legacy_alias_checks.py": "e9f5d8938397fd7365a0f26f0a6781324411adc6a3b87c690b637941ee302b05",
+    "parent_pc_local/phoneme_alignment_client.py": "adaf5f7bd95910debdfd4175cb02279bcd2e6922db278821f2590a1bbe965520",
+    "parent_pc_local/phoneme_hotfix_checks.py": "55dffa056da1999e86d8741549ca78489d4fc0da3268c2550abf723f34db6268",
+    "parent_pc_local/reanalysis_integrity.py": "c75ddb9bf8c97bf8dd467e6ab3924c0172ae35c957e5b62ccf6424e50ff08922",
+    "parent_pc_local/reference_audio_gui.py": "bdfcc643f411b91e56f74eb7979e623f000fec125b0f8f8e3701b87ec195730c",
+    "parent_pc_local/speech_hotfix_checks.py": "4bd8a01ee4c184d74b6ffd68625cbee172bde6a9cf27754c87b3f20b23fc782c",
+    "parent_pc_local/upload_retry_check.py": "5879d23679cf7ce64cf91e2f8d0133c63174d4bc071671bfaed4ae4d125eba36",
+    "server/analysis_engine.py": "6bbe181aa9d7cbb512155579867a6cede49844d85da3f627a1a30a38ca69b3e5",
+    "server/analysis_jobs.py": "ceb3e1657395924a2b0e8bdb5af013d735845a0343fc38600e33a867bc545b6b",
+    "server/android_recording_storage.py": "575252ed9925fad3d404d6d99ad629bd55af025bba480361630a09ff96daa1d7",
+    "server/candidate_word_engine.py": "fdfaa60e15cc9685dfa7287cbefe3c6a315a34d44ea1174b4458dd724bb6cc72",
+    "server/ctc_segmentation.py": "bb7ec8add6aa36da29508d394ee9f069e7b19d6755b996bc189a2da27f849573",
+    "server/layer_health.py": "3f3055ba87afeff658abd62db4c89660859cf6ef008d90b8e020591878dcd990",
+    "server/main.py": "04e209c97e3b5b7e14d7c06e37611d5e5e5e6d8df4e4bfffb458997a9a3e074a",
+    "server/nltk_resources.py": "bd8861bbc15febb3796fbb1c404a104afa256bbfe29a768759b90cdd50d95df8",
+    "server/pc_copy_verification.py": "91bbf67f61e48701d2d8f6b06f89a11c34a960ffde913131cd93a68c955adcd7",
+    "server/phoneme_substitution.py": "b24d4709d26db223baedee60fd0dd4ea304d5a92a238e532b38b56b4681e4369",
+    "server/phoneme_timing_review.py": "e693d54823607c9ae9df9512f6c35d3748c05a47455fa153696a75885d6c3376",
+    "server/recognition_diagnostics.py": "62c9f88bc679e3ee8bfe4c7995d0333e6a3b0a48df5ab1c14fe28a4fd10dbc97",
+    "server/reference_audio.py": "1aa5cd6b42193f155c351623badda0c262e6780f98f1a5f9f3eccba81c8b6f49",
+    "server/reference_phoneme_alignment.py": "ab237799bba609a1e1878d5c9c62b2f532cf2fc6342803e329bb3cef9f5e5aa4",
+    "server/review_vocabulary.py": "a9e2a750016cf09a9640fd2018da59d4a09f7f5da1f34067fd1888defcb0c252",
+    "server/speech_activity_review.py": "70237bfe363a0bd2e272eafa11e94b5e0134294ada821dc0ec0370b28de255be",
+    "server/temporal_prosody.py": "cd5c91de6ece8ecb805ad4adad941ab100ebb8b22af5ff283cd037ddcd2f0d8e",
+    "server/utterance_prosody_review.py": "c65e5a4c5232ebfc59812b09889440f7be6dda96b94b833c5c61694bc4669228",
+    "server/word_asr.py": "50930eb53be59dfd5e116fbf75b0d31aa6d78daa74629a1f0ed49592985f097f",
+    "server/word_phoneme_alignment_review.py": "48bfd37d173707f46fa2f2a99b2c8b8e79f59b549849341e60ca70db5e3656da"
+  },
+  "verifiedProgramFileCount": 40,
+  "testedBuildStampSha256": "a091114d50e0230a1603a46f11ffe54bc7006d962fde0b84594b0b8cf41c7914",
+  "installerVerification": {
+    "version": "0.4.21",
+    "checkedUtc": "2026-10-28T13:44:53.847612+00:00",
+    "installer": "HearliumSetup-0.4.21.exe",
+    "bytes": 1678529103,
+    "sha256": "41f7311ebd793cd9e4810ad1b92fa4c70ed202efd9ba687b28886f9ea004de71",
+    "executableSha256": "29435bd71d88793e1de8433d3efac2fd416b41dad837349cadc0f85c2f45ca9b",
+    "sourceTests": {
+      "passed": 517,
+      "skipped": 3
+    },
+    "frozenChecks": [
+      "archive",
+      "gui",
+      "phoneme",
+      "receipt_integrity",
+      "self-test",
+      "verify-layer2",
+      "verify-android-retry",
+      "stamp",
+      "verify_stamp"
+    ],
+    "frozenOfflinePronunciation": true,
+    "storedCopyProtocolPresent": true,
+    "bundleUnchangedDuringCompilation": true,
+    "installed": false,
+    "installedDeviceAcceptance": "pending",
+    "privateAudioUsed": false,
+    "recognitionOrAlignmentAccuracyValidated": false
+  },
+  "androidVersion": "3.3.4/code10",
+  "androidSourceGuard": "passed",
+  "gradleVersion": "8.9",
+  "remoteApkBuild": "not run",
+  "installedDeviceAcceptance": "pending",
+  "nltkResources": {
+    "filesSha256": {
+      "taggers/averaged_perceptron_tagger.zip": "e1f13cf2532daadfd6f3bc481a49859f0b8ea6432ccdcd83e6a49a5f19008de9",
+      "corpora/cmudict.zip": "d07cca47fd72ad32ea9d8ad1219f85301eeaf4568f8b6b73747506a71fb5afd6",
+      "corpora/cmudict/cmudict": "cad209c39eb87677d64e93d97f8eed10b7e6f9bdd42de8e7ca8efc8e17d62e8a",
+      "corpora/cmudict/README": "b0556be7a2b12bea6a667277b75864f802dd4854480657ce298c62e6897e766b",
+      "taggers/averaged_perceptron_tagger_eng/averaged_perceptron_tagger_eng.weights.json": "789e8e35f6fac656d9b7eccea29ba4e8a137cbb5b525dd31f39e4291a9e80832",
+      "taggers/averaged_perceptron_tagger_eng/averaged_perceptron_tagger_eng.tagdict.json": "4c713731cb06727736962bc8cd94ad919217a040e76691059af99bc0c2c9c246",
+      "taggers/averaged_perceptron_tagger_eng/averaged_perceptron_tagger_eng.classes.json": "d152ffa69d45b8357276341a3d592c6c025911d52ec0d9068d4f382560dd48b6"
+    },
+    "officialArchives": {
+      "averaged_perceptron_tagger": {
+        "url": "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/taggers/averaged_perceptron_tagger.zip",
+        "sha256": "e1f13cf2532daadfd6f3bc481a49859f0b8ea6432ccdcd83e6a49a5f19008de9"
+      },
+      "averaged_perceptron_tagger_eng": {
+        "url": "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/taggers/averaged_perceptron_tagger_eng.zip",
+        "sha256": "6025f530624335c67d6547d44757b357b4e79bae030a0383e9887a92c1718f0b"
+      },
+      "cmudict": {
+        "url": "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/cmudict.zip",
+        "sha256": "d07cca47fd72ad32ea9d8ad1219f85301eeaf4568f8b6b73747506a71fb5afd6"
+      }
+    }
+  },
+  "kotlinPolicyTests": {
+    "passed": 12,
+    "failures": 0,
+    "localJvmExecution": true,
+    "scope": "production Kotlin policy and recording-store code, real temporary-file IO, injected clock; full Android UI/device execution not established",
+    "filesSha256": {
+      "app/src/main/java/com/firstsoundhelper/LocalAudioDeletionPolicy.kt": "4b4b53d58f2b74dfda0745e9f3592e658184af40cd0b91d206fd785bae302b92",
+      "app/src/main/java/com/firstsoundhelper/LocalSpeechRecordingStore.kt": "b25f6a78915482624c159abc77ab15a42ef57e722dd398b8390f018c28348759",
+      "app/src/test/java/com/firstsoundhelper/LocalAudioDeletionPolicyTest.kt": "0e8f6d51883ffe5bd827537d25228da87fe78b63156a0a28307774acc8c8a21f",
+      "app/src/test/java/com/firstsoundhelper/LocalSpeechRecordingRemovalTest.kt": "c9a30fad9b43df5b407d93a33f21d51fcc9d3d112176f0e26c15c40d2d2539fe"
+    }
+  },
+  "androidCleanupProtocol": "android-local-audio-removal-v1",
+  "androidCleanupApproval": "caregiver confirms after fresh PC stored-copy verification"
+}

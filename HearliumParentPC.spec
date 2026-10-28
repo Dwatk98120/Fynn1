@@ -8,7 +8,14 @@ if not tcltk_info.available or not tcltk_info.data_files:
     raise RuntimeError('Working Tcl/Tk is required. Run installer/verify_tk_build.py with this interpreter.')
 
 # The launcher dispatches --server / --record / --pair in the same frozen EXE.
+import sys
+import os
+sys.path.insert(0, '.')
+from server.nltk_resources import validate_resources
+validate_resources('models/nltk_data')
+os.environ['NLTK_DATA'] = os.path.abspath('models/nltk_data')
 datas = []
+datas.append(('models/nltk_data', 'nltk_data'))
 binaries = []
 hiddenimports = []
 for pkg in ['torch', 'transformers', 'tokenizers', 'numpy', 'sounddevice', 'soundfile',
@@ -54,6 +61,8 @@ a = Analysis(
         'tkinter.filedialog', 'tkinter.messagebox', 'tkinter.font', 'gui_smoke_check',
         'main', 'direct_recording', 'pair_phone', 'ctc_segmentation',
         'reference_phoneme_alignment', 'phoneme_alignment_client', 'capture_identity',
+        'nltk_resources', 'server.nltk_resources',
+        'pc_copy_verification', 'server.pc_copy_verification',
         'phoneme_hotfix_checks', 'legacy_alias_checks',
         'hearlium_parent_pc_gui', 'phase3_learning_gui', 'layer_health', 'temporal_prosody', 'candidate_word_engine',
         'learning_engine', 'learning_store', 'analysis_engine', 'phoneme_analysis',

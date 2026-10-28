@@ -1,0 +1,18 @@
+HEARLIUM PARENT PC 0.4.20 - REANALYSIS RECEIPT INTEGRITY REPAIR
+2026-10-28 | Branch: hearlium-parent-pc-integration | Main frozen
+
+Reject conflicting same-ID declared sources and contradictory nested modern
+receipt recording/speaker/source identity before writing a derived result.
+Original WAVs, metadata, historical duplicates, approvals and audit history
+are preserved. Integrity reports and Parent PC windows identify 0.4.20.
+
+Android remains 3.3.3/code9. Both APK workflows bootstrap official Gradle 8.9,
+verify its distribution and wrapper SHA-256, build the debug APK and run the
+durable-capture artifact guard before uploading it. The checked-in properties
+now agree with those workflows. The wrapper JAR is regenerated in CI.
+
+Use GITHUB_0.4.20_UPLOAD.md for the prepared source-only repository ZIP.
+Use TEST_RESULTS_0.4.20.md and SOURCE_RELEASE_0.4.20_VERIFICATION.json for
+the exact build result. Source/test execution is not recognition accuracy,
+pediatric clinical validation or installed-device acceptance.
+No automatic installation, GitHub push or Main changes.

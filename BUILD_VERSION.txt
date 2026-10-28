@@ -198,3 +198,13 @@ Build 0.4.19 - Legacy Recording Alias Repair - 2026-10-27.
 Corroborated source-absent legacy aliases with separate verified receipts; all
 same-ID conflicts still fail. Source suite: 463 passed, 3 skipped. Original data unchanged.
 GitHub source handoff: 0.4.19; see BUILD_0.4.19_README.txt.
+
+Build 0.4.20 ? Branch 2 Reanalysis Receipt Integrity Repair ? 2026-10-28.
+Reject contradictory modern receipt identity/source and conflicting same-ID declared sources.
+Preserve all original evidence and require caregiver approval for learning.
+Integrity reports identify 0.4.20. Android remains 3.3.3/code9. Main frozen.
+
+Build 0.4.21 ? Offline Pronunciation and Safe Android Cleanup ? 2026-10-28.
+Bundle and verify complete NLTK English tagger/CMU resources and exercise actual G2P before readiness.
+Android 3.3.4/code10 removes local recording audio only after fresh verified PC copy and caregiver confirmation.
+Original metadata, labels, analyses, approvals, audit history and PC originals remain retained. Main frozen.

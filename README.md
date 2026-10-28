@@ -1,4 +1,36 @@
-# Hearlium 0.4.19 Branch 2 - Legacy Recording Alias Repair
+# Hearlium 0.4.21 - Offline Pronunciation and Safe Android Cleanup
+
+Current release: Parent PC **0.4.21**, Android **3.3.4/code10**.
+Read [BUILD_0.4.21_README.txt](BUILD_0.4.21_README.txt),
+[TEST_RESULTS_0.4.21.md](TEST_RESULTS_0.4.21.md) and
+[GITHUB_0.4.21_UPLOAD.md](GITHUB_0.4.21_UPLOAD.md).
+The complete offline NLTK resources are verified and pronunciation conversion
+is exercised before readiness. Android removes local recording audio only after
+fresh PC-copy verification and caregiver confirmation; metadata/audits stay.
+Source suite: **517 passed, 3 skipped**; **12 real Kotlin policy/storage tests passed**.
+Use only `hearlium-parent-pc-integration`; Main remains frozen. Remote APK build,
+existing signing-key compatibility and installed-device acceptance remain pending.
+
+## Historical handoff notes
+
+# Hearlium 0.4.20 Branch 2 - Reanalysis Receipt Integrity Repair
+
+Start with [BUILD_0.4.20_README.txt](BUILD_0.4.20_README.txt),
+[GITHUB_0.4.20_UPLOAD.md](GITHUB_0.4.20_UPLOAD.md), and
+[TEST_RESULTS_0.4.20.md](TEST_RESULTS_0.4.20.md).
+Parent PC is 0.4.20; Android remains 3.3.3/code9. The prepared repository ZIP
+contains source only; the Windows installer is a separate artifact.
+Target `hearlium-parent-pc-integration`; Main remains frozen. Analysis, models,
+storage and learning run on the local Windows Parent PC. Never restore Render.
+The 0.4.19 notes below describe the preceding source review and release history.
+
+2026-10-28 source review fixes are applied; see
+[SOURCE_REVIEW_FIXES_20261028.md](SOURCE_REVIEW_FIXES_20261028.md).
+Current checks: **488 passed, 3 skipped** after installing PocketSphinx 5.0.4
+in the local `.venv`. Reanalysis rejects conflicting
+same-ID declared sources and conflicting modern nested receipt identities.
+The original frozen-build proof below is historical; these source changes
+require a new frozen build and installed-device acceptance.
 
 Start with [GITHUB_UPDATE_INSTRUCTIONS.md](GITHUB_UPDATE_INSTRUCTIONS.md),
 [BUILD_0.4.19_README.txt](BUILD_0.4.19_README.txt) and

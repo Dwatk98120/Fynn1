@@ -1,6 +1,34 @@
-# Update Branch 2 with Hearlium 0.4.19
+# Update Branch 2 with Hearlium 0.4.21
+
+Current release: Parent PC **0.4.21**, Android **3.3.4/code10**.
+Read [BUILD_0.4.21_README.txt](BUILD_0.4.21_README.txt),
+[TEST_RESULTS_0.4.21.md](TEST_RESULTS_0.4.21.md) and
+[GITHUB_0.4.21_UPLOAD.md](GITHUB_0.4.21_UPLOAD.md).
+The complete offline NLTK resources are verified and pronunciation conversion
+is exercised before readiness. Android removes local recording audio only after
+fresh PC-copy verification and caregiver confirmation; metadata/audits stay.
+Source suite: **517 passed, 3 skipped**; **12 real Kotlin policy/storage tests passed**.
+Use only `hearlium-parent-pc-integration`; Main remains frozen. Remote APK build,
+existing signing-key compatibility and installed-device acceptance remain pending.
+
+## Historical handoff notes
+
+# Update Branch 2 with Hearlium 0.4.20
+
+Current handoff: follow GITHUB_0.4.20_UPLOAD.md and TEST_RESULTS_0.4.20.md.
+The source ZIP is release_0.4.20/Hearlium_0.4.20_GitHub_Ready.zip; Windows
+installer is separate. Use SOURCE_MANIFEST_SHA256.json for current source and
+SOURCE_RELEASE_0.4.20_VERIFICATION.json for the current frozen-build proof.
+The 0.4.19 procedure below is historical, retained for provenance.
+
+## Historical 0.4.19 procedure
 
 Target branch: `hearlium-parent-pc-integration`. Leave Main untouched.
+Source review amendment, 2026-10-28: read SOURCE_REVIEW_FIXES_20261028.md and the
+current section of TEST_RESULTS_0.4.19.md first. SOURCE_MANIFEST_SHA256.json
+describes the revised source; SOURCE_MANIFEST_SHA256_0.4.19_BASELINE.json preserves
+the received manifest verbatim. SOURCE_RELEASE_0.4.19_VERIFICATION.json remains
+historical evidence for the original frozen build, not proof for amended source.
 This is the current cumulative source-only handoff. It includes the 0.4.17 Tk
 packaging fix, 0.4.18 phoneme/capture repairs, and the 0.4.19 legacy recording alias
 repair. No remote Git operation or installation was performed.

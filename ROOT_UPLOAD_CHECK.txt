@@ -1,5 +1,5 @@
-HEARLIUM 0.4.19 BRANCH 2 SOURCE UPDATE
+HEARLIUM 0.4.21 BRANCH 2 SOURCE UPDATE
 Target: hearlium-parent-pc-integration. Leave Main untouched.
-Read GITHUB_UPDATE_INSTRUCTIONS.md before copying source.
+Read GITHUB_0.4.21_UPLOAD.md before copying source.
 Verify SOURCE_MANIFEST_SHA256.json after copying.
 No binaries, model weights, recordings, credentials, installation or remote push.

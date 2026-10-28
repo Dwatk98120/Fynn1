@@ -18,6 +18,7 @@ installer/output/
 # Credentials and machine-specific settings
 .env
 .env.*
+!.env.example
 *.keystore
 *.jks
 local.properties
@@ -39,3 +40,11 @@ credentials.json
 *.p12
 *.zip
 *.csv
+
+# Local model assets, build reports and prepared release artifacts
+models/
+reports/
+release_0.4.20/
+parent_pc_local/bluetooth_service/bin/
+parent_pc_local/bluetooth_service/obj/
+release_0.4.21/

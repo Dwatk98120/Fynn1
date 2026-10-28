@@ -1,0 +1,31 @@
+HEARLIUM 0.4.21 - OFFLINE PRONUNCIATION AND SAFE ANDROID CLEANUP
+2026-10-28 | Branch: hearlium-parent-pc-integration | Main frozen
+
+Parent PC 0.4.21 bundles and SHA-256 verifies the complete required NLTK
+English JSON tagger, legacy resource package and CMU pronunciation corpus.
+Startup and the frozen self-test execute actual G2P conversion before reporting
+analysis readiness. Frozen runtime uses bundled NLTK data without host fallback.
+Only build-time preparation downloads the pinned official NLTK archives.
+
+Android 3.3.4/code10 removes local recording audio only after a fresh PC check
+of stored originals and explicit caregiver confirmation. It repeats the PC
+check immediately before removal. IDs, speaker, source, bytes, SHA-256 and a
+fresh nonce must match; unverified/legacy/conflicting/missing copies are blocked.
+A transport-only upload receipt cannot authorize removal. Offline mode,
+connection changes and active recording/upload also block cleanup.
+
+Only the local recording WAV is removed. PC originals, phone metadata, labels,
+analyses and immutable audit records are retained. Bulk and privacy-menu paths
+use the same guard. Word-bank originals without verified-copy support remain
+retained. Interpretation/learning history clearing shortcuts are protected.
+Removal confirmation never grants learning approval.
+
+Source checks: 517 passed, 3 optional private-adult-audio skips. The pure Kotlin
+deletion policy also passes 12 real JUnit tests. GitHub workflows run Android
+unit tests, build the APK and reject stale artifacts lacking the new guards.
+See TEST_RESULTS_0.4.21.md and SOURCE_RELEASE_0.4.21_VERIFICATION.json for the
+exact frozen build/installer and source-package results. Android device
+acceptance and real recording accuracy remain separate pending checks.
+
+Previous 0.4.20 installers/source ZIPs and build proof remain historical.
+No automatic installation, original recording migration or GitHub publication.

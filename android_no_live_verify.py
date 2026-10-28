@@ -58,10 +58,16 @@ def verify_source() -> None:
                    "studentNameForRecording(", "saveStudentName("):
         if marker not in store:
             raise ValueError(f"Protected local recording storage missing: {marker}")
-    if not re.search(r"(?m)^\s*versionCode\s+9\s*$", gradle):
-        raise ValueError("Expected Android caregiver child-name versionCode 9")
-    if not re.search(r"(?m)^\s*versionName\s+['\"]3\.3\.3['\"]\s*$", gradle):
-        raise ValueError("Expected Android caregiver child-name versionName 3.3.3")
+    if not re.search(r"(?m)^\s*versionCode\s+10\s*$", gradle):
+        raise ValueError("Expected Android caregiver child-name versionCode 10")
+    if not re.search(r"(?m)^\s*versionName\s+['\"]3\.3\.4['\"]\s*$", gradle):
+        raise ValueError("Expected Android caregiver child-name versionName 3.3.4")
+    for marker in ("requestLocalAudioRemoval", "/v1/recording-preservation-check", "caregiverConfirmed = true"):
+        if marker not in kotlin:
+            raise ValueError(f"Protected local audio removal missing: {marker}")
+    for marker in ("fun removeVerifiedLocalAudio", "LocalAudioDeletionPolicy.requireAllowed", "local_audio_removal_request_"):
+        if marker not in store:
+            raise ValueError(f"Protected recording-store removal guard missing: {marker}")
     print("PASS: source protects completed audio and preserves normal recording/upload.")
 
 
@@ -78,7 +84,8 @@ def verify_apk(path: Path) -> None:
         print("NOTE: legacy Live Recording mode is present; this hotfix tests capture durability.")
     for marker in ("startRecording", "stopRecording", "recordButton", "stopButton",
                    "LocalSpeechRecordingStore", "saveCapture", "verifiedWav",
-                   "saveStudentName", "studentNameForRecording", "student_name"):
+                   "saveStudentName", "studentNameForRecording", "student_name",
+                   "LocalAudioDeletionPolicy", "removeVerifiedLocalAudio", "recording-preservation-check"):
         if not any(marker.encode("ascii") in dex for dex in dex_data):
             raise ValueError(f"STALE APK lacks expected durable recording feature: {marker}")
     print(f"PASS: compiled APK contains durable recording storage and required controls: {path}")

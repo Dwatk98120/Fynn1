@@ -1,5 +1,43 @@
 # Hearlium 0.4.19 source and build validation
 
+## Source review update, 2026-10-28
+
+Latest validation after adding PocketSphinx: **488 passed, 3 skipped** in 11.57s.
+The Windows x64 CPython 3.12 PocketSphinx 5.0.4 wheel is installed in this folder's
+ignored `.venv`. The bundled native engine/dictionary initialization test now
+passes, including model-file SHA-256 provenance. `python -m pip check` reports
+no broken requirements. Remaining skips are only the three private-adult-audio
+checks. Run with `.venv/Scripts/python.exe`; this local test environment uses
+`hearlium_build_environment.pth` to read the other installed dependencies from
+the user-supplied 0.4.12 build environment, which was not modified. This is a
+local test setup, not a portable installer. Frozen rebuild/device acceptance
+and real-recording alignment validation remain pending.
+
+The following records the earlier run before PocketSphinx was added:
+
+Current source: **487 passed, 4 skipped**, using the Python 3.12 build interpreter
+in the user-supplied 0.4.12 folder, with temporary LOCALAPPDATA/APPDATA, offline
+model flags, disabled bytecode/cache writes, and an isolated pytest base folder.
+Command: `python -B -m pytest server/tests test_phase3_consonant_regression.py -q -p no:cacheprovider --basetemp <temporary-folder>`.
+Android `android_no_live_verify.py --source` and the extended
+`installer/verify_legacy_alias_build.py` synthetic source check passed.
+
+The 21 added cases cover modern nested identity/source conflicts, cross-copy
+declared-source conflicts, invalid declared sources, and valid reuse. With the
+new report-version assertion, 20 checks failed before the fixes and now pass.
+Conflict tests compare every fixture file before/after rejection, including
+checking that no derived analysis was written. Three existing assertions now
+expect the more precise source-conflict error instead of legacy-unverified.
+
+Three skipped checks require optional private adult audio; the fourth requires
+PocketSphinx, absent from this interpreter. No pediatric clinical validation,
+native PocketSphinx execution, frozen rebuild, installer or device acceptance
+is claimed for the revised source. All validation below describes the original
+2026-10-27 release, not the current modified source. See
+SOURCE_REVIEW_FIXES_20261028.md for integrity/provenance details.
+
+## Historical release validation, 2026-10-27
+
 This is a cumulative source-only Branch 2 handoff, including 0.4.17 Tk packaging,
 0.4.18 phoneme/capture repairs and 0.4.19 protected reanalysis of corroborated legacy
 aliases. Android remains 3.3.3/code9.

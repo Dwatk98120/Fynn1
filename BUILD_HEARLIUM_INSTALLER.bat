@@ -217,6 +217,10 @@ echo Auditing all pinned speech/audio/build Python dependencies...
 "%HEARLIUM_TEST_PYTHON%" "installer\ensure_build_dependencies.py" --repair
 if errorlevel 1 goto :depfail
 REM The full GUI smoke check also imports recording/audio dependencies.
+echo Staging and testing offline NLTK English tagger resources...
+"%HEARLIUM_TEST_PYTHON%" "installer\prepare_nltk_data.py"
+if errorlevel 1 goto :depfail
+set "NLTK_DATA=%CD%\models\nltk_data"
 REM Run it after dependency installation; the bare Tk prerequisite was checked
 REM immediately after creating the environment.
 "%HEARLIUM_TEST_PYTHON%" "installer\verify_tk_build.py"

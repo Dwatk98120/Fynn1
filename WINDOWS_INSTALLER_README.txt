@@ -1,6 +1,11 @@
-HEARLIUM PARENT PC - CURRENT WINDOWS SOURCE HANDOFF 0.4.19
-Read README_BUILD_THIS_INSTALLER.txt, BUILD_0.4.19_README.txt and
-TEST_RESULTS_0.4.19.md for current requirements, checks and pending acceptance.
+HEARLIUM CURRENT BUILD: 0.4.21 | ANDROID 3.3.4/CODE10
+Read BUILD_0.4.21_README.txt, TEST_RESULTS_0.4.21.md and GITHUB_0.4.21_UPLOAD.md.
+Complete offline NLTK resources and safe Android audio cleanup are included.
+Earlier builder/handoff notes below are historical. No automatic installation.
+
+HEARLIUM PARENT PC - CURRENT WINDOWS SOURCE HANDOFF 0.4.20
+Read README_BUILD_THIS_INSTALLER.txt, BUILD_0.4.20_README.txt and
+TEST_RESULTS_0.4.20.md for current requirements, checks and pending acceptance.
 No automatic installation. The following older builder overview is historical;
 its optional user-install step is not part of preparing this handoff.
 

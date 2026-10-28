@@ -1,22 +1,22 @@
-HEARLIUM BRANCH 2 - CURRENT SOURCE HANDOFF 0.4.19
+HEARLIUM CURRENT BUILD: 0.4.21 | ANDROID 3.3.4/CODE10
+Read BUILD_0.4.21_README.txt, TEST_RESULTS_0.4.21.md and GITHUB_0.4.21_UPLOAD.md.
+Complete offline NLTK resources and safe Android audio cleanup are included.
+Earlier builder/handoff notes below are historical. No automatic installation.
 
-Read BUILD_0.4.19_README.txt and TEST_RESULTS_0.4.19.md first.
-The cumulative source includes the 0.4.17 Tk repair, 0.4.18 phoneme/capture
-improvements and 0.4.19 protected legacy-alias reanalysis repair.
-Use BUILD_HEARLIUM_INSTALLER.bat with Python 3.12 x64, Tcl/Tk and Inno Setup 6.
-Do not install tkinter through pip. PocketSphinx is pinned to 5.0.4.
-The builder checks source/frozen GUI, Tk, native phoneme alignment, legacy-alias,
-Layer 2 and Android retry before packaging the matching stamped executable.
-The default fresh builder output is installer/output/HearliumSetup.exe, with
-application version 0.4.19. The separately prepared versioned local artifact is
-installer/output/HearliumSetup-0.4.19.exe. No binary/model weights are shipped here.
-A source-only folder cannot run COMPILE_INSTALLER_ONLY.bat until the corresponding
-verified frozen distribution and prerequisites have been built.
+HEARLIUM BRANCH 2 - CURRENT SOURCE HANDOFF 0.4.20
 
-Source regression: 463 passed, 3 skipped. Installed acceptance remains pending.
-No automatic installation. Original recordings, metadata, history and the previous
-reanalysis safeguards are preserved. Forced alignment uses explicit confirmed words
-and separate JSON; it does not independently verify speech/pronunciation or learning.
+Read BUILD_0.4.20_README.txt and TEST_RESULTS_0.4.20.md first.
+Includes the earlier Tk/phoneme/capture/legacy-alias repairs and now rejects
+conflicting modern receipt identities/sources and same-ID declared sources.
+Use BUILD_HEARLIUM_INSTALLER.bat with Python 3.12 x64, Tcl/Tk, .NET 8 SDK and
+Inno Setup 6. Do not install tkinter through pip. PocketSphinx is pinned to 5.0.4.
+The fresh builder output is installer/output/HearliumSetup.exe (version 0.4.20).
+The separately prepared artifact is installer/output/HearliumSetup-0.4.20.exe.
+The GitHub-ready ZIP contains source only; see GITHUB_0.4.20_UPLOAD.md.
+Source regression: 493 passed, 3 optional private-adult-audio tests skipped.
+Refer to the current release proof for frozen/installer validation.
+Installed-device acceptance remains pending. No automatic installation.
+Preserve original recordings, metadata, approvals, duplicate history and audits.
 
 Historical cumulative builder notes follow and may name superseded fixes.
 

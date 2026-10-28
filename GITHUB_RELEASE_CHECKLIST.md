@@ -1,7 +1,16 @@
-# Hearlium 0.4.19 handoff status
+# 0.4.21 current checklist
+
+Use GITHUB_0.4.21_UPLOAD.md and TEST_RESULTS_0.4.21.md. Parent PC 0.4.21, Android 3.3.4/code10.
+517 source tests and 5 real Kotlin policy tests pass; 3 private-audio checks are skipped.
+Main frozen. APK compilation/signing compatibility and device acceptance remain pending.
+
+## Historical checklist
+
+# Hearlium 0.4.20 handoff status
 
 Current target is `hearlium-parent-pc-integration`; leave Main untouched.
-Source: 463 passed, 3 skipped. Matching source/frozen packaging checks passed.
+Source: 493 passed, 3 optional private-audio skips. See TEST_RESULTS_0.4.20.md
+and SOURCE_RELEASE_0.4.20_VERIFICATION.json for current build validation.
 Installed-device checks and remote GitHub/Android builds remain pending.
 The wrapper scripts/properties are present; the wrapper JAR is absent and current
 workflows regenerate it. Read GITHUB_UPDATE_INSTRUCTIONS.md before using this list.
